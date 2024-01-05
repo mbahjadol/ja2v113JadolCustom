@@ -3305,6 +3305,11 @@ void EquipArmouredVehicle( SOLDIERCREATE_STRUCT *pp )
 		// machine gun
 		CreateItems( MINIMI, (INT8)(80 + Random( 21 )), 1, &(pp->Inv[HANDPOS]) );
 		pp->Inv[HANDPOS].fFlags |= OBJECT_UNDROPPABLE;
+
+		// smoke grenade
+		CreateItems(SMOKE_GRENADE, (INT8)(80 + Random(21)), 1, &gTempObject);
+		gTempObject.fFlags |= OBJECT_UNDROPPABLE;
+		PlaceObjectInSoldierCreateStruct(pp, &gTempObject);
 	}
 	else if ( ENEMYROBOT(pp) )
 	{

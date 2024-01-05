@@ -1303,6 +1303,21 @@ void HandleDialogue( )
 		}
 		else if( QItem.uiSpecialEventFlag & DIALOGUE_SPECIAL_EVENT_MULTIPURPOSE )
 		{
+			// JADOL -- Adding rejected resign merc because he hate someone
+			if (gGameExternalOptions.fMercIrresistiblePlayer) {
+				if (QItem.uiSpecialEventData & MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE)
+				{
+					// if soldier valid...
+					if (pSoldier != NULL)
+					{
+						if (((UINT8)QItem.uiSpecialEventData2) != NOBODY) {
+							MercWantDepartCauseHateAndRejectedByPlayer(pSoldier, MercPtrs[(UINT8)QItem.uiSpecialEventData2]);
+						}
+					}
+				}
+			}
+			// --
+
 			// anv: handle snitch event
 			if( QItem.uiSpecialEventData & MULTIPURPOSE_SPECIAL_EVENT_SNITCH_DIALOGUE )
 			{
@@ -1392,7 +1407,7 @@ void HandleDialogue( )
 			else if ( QItem.uiSpecialEventData & MULTIPURPOSE_SPECIAL_EVENT_TEAM_MEMBERS_DONE_TALKING )
 			{
 				HandleDoneLastEndGameQuote( );
-			}
+			}			
 		}
 #endif
 		else if( QItem.uiSpecialEventFlag & DIALOGUE_SPECIAL_EVENT_SLEEP )
@@ -1477,7 +1492,7 @@ BOOLEAN TacticalCharacterDialogueWithSpecialEvent( SOLDIERTYPE *pSoldier, UINT16
 		return( FALSE );
 	}
 
-	if ( uiFlag != DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND && uiData1 != BATTLE_SOUND_DIE1 )
+	if ( uiFlag != DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND && uiData1 != BATTLE_SOUND_DIE )
 	{
 		if (pSoldier->stats.bLife < CONSCIOUSNESS )
 			return( FALSE );
@@ -1499,7 +1514,7 @@ BOOLEAN TacticalCharacterDialogueWithSpecialEventEx( SOLDIERTYPE *pSoldier, UINT
 		return( FALSE );
 	}
 
-	if ( uiFlag != DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND && uiData1 != BATTLE_SOUND_DIE1 )
+	if ( uiFlag != DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND && uiData1 != BATTLE_SOUND_DIE )
 	{
 		if (pSoldier->stats.bLife < CONSCIOUSNESS )
 			return( FALSE );
@@ -1531,6 +1546,59 @@ BOOLEAN TacticalCharacterDialogueWithSpecialEventEx( SOLDIERTYPE *pSoldier, UINT
 	}
 
 	return( CharacterDialogueWithSpecialEventEx( pSoldier->ubProfile, usQuoteNum, pSoldier->iFaceIndex, DIALOGUE_TACTICAL_UI, TRUE, FALSE, uiFlag, uiData1, uiData2, uiData3 ) );
+}
+
+void RespondHateQuoteByTheirPersonality(SOLDIERTYPE* pSoldier)
+{
+	extern BOOLEAN DoesMercHavePersonality(SOLDIERTYPE * pSoldier, UINT8 aVal);
+	extern BOOLEAN DoesMercHaveDisability(SOLDIERTYPE * pSoldier, UINT8 aVal);
+	extern BOOLEAN DoesMercHaveAttitude(SOLDIERTYPE * pSoldier, UINT8 aVal);
+	if (DoesMercHaveDisability(pSoldier, PSYCHO) ||
+		DoesMercHavePersonality(pSoldier, ATT_ARROGANT) ||
+		DoesMercHavePersonality(pSoldier, ATT_BIG_SHOT) ||
+		DoesMercHavePersonality(pSoldier, ATT_AGGRESSIVE)
+		)
+	{
+		// These group of personality or disability traits is always mock that hate them
+		TacticalCharacterDialogueWithSpecialEvent(pSoldier, 0, DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND, BATTLE_SOUND_LAUGH, 500);
+	}
+	else if (DoesMercHaveAttitude(pSoldier, ATT_COWARD) )
+	{
+		// Hey Biff or rather I call dried Beef? this is for you (LOL)
+		// Biff Apscott, Florence Gabriel, Lance Fisher, Jack "Postie" Durham, Megan "Sparky" Roachburn
+		if (pSoldier->ubProfile == 40 || pSoldier->ubProfile == 44) // biff, flo
+			TacticalCharacterDialogue(pSoldier, QUOTE_PERSONALITY_TRAIT);
+		else if (pSoldier->ubProfile == 224 ) // sparky
+			TacticalCharacterDialogue(pSoldier, QUOTE_FORGETFULL_SLASH_CONFUSED);
+		else if (pSoldier->ubProfile == 188 ) // lance
+			TacticalCharacterDialogue(pSoldier, QUOTE_ATTACKED_BY_MULTIPLE_CREATURES);
+		else if (pSoldier->ubProfile == 220 ) // postie
+			TacticalCharacterDialogue(pSoldier, QUOTE_TRACES_OF_CREATURE_ATTACK);
+	}
+	else if (DoesMercHaveDisability(pSoldier, NERVOUS) ||
+		DoesMercHaveDisability(pSoldier, SELF_HARM) ||
+		DoesMercHavePersonality(pSoldier, ATT_PESSIMIST))
+	{
+		TacticalCharacterDialogue(pSoldier, QUOTE_PERSONALITY_TRAIT);
+	}
+	else if (
+		DoesMercHavePersonality(pSoldier, ATT_BIG_SHOT) ||
+		DoesMercHaveDisability(pSoldier, HEMOPHILIAC) ||
+		DoesMercHaveDisability(pSoldier, CLAUSTROPHOBIC) ||
+		DoesMercHaveDisability(pSoldier, AFRAID_OF_HEIGHTS) ||
+		DoesMercHaveDisability(pSoldier, NONSWIMMER)
+		)
+	{
+		// These group of personality or disability traits is always afraid of something
+		// like Being harmed by people who hate them. So they will affraid from someone
+		// that hate them then will hurt 'em in a way that they feared most,
+		// eg: they will be drowned if they have disability of swimming by someone who hate them
+		TacticalCharacterDialogueWithSpecialEvent(pSoldier, 0, DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND, BATTLE_SOUND_LOWMORALE_ATTN, 500);
+	}
+	else
+	{
+		TacticalCharacterDialogueWithSpecialEvent(pSoldier, 0, DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND, BATTLE_SOUND_HUMM, 500);
+	}
 }
 
 
@@ -1861,6 +1929,27 @@ BOOLEAN CharacterDialogueWithSpecialEventEx( UINT8 ubCharacterNum, UINT16 usQuot
 
 BOOLEAN CharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed )
 {
+	// JADOL -- manage duplicate quote, duplicate quote and recently under 1 seconds and he is quoting the same quote
+	if (fFromSoldier)
+	{
+		// Try to find soldier...
+		SOLDIERTYPE* pSoldier = FindSoldierByProfileID(ubCharacterNum, TRUE);
+		if (pSoldier != NULL)
+		{
+			if ((pSoldier->ubLastQuoteSaidTriggered == usQuoteNum)
+				&& abs((long)(GetWorldTotalSeconds() - pSoldier->ubLastQuoteTimeTriggered)) < 1)
+			{
+				return(FALSE);
+			}
+			else
+			{
+				pSoldier->ubLastQuoteTimeTriggered = GetWorldTotalSeconds();
+				pSoldier->ubLastQuoteSaidTriggered = usQuoteNum;
+			}
+		}
+	}
+	// --
+
 	DIALOGUE_Q_STRUCT QItem{};
 	QItem.ubCharacterNum = ubCharacterNum;
 	QItem.usQuoteNum	 = usQuoteNum;
@@ -2088,6 +2177,7 @@ BOOLEAN ExecuteCharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32
 			}
 		}
 		*/
+
 	}
 	else
 	{

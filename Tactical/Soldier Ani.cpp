@@ -2223,7 +2223,7 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
 					{
 						if ( pSoldier->usAnimState != JFK_HITDEATH )
 						{
-							pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+							pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 							pSoldier->flags.fDeadSoundPlayed = TRUE;
 						}
 					}
@@ -3056,7 +3056,7 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
 			case 732:
 
 				// Play die sound
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 				pSoldier->flags.fDeadSoundPlayed = TRUE;
 				break;
 
@@ -3276,7 +3276,7 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
 				if ( Chance(gGameExternalOptions.iChanceSayAnnoyingPhrase) )
 				{
 					// Say COOL quote
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 				}
 				break;
 
@@ -3875,7 +3875,7 @@ void HandleKilledQuote( SOLDIERTYPE *pKilledSoldier, SOLDIERTYPE *pKillerSoldier
 					else if ( pKillerSoldier->bSide == pKilledSoldier->bSide )
 					{
 						// if the attacker was from the same side, play a curse
-						pKillerSoldier->DoMercBattleSound( (INT8)(BATTLE_SOUND_CURSE1) );
+						pKillerSoldier->DoMercBattleSound( (INT8)(BATTLE_SOUND_CURSE) );
 					}
 					else
 						// Randomize between laugh, quote...
@@ -3896,11 +3896,11 @@ void HandleKilledQuote( SOLDIERTYPE *pKilledSoldier, SOLDIERTYPE *pKillerSoldier
 						{
 							if ( Random( 50 ) == 25 )
 							{
-								pKillerSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_LAUGH1 ) );
+								pKillerSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_LAUGH ) );
 							}
 							else
 							{
-								pKillerSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_COOL1 ) );
+								pKillerSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_COOL ) );
 							}
 						}
 					}
@@ -4048,9 +4048,9 @@ BOOLEAN HandleSoldierDeath( SOLDIERTYPE *pSoldier , BOOLEAN *pfMadeCorpse )
 						{
 							// if the attacker was from the same team, play a curse, otherwise play a laugh
 							if ( MercPtrs[ubAttacker]->bSide == pSoldier->bSide )
-								MercPtrs[ubAttacker]->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+								MercPtrs[ubAttacker]->DoMercBattleSound( BATTLE_SOUND_CURSE );
 							else
-								MercPtrs[ ubAttacker ]->DoMercBattleSound( BATTLE_SOUND_LAUGH1 );
+								MercPtrs[ ubAttacker ]->DoMercBattleSound( BATTLE_SOUND_LAUGH );
 						}
 					}					
 				}
@@ -4432,7 +4432,7 @@ void CheckForAndHandleSoldierIncompacitated( SOLDIERTYPE *pSoldier )
 			if ( !AreInMeanwhile() )
 #endif
 			{
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 				pSoldier->flags.fDeadSoundPlayed = TRUE;
 			}
 		}
@@ -4586,7 +4586,7 @@ BOOLEAN CheckForAndHandleSoldierDyingNotFromHit( SOLDIERTYPE *pSoldier )
 {
 	if ( pSoldier->stats.bLife == 0 )
 	{
-		pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+		pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 		pSoldier->flags.fDeadSoundPlayed = TRUE;
 
 		// 0verhaul:	The bBeingAttackedCount is now obsolete.

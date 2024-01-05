@@ -2892,10 +2892,19 @@ void BtnFirstContactButtonCallback(GUI_BUTTON *btn,INT32 reason)
 
 			if( ubRetValue == 0)
 			{
-				if( CanMercBeHired() )
+				// JADOL -- Handle irresistible player external gamesetting option flag
+				if (gGameExternalOptions.fMercIrresistiblePlayer)
+				{
+					CHAR16 sString[256];
+					swprintf(sString,
+						L"You area irresistible commander, whatever they says doesn't matter they will join with you, as long you have your budget.");
+					DoScreenIndependantMessageBox(sString, MSG_BOX_FLAG_OK, NULL);
+				}
+				if (CanMercBeHired())
 				{
 					gubVideoConferencingMode = AIM_VIDEO_HIRE_MERC_MODE;
 				}
+				// --
 			}
 			else
 			{
@@ -3188,9 +3197,15 @@ BOOLEAN CanMercBeHired()
 	if (gMercProfiles[ gbCurrentSoldier ].ubDaysOfMoraleHangover > 0)
 	{
 		// then he refuses with a lame excuse.	Buddy or no buddy.
-		WaitForMercToFinishTalkingOrUserToClick();
+		if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 		InitVideoFaceTalking( gbCurrentSoldier, QUOTE_LAME_REFUSAL );
-		return( FALSE );
+
+		// JADOL -- Handle irresistible player external gamesetting option flag
+		if (gGameExternalOptions.fMercIrresistiblePlayer)
+			return(TRUE);
+		else
+			return (FALSE);
+		// --
 	}
 
 
@@ -3280,7 +3295,7 @@ BOOLEAN CanMercBeHired()
 			{
 				if( gMercProfiles[ gbCurrentSoldier ].bHatedTime[ i ] < 24 )
 				{
-					WaitForMercToFinishTalkingOrUserToClick();
+					if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 					InitVideoFaceTalking(gbCurrentSoldier, QUOTE_HATED_1_ON_TEAM );
 					fRetVal = FALSE;
 				}
@@ -3294,7 +3309,7 @@ BOOLEAN CanMercBeHired()
 			{
 				if( gMercProfiles[ gbCurrentSoldier ].bHatedTime[ i ] < 24 )
 				{
-					WaitForMercToFinishTalkingOrUserToClick();
+					if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 					InitVideoFaceTalking(gbCurrentSoldier, QUOTE_HATED_2_ON_TEAM );
 					fRetVal = FALSE;
 				}
@@ -3309,7 +3324,7 @@ BOOLEAN CanMercBeHired()
 			{
 				if( gMercProfiles[ gbCurrentSoldier ].bHatedTime[ i ] < 24 )
 				{
-					WaitForMercToFinishTalkingOrUserToClick();
+					if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 					InitVideoFaceTalking(gbCurrentSoldier, QUOTE_HATED_3_ON_TEAM );
 					fRetVal = FALSE;
 				}
@@ -3323,7 +3338,7 @@ BOOLEAN CanMercBeHired()
 			{
 				if( gMercProfiles[ gbCurrentSoldier ].bHatedTime[ i ] < 24 )
 				{
-					WaitForMercToFinishTalkingOrUserToClick();
+					if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 					InitVideoFaceTalking(gbCurrentSoldier, QUOTE_HATED_4_ON_TEAM );
 					fRetVal = FALSE;
 				}
@@ -3337,7 +3352,7 @@ BOOLEAN CanMercBeHired()
 			{
 				if( gMercProfiles[ gbCurrentSoldier ].bHatedTime[ i ] < 24 )
 				{
-					WaitForMercToFinishTalkingOrUserToClick();
+					if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 					InitVideoFaceTalking(gbCurrentSoldier, QUOTE_HATED_5_ON_TEAM );
 					fRetVal = FALSE;
 				}
@@ -3349,12 +3364,20 @@ BOOLEAN CanMercBeHired()
 			}
 			else
 			{
-				WaitForMercToFinishTalkingOrUserToClick();
+				if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 				InitVideoFaceTalking(gbCurrentSoldier, QUOTE_LEARNED_TO_HATE_MERC_ON_TEAM);
 				fRetVal = FALSE;
 			}
 
-			return( fRetVal );
+			// JADOL -- Handle irresistible player external gamesetting option flag
+			if (gGameExternalOptions.fMercIrresistiblePlayer)
+			{
+				return(TRUE);
+			}
+			else
+				return(fRetVal);
+			// --
+			
 		}
 	}
 
@@ -3367,17 +3390,27 @@ BOOLEAN CanMercBeHired()
 		// Check the players Death rate
 		if( MercThinksDeathRateTooHigh( gbCurrentSoldier ) )
 		{
-			WaitForMercToFinishTalkingOrUserToClick();
+			if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 			InitVideoFaceTalking( gbCurrentSoldier, QUOTE_DEATH_RATE_REFUSAL );
-			return( FALSE );
+			// JADOL -- Handle irresistible player external gamesetting option flag
+			if (gGameExternalOptions.fMercIrresistiblePlayer)
+				return(TRUE);
+			else
+				return(FALSE);
+			// --
 		}
 
 		// Check the players Reputation
 		if( MercThinksBadReputationTooHigh( gbCurrentSoldier ) )
 		{
-			WaitForMercToFinishTalkingOrUserToClick();
+			if (!gGameExternalOptions.fMercIrresistiblePlayer) WaitForMercToFinishTalkingOrUserToClick(); // JADOL -- Handle irresistible player external gamesetting option flag
 			InitVideoFaceTalking( gbCurrentSoldier, QUOTE_REPUTATION_REFUSAL );
-			return( FALSE );
+			// JADOL -- Handle irresistible player external gamesetting option flag
+			if (gGameExternalOptions.fMercIrresistiblePlayer)
+				return(TRUE);
+			else
+				return(FALSE);
+			// --
 		}
 	}
 

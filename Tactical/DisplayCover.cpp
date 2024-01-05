@@ -1717,10 +1717,10 @@ BOOLEAN TrackerTileHasAdjTile( const INT32& ubX, const INT32& ubY, const INT32& 
 void CalculateFortify( )
 {
 	// simply get all fortified gridnos and colour them
-	auto vec = GetAllForticationGridNo();
+	auto vec = GetAllForticationGridNo( );
 
-	auto itend = vec.end();
-	for (auto it = vec.begin(); it != itend; ++it)
+	auto itend = vec.end( );
+	for ( auto it = vec.begin( ); it != itend; ++it )
 	{
 		INT16 sX, sY;
 		ConvertGridNoToXY( (*it).first, &sX, &sY );

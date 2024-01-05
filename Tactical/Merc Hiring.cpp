@@ -123,6 +123,7 @@ INT16	gsInitialHeliRandomTimes[ NUM_INITIAL_GRIDNOS_FOR_HELI_CRASH ] =
 UINT32		GetInitialHeliGridNo( );
 UINT16	GetInitialHeliRandomTime();
 #endif
+
 INT8 HireMerc( MERC_HIRE_STRUCT *pHireMerc)
 {
 	SOLDIERTYPE	*pSoldier;
@@ -135,7 +136,8 @@ INT8 HireMerc( MERC_HIRE_STRUCT *pHireMerc)
 
 	//If we are to disregard the ststus of the merc
 	#ifdef JA2TESTVERSION
-		if( !gForceHireMerc )
+		gForceHireMerc = TRUE;
+		if( !gForceHireMerc)
 	#endif
 	//If the merc is away, Dont hire him, or if the merc is only slightly annoyed at the player
 	if( ( pMerc->bMercStatus != 0 ) && (pMerc->bMercStatus != MERC_ANNOYED_BUT_CAN_STILL_CONTACT ) && ( pMerc->bMercStatus != MERC_HIRED_BUT_NOT_ARRIVED_YET ) )

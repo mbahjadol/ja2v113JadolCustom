@@ -72,7 +72,7 @@ ValidateOptions("${ValidApplications}" "Applications" "${Applications}" "Applica
 
 
 # preprocessor definitions for Debug build, per the legacy MSBuild
-set(debugFlags $<IF:$<CONFIG:Debug>,JA2BETAVERSION;JA2TESTVERSION;DEBUG_ATTACKBUSY,>)
+set(debugFlags $<IF:$<CONFIG:Debug>,JA2BETAVERSION;JA2TESTVERSION;DEBUG_ATTACKBUSY;SPG_DEBUG;SGP_DEBUG;_AISUBSYSTEM_DEBUG;DEBUGDECISIONS1;DEBUG_;_NO_DEBUG_TXT;_ANIMSUBSYSTEM_DEBUG,>)
 
 # Due to widespread preprocessor definition abuse in the codebase, practically
 # every library-language-executable combination is its own compilation target

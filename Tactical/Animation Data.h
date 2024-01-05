@@ -31,6 +31,29 @@
 #define	IS_MERC_BODY_TYPE( p )	( ( p->ubBodyType <= REGFEMALE ) ? ( TRUE ) : ( FALSE ) )
 #define IS_CIV_BODY_TYPE( p ) ( (p->ubBodyType >= FATCIV) && (p->ubBodyType <= CRIPPLECIV) )
 
+// JADOL -- Macro to identified is body type is MALE or not (include merc, npc, civilians, and even creature / monster,
+// with exception of cow, bloodcat because we cannot identified it)
+#define IS_GENDER_MALE_BODY_TYPE( p ) ( (p->ubBodyType >= REGMALE) || (p->ubBodyType >= BIGMALE) || (p->ubBodyType >= STOCKYMALE) \
+	|| (p->ubBodyType >= AM_MONSTER) || (p->ubBodyType >= YAM_MONSTER) || (p->ubBodyType >= FATCIV) || (p->ubBodyType >= MANCIV) \
+	|| (p->ubBodyType >= CRIPPLECIV) )
+
+// JADOL -- check gender is female, applies to any entity
+#define IS_GENDER_FEMALE_BODY_TYPE( p ) ( (p->ubBodyType >= REGFEMALE) || (p->ubBodyType <= MINICIV) || (p->ubBodyType <= DRESSCIV) \
+	|| (p->ubBodyType <= ADULTFEMALEMONSTER) || (p->ubBodyType <= YAF_MONSTER) || (p->ubBodyType <= MINICIV) )
+
+// JADOL -- only check civilians that doesn't have profile
+#define IS_CIVILIAN_BODY_TYPE( p ) ( IS_CIV_BODY_TYPE( p ) && (p->ubProfile == NO_PROFILE) )
+
+// JADOL -- only check can be armed that doesn't have profile
+#define IS_ARMED_BODY_TYPE( p ) ( IS_MERC_BODY_TYPE( p ) && (p->ubProfile == NO_PROFILE) )
+
+// JADOL -- only check all human with no profile
+#define IS_HUMAN_BODY_TYPE_WITH_NOPROFILE( p ) ( IS_ARMED_BODY_TYPE( p ) || IS_CIVILIAN_BODY_TYPE( p ) )
+
+// JADOL -- only check all human
+#define IS_HUMAN_BODY_TYPE( p ) ( IS_ARMED_BODY_TYPE( p ) || IS_CIVILIAN_BODY_TYPE( p ) || IS_MERC_BODY_TYPE(p) || IS_CIVILIAN_BODY_TYPE(p) )
+// -- 
+
 #define NUMSOLDIERBODYTYPES	4
 
 enum SoldierBodyTypes

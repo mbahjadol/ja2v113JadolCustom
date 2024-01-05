@@ -93,7 +93,7 @@ bool SurfaceCache::LoadSurface(AnimationSurfaceType* animSurfaceType, STRUCTURE_
 	VOBJECT_DESC VObjectDesc;
 	HVOBJECT hVObject;
 	HIMAGE hImage;
-	CHAR8 sFilename[48];
+	CHAR8 sFilename[50]; // CHAR8 sFilename[48]; // JADOL -- Local size now equalized with AnimationSurfaceType::Filename which size 50 of CHAR8
 	// Create video object
 	FilenameForBPP(animSurfaceType->Filename, sFilename);
 	AnimDebugMsg(String("SurfaceCache::LoadSurface, %s", sFilename));

@@ -15,6 +15,11 @@
 	#include "Render Fun.h"
 	#include "Soldier Functions.h"		// added by Flugente
 #include "connect.h"
+
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif
+
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
 class SOLDIERTYPE;
@@ -330,7 +335,8 @@ INT8 PointPatrolAI(SOLDIERTYPE *pSoldier)
 
  // passed all tests - start moving towards next patrol point
 #ifdef DEBUGDECISIONS
- sprintf(tempstr,"%s - POINT PATROL to grid %d",pSoldier->name,pSoldier->aiData.usActionData);
+ //vswprintf(tempDestString, L"%s - POINT PATROL to grid %d", pSoldier->name, pSoldier->aiData.usActionData);
+ sprintf(tempstr, "%s - POINT PATROL to grid %d", pSoldier->name, pSoldier->aiData.usActionData);
  AIPopMessage(tempstr);
 #endif
 
@@ -514,7 +520,7 @@ INT32 InternalGoAsFarAsPossibleTowards(SOLDIERTYPE *pSoldier, INT32 sDesGrid, IN
 	if (!LegalNPCDestination(pSoldier,sDesGrid,ENSURE_PATH,NOWATER,fPathFlags))
 	{
 #ifdef DEBUGDECISIONS
-		AIPopMessage("destination Grid # itself not valid, looking around it");
+		AIPopMessage(L"destination Grid # itself not valid, looking around it");
 #endif
 		if ( CREATURE_OR_BLOODCAT( pSoldier ) )
 		{
@@ -706,6 +712,7 @@ INT32 InternalGoAsFarAsPossibleTowards(SOLDIERTYPE *pSoldier, INT32 sDesGrid, IN
 	{
 #ifdef DEBUGDECISIONS
    sprintf(tempstr,"%s will go NOWHERE, path doesn't meet criteria",pSoldier->name);
+   vswprintf(DestString, pStringA, argptr);
    AIPopMessage(tempstr);
 #endif
 

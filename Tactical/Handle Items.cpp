@@ -645,7 +645,7 @@ INT32 HandleItem( SOLDIERTYPE *pSoldier, INT32 sGridNo, INT8 bLevel, UINT16 usHa
 						if ( EnoughPoints( pSoldier, sAPCost, 0, FALSE ) )
 						{
 							// we have enough points to do this burst, roll the dice and see if we want to change						
-							pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH1 );
+							pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH );
 							pSoldier->bDoBurst = TRUE;
 							pSoldier->bWeaponMode = WM_BURST;
 							pSoldier->bDoAutofire = 0;
@@ -703,7 +703,7 @@ INT32 HandleItem( SOLDIERTYPE *pSoldier, INT32 sGridNo, INT8 bLevel, UINT16 usHa
 					chanceToMisfire = diceSides;
 					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[ 26 ], pSoldier->GetName() );
 
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH1 ); // Added the laugh sound when going Psycho on autofire - SANDRO
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH ); // Added the laugh sound when going Psycho on autofire - SANDRO
 				}
 
 				chanceToMisfire = __min(diceSides-1, chanceToMisfire); //cap the misfire chance, no-one has reflexes this bad
@@ -2312,6 +2312,57 @@ void SoldierGiveItem( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pTargetSoldier, OBJECT
 	}
 }
 
+void SoldierGiveItemInStealth( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pTargetSoldier, OBJECTTYPE *pObject, INT8 bInvPos )
+{
+	INT32 sActionGridNo, sAdjustedGridNo;
+	UINT8	ubDirection;
+
+	// Remove any previous actions
+	pSoldier->aiData.ubPendingAction		= NO_PENDING_ACTION;
+
+	// See if we can get there to stab
+	sActionGridNo =	FindAdjacentGridEx( pSoldier, pTargetSoldier->sGridNo, &ubDirection, &sAdjustedGridNo, TRUE, FALSE );
+	if ( sActionGridNo != -1 )
+	{
+		// SEND PENDING ACTION
+		pSoldier->aiData.ubPendingAction = MERC_GIVEITEM;
+
+		pSoldier->bPendingActionData5 = bInvPos;
+		// Copy temp object
+		OBJECTTYPE::CopyToOrCreateAt(&pSoldier->pTempObject, pObject);
+
+		pSoldier->aiData.sPendingActionData2	= pTargetSoldier->sGridNo;
+		pSoldier->aiData.bPendingActionData3	= ubDirection;
+		pSoldier->aiData.uiPendingActionData4 = pTargetSoldier->ubID;
+		pSoldier->aiData.ubPendingActionAnimCount = 0;
+
+		// Set soldier as engaged!
+		pSoldier->flags.uiStatusFlags |= SOLDIER_ENGAGEDINACTION;
+
+		// CHECK IF WE ARE AT THIS GRIDNO NOW
+		if ( pSoldier->sGridNo != sActionGridNo )
+		{
+			// WALK UP TO DEST FIRST
+			pSoldier->EVENT_InternalGetNewSoldierPath( sActionGridNo, pSoldier->usUIMovementMode, FALSE, TRUE );
+		}
+		else
+		{
+			pSoldier->EVENT_SoldierBeginGiveItemInStealth( );
+			// CHANGE DIRECTION OF TARGET TO OPPOSIDE DIRECTION!
+			pSoldier->EVENT_SetSoldierDesiredDirection( ubDirection );
+		}
+
+		// Set target as engaged!
+		pTargetSoldier->flags.uiStatusFlags |= SOLDIER_ENGAGEDINACTION;
+
+		return;
+	}
+	else
+	{
+		return;
+	}
+}
+
 BOOLEAN SoldierDropItem( SOLDIERTYPE * pSoldier, OBJECTTYPE * pObj )
 {
 	OBJECTTYPE::CopyToOrCreateAt(&pSoldier->pTempObject, pObj);
@@ -2351,7 +2402,7 @@ void SoldierPickupItem( SOLDIERTYPE *pSoldier, INT32 iItemIndex, INT32 sGridNo, 
 			// Say it only if we don;t have to go too far!
 			if ( pSoldier->pathing.usPathDataSize > 5 )
 			{
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_OK1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_OK );
 			}
 		}
 		else
@@ -2385,7 +2436,7 @@ void HandleAutoPlaceFail( SOLDIERTYPE *pSoldier, INT32 iItemIndex, INT32 sGridNo
 			// If we are a merc, say DAMN quote....
 			if ( pSoldier->bTeam == gbPlayerNum )
 			{
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 			}
 		}
 	}
@@ -5187,7 +5238,7 @@ void StartBombMessageBox( SOLDIERTYPE * pSoldier, INT32 sGridNo )
 		{
 			if ( InARoom( pSoldier->sGridNo, &usRoom ) && usRoom == 4 )
 			{
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_OK1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_OK );
 
 				// Open statue
 				ChangeO3SectorStatue( FALSE );
@@ -5195,12 +5246,12 @@ void StartBombMessageBox( SOLDIERTYPE * pSoldier, INT32 sGridNo )
 			}
 			else
 			{
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+				pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 			}
 		}
 		else
 		{
-			pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+			pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 		}
 	}
 	else if ( HasAttachmentOfClass( &(pSoldier->inv[HANDPOS]), AC_DEFUSE ) )
@@ -6083,7 +6134,7 @@ void BoobyTrapMessageBoxCallBack( UINT8 ubExitValue )
 			}
 
 			// have merc say this is good
-			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 
 			if (gfDisarmingBuriedBomb)
 			{
@@ -6221,7 +6272,7 @@ void BoobyTrapMessageBoxCallBack( UINT8 ubExitValue )
 		else
 		{
 			// oops! trap goes off
-			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 ); 
+			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE ); 
 			
 			if ( HasItemFlag( gTempObject.usItem, BEARTRAP ) )
 				return;
@@ -6287,7 +6338,7 @@ void BoobyTrapInMapScreenMessageBoxCallBack( UINT8 ubExitValue )
 				gMercProfiles[ gpBoobyTrapSoldier->ubProfile ].records.usTrapsRemoved++;
 
 			// have merc say this is good
-			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 
 			// get the item
 			gTempObject = *gpItemPointer;
@@ -6329,7 +6380,7 @@ void BoobyTrapInMapScreenMessageBoxCallBack( UINT8 ubExitValue )
 		else
 		{
 			// oops! trap goes off
-			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+			gpBoobyTrapSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 
 			// beartraps don't explode...
 			if ( HasItemFlag( gpItemPointer->usItem, BEARTRAP ) )

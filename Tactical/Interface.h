@@ -208,6 +208,10 @@ enum {
 	BG_ADMINISTRATION_ASSIGNMENT,	// modifies effectivity of 'ADMINISTRATION' assignment
 	BG_EXPLORATION_ASSIGNMENT,	// modifies effectivity of 'EXPLORATION' assignment
 
+	// the chosen one
+	BG_TC_TAKE_DAMAGE_REDUCTION,		// take damage reduction factor (0 to 8)
+	BG_TC_EVADE_HIT_CHANCE,				// { 0: using existing system chance miss when resist , 1(0.01%) ~ 10000(100.00%) percent success when evade attack }
+
 	BG_MAX,
 };
 

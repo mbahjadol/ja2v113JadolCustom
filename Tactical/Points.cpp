@@ -1646,7 +1646,7 @@ INT16 CalcTotalAPsToAttack( SOLDIERTYPE *pSoldier, INT32 sGridNo, UINT8 ubAddTur
 	UINT16						usItemNum;
 	INT32 sActionGridNo;
 	UINT8							ubDirection;
-	INT32 sAdjustedGridNo;
+	INT32 sAdjustedGridNo = NOWHERE; // JADOL -- Add initialize
 	UINT32						uiItemClass;
 	BOOLEAN	fAddingTurningCost = FALSE;
 	BOOLEAN	fAddingRaiseGunCost = FALSE;

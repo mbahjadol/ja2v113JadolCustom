@@ -76,8 +76,8 @@ UINT8 CalcDeathRate(void)
 		// calculates the player's current death rate
 		uiDeathRate = (UINT32) ((gStrategicStatus.ubMercDeaths * DEATH_RATE_SEVERITY * 100) / gStrategicStatus.uiManDaysPlayed);
 	}
-
-	return((UINT8) uiDeathRate);
+	
+	return((UINT8) min(255, max(0, uiDeathRate))); // JADOL -- Add safe limit threshold
 }
 
 

@@ -3160,10 +3160,14 @@ BOOLEAN SendReinforcementsForGarrison( INT32 iDstGarrisonID, UINT16 usDefencePoi
 		pGroup = CreateNewEnemyGroupDepartingFromSector( SECTOR( gModSettings.ubSAISpawnSectorX, gModSettings.ubSAISpawnSectorY ), 0, (UINT8)iReinforcementsApproved, 0, 0, 0, 0 );
 		ConvertGroupTroopsToComposition( pGroup, gGarrisonGroup[ iDstGarrisonID ].ubComposition );
 		pGroup->ubOriginalSector = (UINT8)SECTOR( ubDstSectorX, ubDstSectorY );
-		if (gGameExternalOptions.fASDActive && Random(10) < gGameOptions.ubDifficultyLevel)
+		// JADOL -- Use Immediately Heavy Weight Vechicle in Queen's Warehouse
+		//if (gGameExternalOptions.fASDActive && Random(10) < gGameOptions.ubDifficultyLevel) 
+		if (gGameExternalOptions.fASDActive
+			&& (GetStrategicAIResourceCount(ASD_TANK) || GetStrategicAIResourceCount(ASD_JEEP) || GetStrategicAIResourceCount(ASD_ROBOT)) )
 		{
 			ASDInitializePatrolGroup(pGroup);
 		}
+		// --
 		//Madd: unlimited reinforcements?
 		if ( !gfUnlimitedTroops )
 			giReinforcementPool -= iReinforcementsApproved;
@@ -3253,10 +3257,14 @@ BOOLEAN SendReinforcementsForGarrison( INT32 iDstGarrisonID, UINT16 usDefencePoi
 
 			pGroup = CreateNewEnemyGroupDepartingFromSector( gGarrisonGroup[ iSrcGarrisonID ].ubSectorID, 0, (UINT8)iReinforcementsApproved, 0, 0, 0, 0 );
 			ConvertGroupTroopsToComposition( pGroup, gGarrisonGroup[ iDstGarrisonID ].ubComposition );
-			if (gGameExternalOptions.fASDActive && Random(10) < gGameOptions.ubDifficultyLevel)
+			// JADOL -- Use Immediately Heavy Weight Vechicle in Queen's Warehouse
+			//if (gGameExternalOptions.fASDActive && Random(10) < gGameOptions.ubDifficultyLevel) 
+			if (gGameExternalOptions.fASDActive
+				&& (GetStrategicAIResourceCount(ASD_TANK) || GetStrategicAIResourceCount(ASD_JEEP) || GetStrategicAIResourceCount(ASD_ROBOT)) )
 			{
 				ASDInitializePatrolGroup(pGroup);
 			}
+			// --
 			RemoveSoldiersFromGarrisonBasedOnComposition( iSrcGarrisonID, pGroup->ubGroupSize );
 			pGroup->ubOriginalSector = (UINT8)SECTOR( ubDstSectorX, ubDstSectorY );
 			pGroup->ubMoveType = ONE_WAY;

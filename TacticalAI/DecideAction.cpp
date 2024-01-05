@@ -35,6 +35,10 @@
 #include "Game Clock.h"		// sevenfm
 #include "SkillCheck.h"		// sevenfm
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 // SANDRO - In this file, all APBPConstants[AP_CROUCH] and APBPConstants[AP_PRONE] were changed to GetAPsCrouch() and GetAPsProne()
 //			On the bottom here, there are these functions made

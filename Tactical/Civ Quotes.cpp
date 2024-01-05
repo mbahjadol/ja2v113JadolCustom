@@ -44,7 +44,7 @@
 
 #define			MAX_APPLICABLE_TAUNTS			512
 
-extern void CaptureTimerCallback( void );
+extern void CaptureTimerCallback(void);
 
 BOOLEAN gfSurrendered = FALSE;
 
@@ -57,9 +57,9 @@ typedef struct
 
 } CIV_QUOTE;
 
-CIV_QUOTE	gCivQuotes[ NUM_CIV_QUOTES]; //Not used 
+CIV_QUOTE	gCivQuotes[NUM_CIV_QUOTES]; //Not used 
 
-UINT16	gubNumEntries[ NUM_CIV_QUOTES ] = // Not used 
+UINT16	gubNumEntries[NUM_CIV_QUOTES] = // Not used 
 {
 	15,
 	15,
@@ -126,387 +126,306 @@ typedef struct
 	INT32					iDialogueBox;
 	UINT32				uiTimeOfCreation;
 	UINT32				uiDelayTime;
-	SOLDIERTYPE *	pCiv;
+	SOLDIERTYPE* pCiv;
 } QUOTE_SYSTEM_STRUCT;
 
 
 QUOTE_SYSTEM_STRUCT	gCivQuoteData;
 
-CHAR16	gzCivQuote[ 320 ];
+CHAR16	gzCivQuote[320];
 UINT16	gusCivQuoteBoxWidth;
 UINT16	gusCivQuoteBoxHeight;
 
 // anv: store times, when enemy taunt will be finished (so they won't taunt 50 times / second)
-UINT32	uiTauntFinishTimes[ TOTAL_SOLDIERS ];
+UINT32	uiTauntFinishTimes[TOTAL_SOLDIERS];
 
 TAUNT_VALUES zApplicableTaunts[NUM_TAUNT];
 
 //--------------------------------------------------------------
-void CopyNumEntriesIntoQuoteStruct( ) //  Not used 
+void CopyNumEntriesIntoQuoteStruct() //  Not used 
 {
 	INT32	cnt;
 
-	for ( cnt = 0; cnt < NUM_CIV_QUOTES; ++cnt )
+	for (cnt = 0; cnt < NUM_CIV_QUOTES; ++cnt)
 	{
-		if (cnt <= 50) 
-			gCivQuotes[ cnt ].ubNumEntries = gubNumEntries[ cnt ];
-		else 
-			gCivQuotes[ cnt ].ubNumEntries = 15;
+		if (cnt <= 50)
+			gCivQuotes[cnt].ubNumEntries = gubNumEntries[cnt];
+		else
+			gCivQuotes[cnt].ubNumEntries = 15;
 	}
 
 }
 //--------------------------------------------------------------
 
-BOOLEAN GetCivQuoteText(UINT16 ubCivQuoteID, UINT16 ubEntryID, STR16 zQuote )
+BOOLEAN GetCivQuoteText(UINT16 ubCivQuoteID, UINT16 ubEntryID, STR16 zQuote)
 {
 	CHAR8 zFileName[164];
 
 	// Build filename....
-	if ( ubCivQuoteID == CIV_QUOTE_HINT )
+	if (ubCivQuoteID == CIV_QUOTE_HINT)
 	{
-		if ( gbWorldSectorZ > 0 )
+		if (gbWorldSectorZ > 0)
 		{
 			//sprintf( zFileName, "NPCData\\miners.edt" );
-				sprintf( zFileName,"NPCDATA\\CIV%02d.edt", CIV_QUOTE_MINERS_NOT_FOR_PLAYER );
+			sprintf(zFileName, "NPCDATA\\CIV%02d.edt", CIV_QUOTE_MINERS_NOT_FOR_PLAYER);
 		}
 		else
 		{
-			sprintf( zFileName, "NPCData\\%c%d.edt", 'A' + (gWorldSectorY - 1) , gWorldSectorX );
+			sprintf(zFileName, "NPCData\\%c%d.edt", 'A' + (gWorldSectorY - 1), gWorldSectorX);
 		}
 	}
 	else
 	{
 		if (ubCivQuoteID <= 9)
-			sprintf( zFileName,"NPCDATA\\CIV%02d.edt",ubCivQuoteID );
+			sprintf(zFileName, "NPCDATA\\CIV%02d.edt", ubCivQuoteID);
 		else
-			sprintf( zFileName,"NPCDATA\\CIV%d.edt",ubCivQuoteID );
+			sprintf(zFileName, "NPCDATA\\CIV%d.edt", ubCivQuoteID);
 	}
 
-	CHECKF( FileExists( zFileName ) );
+	CHECKF(FileExists(zFileName));
 
 	// Get data...
-	LoadEncryptedDataFromFile( zFileName, zQuote, ubEntryID * 320, 320 );
+	LoadEncryptedDataFromFile(zFileName, zQuote, ubEntryID * 320, 320);
 
-	if( zQuote[0] == 0 )
+	if (zQuote[0] == 0)
 	{
-		return( FALSE );
+		return(FALSE);
 	}
 
-	return( TRUE );
+	return(TRUE);
 }
 
-void SurrenderMessageBoxCallBack( UINT8 ubExitValue )
+void SurrenderMessageBoxCallBack(UINT8 ubExitValue)
 {
-	if ( ubExitValue == MSG_BOX_RETURN_YES )
+	if (ubExitValue == MSG_BOX_RETURN_YES)
 	{
 		AttemptToCapturePlayerSoldiers();
 	}
 	gTacticalStatus.fEnemyFlags |= ENEMY_OFFERED_SURRENDER;
-	ActionDone( gCivQuoteData.pCiv );
+	ActionDone(gCivQuoteData.pCiv);
 }
 
-void ShutDownQuoteBox( BOOLEAN fForce )
+void ShutDownQuoteBox(BOOLEAN fForce)
 {
-	if ( !gCivQuoteData.bActive )
+	if (!gCivQuoteData.bActive)
 	{
 		return;
 	}
 
 	// Check for min time....
-	if ( ( GetJA2Clock( ) - gCivQuoteData.uiTimeOfCreation ) > 300 || fForce )
+	if ((GetJA2Clock() - gCivQuoteData.uiTimeOfCreation) > 300 || fForce)
 	{
-		RemoveVideoOverlay( gCivQuoteData.iVideoOverlay );
+		RemoveVideoOverlay(gCivQuoteData.iVideoOverlay);
 
 		// Remove mouse region...
-		MSYS_RemoveRegion( &(gCivQuoteData.MouseRegion) );
+		MSYS_RemoveRegion(&(gCivQuoteData.MouseRegion));
 
-		RemoveMercPopupBoxFromIndex( gCivQuoteData.iDialogueBox );
+		RemoveMercPopupBoxFromIndex(gCivQuoteData.iDialogueBox);
 		gCivQuoteData.iDialogueBox = -1;
 
 		gCivQuoteData.bActive = FALSE;
 #ifdef JA2UB
-// no UB
+		// no UB
 #else
 		// do we need to do anything at the end of the civ quote?
-		if ( gCivQuoteData.pCiv && gCivQuoteData.pCiv->aiData.bAction == AI_ACTION_OFFER_SURRENDER )
+		if (gCivQuoteData.pCiv && gCivQuoteData.pCiv->aiData.bAction == AI_ACTION_OFFER_SURRENDER)
 		{
-// Haydent
-			if(!is_networked)
+			// Haydent
+			if (!is_networked)
 			{
-				DoMessageBox( MSG_BOX_BASIC_STYLE, Message[ STR_SURRENDER ], GAME_SCREEN, ( UINT8 )MSG_BOX_FLAG_YESNO, SurrenderMessageBoxCallBack, NULL );
+				DoMessageBox(MSG_BOX_BASIC_STYLE, Message[STR_SURRENDER], GAME_SCREEN, (UINT8)MSG_BOX_FLAG_YESNO, SurrenderMessageBoxCallBack, NULL);
 			}
-			else 
+			else
 			{
-				ScreenMsg( FONT_LTGREEN, MSG_MPSYSTEM, MPClientMessage[39] );
-				ActionDone( gCivQuoteData.pCiv );
+				ScreenMsg(FONT_LTGREEN, MSG_MPSYSTEM, MPClientMessage[39]);
+				ActionDone(gCivQuoteData.pCiv);
 			}
 		}
 #endif
 	}
 }
 
-BOOLEAN ShutDownQuoteBoxIfActive( )
+BOOLEAN ShutDownQuoteBoxIfActive()
 {
-	if ( gCivQuoteData.bActive )
+	if (gCivQuoteData.bActive)
 	{
-		ShutDownQuoteBox( TRUE );
+		ShutDownQuoteBox(TRUE);
 
-		return( TRUE );
+		return(TRUE);
 	}
 
-	return( FALSE );
+	return(FALSE);
 }
 
 
-INT8 GetCivType( SOLDIERTYPE *pCiv )
+INT8 GetCivType(SOLDIERTYPE* pCiv)
 {
-	if ( pCiv->ubProfile != NO_PROFILE )
+	if (pCiv->ubProfile != NO_PROFILE)
 	{
-		return( CIV_TYPE_NA );
+		return(CIV_TYPE_NA);
 	}
 
 	// ATE: Check if this person is married.....
 	// 1 ) check sector....
-	if ( gWorldSectorX == 10 && gWorldSectorY == 6 && gbWorldSectorZ == 0 )
+	if (gWorldSectorX == 10 && gWorldSectorY == 6 && gbWorldSectorZ == 0)
 	{
 		// 2 ) the only female....
-		if ( pCiv->ubCivilianGroup == 0 && pCiv->bTeam != gbPlayerNum && pCiv->ubBodyType == REGFEMALE )
+		if (pCiv->ubCivilianGroup == 0 && pCiv->bTeam != gbPlayerNum && pCiv->ubBodyType == REGFEMALE)
 		{
 			// She's a ho!
-			return( CIV_TYPE_MARRIED_PC );
+			return(CIV_TYPE_MARRIED_PC);
 		}
 	}
 
 	// OK, look for enemy type - MUST be on enemy team, merc bodytype
-	if ( pCiv->bTeam == ENEMY_TEAM && IS_MERC_BODY_TYPE( pCiv ) )
+	if (pCiv->bTeam == ENEMY_TEAM && IS_MERC_BODY_TYPE(pCiv))
 	{
-		return( CIV_TYPE_ENEMY );
+		return(CIV_TYPE_ENEMY);
 	}
 
-	if ( pCiv->bTeam == CREATURE_TEAM && pCiv->ubSoldierClass == SOLDIER_CLASS_BANDIT )
+	if (pCiv->bTeam == CREATURE_TEAM && pCiv->ubSoldierClass == SOLDIER_CLASS_BANDIT)
 	{
-		return( CIV_TYPE_ENEMY );
+		return(CIV_TYPE_ENEMY);
 	}
 
-	if ( pCiv->bTeam != CIV_TEAM && pCiv->bTeam != MILITIA_TEAM )
+	if (pCiv->bTeam != CIV_TEAM && pCiv->bTeam != MILITIA_TEAM)
 	{
-		return( CIV_TYPE_NA );
+		return(CIV_TYPE_NA);
 	}
 
-	switch( pCiv->ubBodyType )
+	switch (pCiv->ubBodyType)
 	{
-		case REGMALE:
-		case BIGMALE:
-		case STOCKYMALE:
-		case REGFEMALE:
-		case FATCIV:
-		case MANCIV:
-		case MINICIV:
-		case DRESSCIV:
-		case CRIPPLECIV:
+	case REGMALE:
+	case BIGMALE:
+	case STOCKYMALE:
+	case REGFEMALE:
+	case FATCIV:
+	case MANCIV:
+	case MINICIV:
+	case DRESSCIV:
+	case CRIPPLECIV:
 
-			return( CIV_TYPE_ADULT );
-			break;
+		return(CIV_TYPE_ADULT);
+		break;
 
-		case ADULTFEMALEMONSTER:
-		case AM_MONSTER:
-		case YAF_MONSTER:
-		case YAM_MONSTER:
-		case LARVAE_MONSTER:
-		case INFANT_MONSTER:
-		case QUEENMONSTER:
+	case ADULTFEMALEMONSTER:
+	case AM_MONSTER:
+	case YAF_MONSTER:
+	case YAM_MONSTER:
+	case LARVAE_MONSTER:
+	case INFANT_MONSTER:
+	case QUEENMONSTER:
 
-			return( CIV_TYPE_NA );
+		return(CIV_TYPE_NA);
 
-		case HATKIDCIV:
-		case KIDCIV:
+	case HATKIDCIV:
+	case KIDCIV:
 
-			return( CIV_TYPE_KID );
+		return(CIV_TYPE_KID);
 
-		default:
+	default:
 
-			return( CIV_TYPE_NA );
+		return(CIV_TYPE_NA);
 	}
 
 	//return( CIV_TYPE_NA ); // not needed when there is a default! (jonathanl)
 }
 
 
-void RenderCivQuoteBoxOverlay( VIDEO_OVERLAY *pBlitter )
+void RenderCivQuoteBoxOverlay(VIDEO_OVERLAY* pBlitter)
 {
-	if ( gCivQuoteData.iVideoOverlay != -1 )
+	if (gCivQuoteData.iVideoOverlay != -1)
 	{
-		RenderMercPopUpBoxFromIndex( gCivQuoteData.iDialogueBox, pBlitter->sX, pBlitter->sY,	pBlitter->uiDestBuff );
+		RenderMercPopUpBoxFromIndex(gCivQuoteData.iDialogueBox, pBlitter->sX, pBlitter->sY, pBlitter->uiDestBuff);
 
-		InvalidateRegion( pBlitter->sX, pBlitter->sY, pBlitter->sX + gusCivQuoteBoxWidth, pBlitter->sY + gusCivQuoteBoxHeight );
+		InvalidateRegion(pBlitter->sX, pBlitter->sY, pBlitter->sX + gusCivQuoteBoxWidth, pBlitter->sY + gusCivQuoteBoxHeight);
 	}
 }
 
 
-void QuoteOverlayClickCallback( MOUSE_REGION * pRegion, INT32 iReason )
+void QuoteOverlayClickCallback(MOUSE_REGION* pRegion, INT32 iReason)
 {
 	static BOOLEAN fLButtonDown = FALSE;
 
-	if (iReason & MSYS_CALLBACK_REASON_LBUTTON_DWN )
+	if (iReason & MSYS_CALLBACK_REASON_LBUTTON_DWN)
 	{
 		fLButtonDown = TRUE;
 	}
 
-	if (iReason & MSYS_CALLBACK_REASON_LBUTTON_UP && fLButtonDown )
+	if (iReason & MSYS_CALLBACK_REASON_LBUTTON_UP && fLButtonDown)
 	{
 		// Shutdown quote box....
-		ShutDownQuoteBox( FALSE );
+		ShutDownQuoteBox(FALSE);
 	}
-	else if (iReason & MSYS_CALLBACK_REASON_LOST_MOUSE )
+	else if (iReason & MSYS_CALLBACK_REASON_LOST_MOUSE)
 	{
 		fLButtonDown = FALSE;
 	}
 }
 
 
-void BeginCivQuote( SOLDIERTYPE *pCiv, UINT16 ubCivQuoteID, UINT16 ubEntryID, INT16 sX, INT16 sY )
+void BeginCivQuote(SOLDIERTYPE* pCiv, UINT16 ubCivQuoteID, UINT16 ubEntryID, INT16 sX, INT16 sY)
 {
 	VIDEO_OVERLAY_DESC		VideoOverlayDesc;
-	CHAR16					zQuote[ 320 ];	
-	
+	CHAR16					zQuote[320];
+
 	// OK, do we have another on?
-	if ( gCivQuoteData.bActive )
+	if (gCivQuoteData.bActive)
 	{
 		// Delete?
-		ShutDownQuoteBox( TRUE );
+		ShutDownQuoteBox(TRUE);
 	}
-	
+
 	// get text
-	if ( !GetCivQuoteText( ubCivQuoteID, ubEntryID, zQuote ) )
+	if (!GetCivQuoteText(ubCivQuoteID, ubEntryID, zQuote))
 	{
 		return;
 	}
 
-	swprintf( gzCivQuote, L"\"%s\"", zQuote );
+	swprintf(gzCivQuote, L"\"%s\"", zQuote);
 
-	if ( ubCivQuoteID == CIV_QUOTE_HINT )
+	if (ubCivQuoteID == CIV_QUOTE_HINT)
 	{
-		MapScreenMessage( FONT_MCOLOR_WHITE, MSG_DIALOG, L"%s",	gzCivQuote );
+		MapScreenMessage(FONT_MCOLOR_WHITE, MSG_DIALOG, L"%s", gzCivQuote);
 	}
 
 	// Create video oeverlay....
-	memset( &VideoOverlayDesc, 0, sizeof( VIDEO_OVERLAY_DESC ) );
+	memset(&VideoOverlayDesc, 0, sizeof(VIDEO_OVERLAY_DESC));
 
 	//never use it anymore
 	//SET_USE_WINFONTS( TRUE );
 	//SET_WINFONT( giSubTitleWinFont );
 	// Prepare text box
-	gCivQuoteData.iDialogueBox = PrepareMercPopupBox( gCivQuoteData.iDialogueBox , BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzCivQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight );
+	gCivQuoteData.iDialogueBox = PrepareMercPopupBox(gCivQuoteData.iDialogueBox, BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzCivQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight);
 	//SET_USE_WINFONTS( FALSE );
-	
+
 	// OK, find center for box......
-	sX = sX - ( gusCivQuoteBoxWidth / 2 );
-	sY = sY - ( gusCivQuoteBoxHeight / 2 );
+	sX = sX - (gusCivQuoteBoxWidth / 2);
+	sY = sY - (gusCivQuoteBoxHeight / 2);
 
 	// OK, limit to screen......
 	{
-		if ( sX < 0 )
+		if (sX < 0)
 		{
 			sX = 0;
 		}
 
 		// CHECK FOR LEFT/RIGHT
-		if ( ( sX + gusCivQuoteBoxWidth ) > SCREEN_WIDTH )
+		if ((sX + gusCivQuoteBoxWidth) > SCREEN_WIDTH)
 		{
 			sX = SCREEN_WIDTH - gusCivQuoteBoxWidth;
 		}
 
 		// Now check for top
-		if ( sY < gsVIEWPORT_WINDOW_START_Y )
+		if (sY < gsVIEWPORT_WINDOW_START_Y)
 		{
 			sY = gsVIEWPORT_WINDOW_START_Y;
 		}
 
 		// Check for bottom
-		if ( ( sY + gusCivQuoteBoxHeight ) > (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT))
+		if ((sY + gusCivQuoteBoxHeight) > (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT))
 		{
 			sY = (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT) - gusCivQuoteBoxHeight;
-		}
-	}
-
-	VideoOverlayDesc.sLeft			= sX;
-	VideoOverlayDesc.sTop				= sY;
-	VideoOverlayDesc.sRight			= VideoOverlayDesc.sLeft + gusCivQuoteBoxWidth;
-	VideoOverlayDesc.sBottom		= VideoOverlayDesc.sTop + gusCivQuoteBoxHeight;
-	VideoOverlayDesc.sX					= VideoOverlayDesc.sLeft;
-	VideoOverlayDesc.sY					= VideoOverlayDesc.sTop;
-	VideoOverlayDesc.BltCallback = RenderCivQuoteBoxOverlay;
-
-	gCivQuoteData.iVideoOverlay =	RegisterVideoOverlay( 0, &VideoOverlayDesc );
-
-
-	//Define main region
-	MSYS_DefineRegion( &(gCivQuoteData.MouseRegion), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop,	VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
-						CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback );
-	// Add region
-	MSYS_AddRegion( &(gCivQuoteData.MouseRegion) );
-	
-	gCivQuoteData.bActive = TRUE;
-
-	gCivQuoteData.uiTimeOfCreation = GetJA2Clock( );
-
-	gCivQuoteData.uiDelayTime = FindDelayForString( gzCivQuote ) + 500;
-
-	gCivQuoteData.pCiv = pCiv;
-}
-
-void BeginChatQuote( SOLDIERTYPE *pCiv, INT16 sX, INT16 sY )
-{
-	VIDEO_OVERLAY_DESC		VideoOverlayDesc;
-
-	// OK, do we have another on?
-	if ( gCivQuoteData.bActive )
-	{
-		// Delete?
-		ShutDownQuoteBox( TRUE );
-	}
-
-	if ( pCiv->bTeam == gbPlayerNum )
-		swprintf( gzCivQuote, L"\"%s\"", szChatTextSpy[Random( 24 )] );
-	else
-		swprintf( gzCivQuote, L"\"%s\"", szChatTextEnemy[Random( 24 )] );
-	
-	// Create video oeverlay....
-	memset( &VideoOverlayDesc, 0, sizeof( VIDEO_OVERLAY_DESC ) );
-
-	// Prepare text box
-	gCivQuoteData.iDialogueBox = PrepareMercPopupBox( gCivQuoteData.iDialogueBox, BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzCivQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight );
-	
-	// Flugente: have the box appear a bit above the soldier. Otherwise it will obstruct us from aiming at him, which is annoying if it happens very often
-	sY -= 30;
-
-	// OK, find center for box......
-	sX = sX - ( gusCivQuoteBoxWidth / 2 );
-	sY = sY - ( gusCivQuoteBoxHeight / 2 );
-
-	// OK, limit to screen......
-	{
-		if ( sX < 0 )
-		{
-			sX = 0;
-		}
-
-		// CHECK FOR LEFT/RIGHT
-		if ( ( sX + gusCivQuoteBoxWidth ) > SCREEN_WIDTH )
-		{
-			sX = SCREEN_WIDTH - gusCivQuoteBoxWidth;
-		}
-
-		// Now check for top
-		if ( sY < gsVIEWPORT_WINDOW_START_Y )
-		{
-			sY = gsVIEWPORT_WINDOW_START_Y;
-		}
-
-		// Check for bottom
-		if ( ( sY + gusCivQuoteBoxHeight ) > ( SCREEN_HEIGHT - INV_INTERFACE_HEIGHT ) )
-		{
-			sY = ( SCREEN_HEIGHT - INV_INTERFACE_HEIGHT ) - gusCivQuoteBoxHeight;
 		}
 	}
 
@@ -518,24 +437,105 @@ void BeginChatQuote( SOLDIERTYPE *pCiv, INT16 sX, INT16 sY )
 	VideoOverlayDesc.sY = VideoOverlayDesc.sTop;
 	VideoOverlayDesc.BltCallback = RenderCivQuoteBoxOverlay;
 
-	gCivQuoteData.iVideoOverlay = RegisterVideoOverlay( 0, &VideoOverlayDesc );
-	
+	gCivQuoteData.iVideoOverlay = RegisterVideoOverlay(0, &VideoOverlayDesc);
+
+
 	//Define main region
-	MSYS_DefineRegion( &( gCivQuoteData.MouseRegion ), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop, VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
-		CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback );
+	MSYS_DefineRegion(&(gCivQuoteData.MouseRegion), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop, VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
+		CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback);
 	// Add region
-	MSYS_AddRegion( &( gCivQuoteData.MouseRegion ) );
+	MSYS_AddRegion(&(gCivQuoteData.MouseRegion));
 
 	gCivQuoteData.bActive = TRUE;
 
 	gCivQuoteData.uiTimeOfCreation = GetJA2Clock();
 
-	gCivQuoteData.uiDelayTime = FindDelayForString( gzCivQuote ) + 500;
+	gCivQuoteData.uiDelayTime = FindDelayForString(gzCivQuote) + 500;
 
 	gCivQuoteData.pCiv = pCiv;
 }
 
-UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLEAN fCanUseHints )
+void BeginChatQuote(SOLDIERTYPE* pCiv, INT16 sX, INT16 sY)
+{
+	VIDEO_OVERLAY_DESC		VideoOverlayDesc;
+
+	// OK, do we have another on?
+	if (gCivQuoteData.bActive)
+	{
+		// Delete?
+		ShutDownQuoteBox(TRUE);
+	}
+
+	if (pCiv->bTeam == gbPlayerNum)
+		swprintf(gzCivQuote, L"\"%s\"", szChatTextSpy[Random(24)]);
+	else
+		swprintf(gzCivQuote, L"\"%s\"", szChatTextEnemy[Random(24)]);
+
+	// Create video oeverlay....
+	memset(&VideoOverlayDesc, 0, sizeof(VIDEO_OVERLAY_DESC));
+
+	// Prepare text box
+	gCivQuoteData.iDialogueBox = PrepareMercPopupBox(gCivQuoteData.iDialogueBox, BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzCivQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight);
+
+	// Flugente: have the box appear a bit above the soldier. Otherwise it will obstruct us from aiming at him, which is annoying if it happens very often
+	sY -= 30;
+
+	// OK, find center for box......
+	sX = sX - (gusCivQuoteBoxWidth / 2);
+	sY = sY - (gusCivQuoteBoxHeight / 2);
+
+	// OK, limit to screen......
+	{
+		if (sX < 0)
+		{
+			sX = 0;
+		}
+
+		// CHECK FOR LEFT/RIGHT
+		if ((sX + gusCivQuoteBoxWidth) > SCREEN_WIDTH)
+		{
+			sX = SCREEN_WIDTH - gusCivQuoteBoxWidth;
+		}
+
+		// Now check for top
+		if (sY < gsVIEWPORT_WINDOW_START_Y)
+		{
+			sY = gsVIEWPORT_WINDOW_START_Y;
+		}
+
+		// Check for bottom
+		if ((sY + gusCivQuoteBoxHeight) > (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT))
+		{
+			sY = (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT) - gusCivQuoteBoxHeight;
+		}
+	}
+
+	VideoOverlayDesc.sLeft = sX;
+	VideoOverlayDesc.sTop = sY;
+	VideoOverlayDesc.sRight = VideoOverlayDesc.sLeft + gusCivQuoteBoxWidth;
+	VideoOverlayDesc.sBottom = VideoOverlayDesc.sTop + gusCivQuoteBoxHeight;
+	VideoOverlayDesc.sX = VideoOverlayDesc.sLeft;
+	VideoOverlayDesc.sY = VideoOverlayDesc.sTop;
+	VideoOverlayDesc.BltCallback = RenderCivQuoteBoxOverlay;
+
+	gCivQuoteData.iVideoOverlay = RegisterVideoOverlay(0, &VideoOverlayDesc);
+
+	//Define main region
+	MSYS_DefineRegion(&(gCivQuoteData.MouseRegion), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop, VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
+		CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback);
+	// Add region
+	MSYS_AddRegion(&(gCivQuoteData.MouseRegion));
+
+	gCivQuoteData.bActive = TRUE;
+
+	gCivQuoteData.uiTimeOfCreation = GetJA2Clock();
+
+	gCivQuoteData.uiDelayTime = FindDelayForString(gzCivQuote) + 500;
+
+	gCivQuoteData.pCiv = pCiv;
+}
+
+UINT16 DetermineCivQuoteEntry(SOLDIERTYPE* pCiv, UINT16* pubCivHintToUse, BOOLEAN fCanUseHints)
 {
 	UINT8	ubCivType;
 #ifdef JA2UB
@@ -551,20 +551,20 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 
 	BOOLEAN bMiners = FALSE;
 	UINT16 FileEDTQUoteID;
-	
+
 	(*pubCivHintToUse) = 0;
 
-	ubCivType = GetCivType( pCiv );
+	ubCivType = GetCivType(pCiv);
 
-	if ( pCiv->ubCivilianGroup < NUM_CIV_GROUPS )
+	if (pCiv->ubCivilianGroup < NUM_CIV_GROUPS)
 	{
 #ifdef JA2UB
-		if ( pCiv->ubCivilianGroup > UNNAMED_CIV_GROUP_19 )
+		if (pCiv->ubCivilianGroup > UNNAMED_CIV_GROUP_19)
 #else
-		if ( pCiv->ubCivilianGroup > QUEENS_CIV_GROUP )
+		if (pCiv->ubCivilianGroup > QUEENS_CIV_GROUP)
 #endif
 		{
-			if ( pCiv->aiData.bNeutral )
+			if (pCiv->aiData.bNeutral)
 			{
 				return(FileEDTQUoteID = pCiv->ubCivilianGroup * 2 + 10);
 			}
@@ -574,14 +574,14 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 			}
 		}
 	}
-		
+
 #ifdef JA2UB		
-	if( ubCivType != CIV_TYPE_ENEMY )
+	if (ubCivType != CIV_TYPE_ENEMY)
 	{
 		//if the civ is not an enemy
-		if ( pCiv->aiData.bNeutral )
+		if (pCiv->aiData.bNeutral)
 		{
-			return( CIV_QUOTE__CIV_NOT_ENEMY ); //43
+			return(CIV_QUOTE__CIV_NOT_ENEMY); //43
 		}
 		else
 		{
@@ -590,234 +590,234 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 			//
 
 			//if the civ can fight
-			if( pCiv->ubBodyType == REGMALE || pCiv->ubBodyType == REGFEMALE || pCiv->ubBodyType == BIGMALE )
+			if (pCiv->ubBodyType == REGMALE || pCiv->ubBodyType == REGFEMALE || pCiv->ubBodyType == BIGMALE)
 			{
-				return( CIV_QUOTE__CIV_ENEMY_CAN_FIGHT); //40 
+				return(CIV_QUOTE__CIV_ENEMY_CAN_FIGHT); //40 
 			}
-			else if( pCiv->stats.bLife < pCiv->stats.bLifeMax )
+			else if (pCiv->stats.bLife < pCiv->stats.bLifeMax)
 			{
-				return( CIV_QUOTE__CIV_HURT ); //42
+				return(CIV_QUOTE__CIV_HURT); //42
 			}
 			else
 			{
-				return( CIV_QUOTE__CIV_ENEMY_GENERIC ); //41
+				return(CIV_QUOTE__CIV_ENEMY_GENERIC); //41
 			}
 		}
 	}
 
 
-	if( ubCivType == CIV_TYPE_ENEMY )
+	if (ubCivType == CIV_TYPE_ENEMY)
 	{
 		// Determine what type of quote to say...
 		// Are are we going to attack?
 
-		if ( pCiv->aiData.bAction == AI_ACTION_TOSS_PROJECTILE || pCiv->aiData.bAction == AI_ACTION_FIRE_GUN ||
-							pCiv->aiData.bAction == AI_ACTION_FIRE_GUN || pCiv->aiData.bAction == AI_ACTION_KNIFE_MOVE )
+		if (pCiv->aiData.bAction == AI_ACTION_TOSS_PROJECTILE || pCiv->aiData.bAction == AI_ACTION_FIRE_GUN ||
+			pCiv->aiData.bAction == AI_ACTION_FIRE_GUN || pCiv->aiData.bAction == AI_ACTION_KNIFE_MOVE)
 		{
-			return( CIV_QUOTE_ENEMY_THREAT );
+			return(CIV_QUOTE_ENEMY_THREAT);
 		}
 
 		// Hurt?
-		else if ( pCiv->stats.bLife < 30 )
+		else if (pCiv->stats.bLife < 30)
 		{
-			return( CIV_QUOTE_ENEMY_HURT );
+			return(CIV_QUOTE_ENEMY_HURT);
 		}
 		// elite?
-		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE )
+		else if (pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE)
 		{
-			return( CIV_QUOTE_ENEMY_ELITE );
+			return(CIV_QUOTE_ENEMY_ELITE);
 		}
 		else
 		{
-			return( CIV_QUOTE_ENEMY_ADMIN );
+			return(CIV_QUOTE_ENEMY_ADMIN);
 		}
 	}
 
-	return( 255 );
+	return(255);
 #else	
-			
-	if ( ubCivType == CIV_TYPE_ENEMY )
+
+	if (ubCivType == CIV_TYPE_ENEMY)
 	{
 		// Determine what type of quote to say...
 		// Are are we going to attack?
 
-		if (	pCiv->aiData.bAction == AI_ACTION_TOSS_PROJECTILE 
-			||	pCiv->aiData.bAction == AI_ACTION_FIRE_GUN 
-			||	pCiv->aiData.bAction == AI_ACTION_THROW_KNIFE 
-			||	pCiv->aiData.bAction == AI_ACTION_KNIFE_MOVE )
+		if (pCiv->aiData.bAction == AI_ACTION_TOSS_PROJECTILE
+			|| pCiv->aiData.bAction == AI_ACTION_FIRE_GUN
+			|| pCiv->aiData.bAction == AI_ACTION_THROW_KNIFE
+			|| pCiv->aiData.bAction == AI_ACTION_KNIFE_MOVE)
 		{
-			return( CIV_QUOTE_ENEMY_THREAT );
+			return(CIV_QUOTE_ENEMY_THREAT);
 		}
-		else if ( pCiv->aiData.bAction == AI_ACTION_OFFER_SURRENDER )
+		else if (pCiv->aiData.bAction == AI_ACTION_OFFER_SURRENDER)
 		{
-			return( CIV_QUOTE_ENEMY_OFFER_SURRENDER );
+			return(CIV_QUOTE_ENEMY_OFFER_SURRENDER);
 		}
 		// Hurt?
-		else if ( pCiv->stats.bLife < 30 )
+		else if (pCiv->stats.bLife < 30)
 		{
-			return( CIV_QUOTE_ENEMY_HURT );
+			return(CIV_QUOTE_ENEMY_HURT);
 		}
 		// elite?
-		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE )
+		else if (pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE)
 		{
-			return( CIV_QUOTE_ENEMY_ELITE );
+			return(CIV_QUOTE_ENEMY_ELITE);
 		}
 		else
 		{
-			return( CIV_QUOTE_ENEMY_ADMIN );
+			return(CIV_QUOTE_ENEMY_ADMIN);
 		}
 	}
 
 	// Are we in a town sector?
 	// get town id
-	bTownId = GetTownIdForSector( gWorldSectorX, gWorldSectorY );
-	
+	bTownId = GetTownIdForSector(gWorldSectorX, gWorldSectorY);
+
 	// If a married PC...
-	if ( ubCivType == CIV_TYPE_MARRIED_PC )
+	if (ubCivType == CIV_TYPE_MARRIED_PC)
 	{
-		return( CIV_QUOTE_PC_MARRIED );
+		return(CIV_QUOTE_PC_MARRIED);
 	}
 
 	// CIV GROUPS FIRST!
 	// Hicks.....
-	if ( pCiv->ubCivilianGroup == HICKS_CIV_GROUP )
+	if (pCiv->ubCivilianGroup == HICKS_CIV_GROUP)
 	{
 		// Are they friendly?
 		//if ( gTacticalStatus.fCivGroupHostile[ HICKS_CIV_GROUP ] < CIV_GROUP_WILL_BECOME_HOSTILE )
-		if ( pCiv->aiData.bNeutral )
+		if (pCiv->aiData.bNeutral)
 		{
-			return( CIV_QUOTE_HICKS_FRIENDLY );
+			return(CIV_QUOTE_HICKS_FRIENDLY);
 		}
 		else
 		{
-			return( CIV_QUOTE_HICKS_ENEMIES );
+			return(CIV_QUOTE_HICKS_ENEMIES);
 		}
 	}
 
 	// Goons.....
-	if ( pCiv->ubCivilianGroup == KINGPIN_CIV_GROUP )
+	if (pCiv->ubCivilianGroup == KINGPIN_CIV_GROUP)
 	{
 		// Are they friendly?
 		//if ( gTacticalStatus.fCivGroupHostile[ KINGPIN_CIV_GROUP ] < CIV_GROUP_WILL_BECOME_HOSTILE )
-		if ( pCiv->aiData.bNeutral )
+		if (pCiv->aiData.bNeutral)
 		{
-			return( CIV_QUOTE_GOONS_FRIENDLY );
+			return(CIV_QUOTE_GOONS_FRIENDLY);
 		}
 		else
 		{
-			return( CIV_QUOTE_GOONS_ENEMIES );
+			return(CIV_QUOTE_GOONS_ENEMIES);
 		}
 	}
 
 	// ATE: Cowering people take precedence....
-	if ( ( pCiv->flags.uiStatusFlags & SOLDIER_COWERING ) || ( pCiv->bTeam == CIV_TEAM && ( gTacticalStatus.uiFlags & INCOMBAT ) ) )
+	if ((pCiv->flags.uiStatusFlags & SOLDIER_COWERING) || (pCiv->bTeam == CIV_TEAM && (gTacticalStatus.uiFlags & INCOMBAT)))
 	{
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
-			return( CIV_QUOTE_ADULTS_COWER );
+			return(CIV_QUOTE_ADULTS_COWER);
 		}
 		else
 		{
-			return( CIV_QUOTE_KIDS_COWER );
+			return(CIV_QUOTE_KIDS_COWER);
 		}
 	}
 
 	// Kid slaves...
-	if ( pCiv->ubCivilianGroup == FACTORY_KIDS_GROUP )
+	if (pCiv->ubCivilianGroup == FACTORY_KIDS_GROUP)
 	{
 		// Check fact.....
-		if ( CheckFact( FACT_DOREEN_HAD_CHANGE_OF_HEART, 0 ) || !CheckFact( FACT_DOREEN_ALIVE, 0 ) )
+		if (CheckFact(FACT_DOREEN_HAD_CHANGE_OF_HEART, 0) || !CheckFact(FACT_DOREEN_ALIVE, 0))
 		{
-			return( CIV_QUOTE_KID_SLAVES_FREE );
+			return(CIV_QUOTE_KID_SLAVES_FREE);
 		}
 		else
 		{
-			return( CIV_QUOTE_KID_SLAVES );
+			return(CIV_QUOTE_KID_SLAVES);
 		}
 	}
 
 	// BEGGERS
-	if ( pCiv->ubCivilianGroup == BEGGARS_CIV_GROUP )
+	if (pCiv->ubCivilianGroup == BEGGARS_CIV_GROUP)
 	{
 		// Check if we are in a town...
-		if( bTownId != BLANK_SECTOR && gbWorldSectorZ == 0 )
+		if (bTownId != BLANK_SECTOR && gbWorldSectorZ == 0)
 		{
-			if ( bTownId == SAN_MONA && ubCivType == CIV_TYPE_ADULT )
+			if (bTownId == SAN_MONA && ubCivType == CIV_TYPE_ADULT)
 			{
-				return( CIV_QUOTE_SAN_MONA_BEGGERS );
+				return(CIV_QUOTE_SAN_MONA_BEGGERS);
 			}
 		}
 
 		// DO normal beggers...
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
-			return( CIV_QUOTE_ADULTS_BEGGING );
+			return(CIV_QUOTE_ADULTS_BEGGING);
 		}
 		else
 		{
-			return( CIV_QUOTE_KIDS_BEGGING );
+			return(CIV_QUOTE_KIDS_BEGGING);
 		}
 	}
 
 	// REBELS
-	if ( pCiv->ubCivilianGroup == REBEL_CIV_GROUP )
+	if (pCiv->ubCivilianGroup == REBEL_CIV_GROUP)
 	{
 		// DO normal beggers...
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
-			return( CIV_QUOTE_ADULTS_REBELS );
+			return(CIV_QUOTE_ADULTS_REBELS);
 		}
 		else
 		{
-			return( CIV_QUOTE_KIDS_REBELS );
+			return(CIV_QUOTE_KIDS_REBELS);
 		}
 	}
 
 	// Do miltitia...
-	if ( pCiv->bTeam == MILITIA_TEAM )
+	if (pCiv->bTeam == MILITIA_TEAM)
 	{
 		// Different types....
-		if ( pCiv->ubSoldierClass == SOLDIER_CLASS_GREEN_MILITIA )
+		if (pCiv->ubSoldierClass == SOLDIER_CLASS_GREEN_MILITIA)
 		{
-			return( CIV_QUOTE_GREEN_MILITIA );
+			return(CIV_QUOTE_GREEN_MILITIA);
 		}
-		if ( pCiv->ubSoldierClass == SOLDIER_CLASS_REG_MILITIA )
+		if (pCiv->ubSoldierClass == SOLDIER_CLASS_REG_MILITIA)
 		{
-			return( CIV_QUOTE_MEDIUM_MILITIA );
+			return(CIV_QUOTE_MEDIUM_MILITIA);
 		}
-		if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE_MILITIA )
+		if (pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE_MILITIA)
 		{
-			return( CIV_QUOTE_ELITE_MILITIA );
+			return(CIV_QUOTE_ELITE_MILITIA);
 		}
 	}
 
 	// If we are in medunna, and queen is dead, use these...
-	if ( bTownId == MEDUNA && CheckFact( FACT_QUEEN_DEAD, 0 ) )
+	if (bTownId == MEDUNA && CheckFact(FACT_QUEEN_DEAD, 0))
 	{
-		return( CIV_QUOTE_DEIDRANNA_DEAD );
+		return(CIV_QUOTE_DEIDRANNA_DEAD);
 	}
 
 	// if in a town
-	if( ( bTownId != BLANK_SECTOR ) && ( gbWorldSectorZ == 0 ) && gfTownUsesLoyalty[ bTownId ] )
+	if ((bTownId != BLANK_SECTOR) && (gbWorldSectorZ == 0) && gfTownUsesLoyalty[bTownId])
 	{
 		// Check loyalty special quotes.....
 		// EXTREMELY LOW TOWN LOYALTY...
-		if ( gTownLoyalty[ bTownId ].ubRating < EXTREAMLY_LOW_TOWN_LOYALTY )
+		if (gTownLoyalty[bTownId].ubRating < EXTREAMLY_LOW_TOWN_LOYALTY)
 		{
 			bCivLowLoyalty = TRUE;
 		}
 
 		// HIGH TOWN LOYALTY...
-		if ( gTownLoyalty[ bTownId ].ubRating >= HIGH_TOWN_LOYALTY )
+		if (gTownLoyalty[bTownId].ubRating >= HIGH_TOWN_LOYALTY)
 		{
 			bCivHighLoyalty = TRUE;
 		}
 	}
 
 	// ATE: OK, check if we should look for a civ hint....
-	if ( fCanUseHints )
+	if (fCanUseHints)
 	{
-		bCivHint = ConsiderCivilianQuotes( gWorldSectorX, gWorldSectorY, gbWorldSectorZ,	FALSE );
+		bCivHint = ConsiderCivilianQuotes(gWorldSectorX, gWorldSectorY, gbWorldSectorZ, FALSE);
 	}
 	else
 	{
@@ -825,12 +825,12 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 	}
 
 	// ATE: check miners......
-	if ( pCiv->ubSoldierClass == SOLDIER_CLASS_MINER )
+	if (pCiv->ubSoldierClass == SOLDIER_CLASS_MINER)
 	{
 		bMiners = TRUE;
 
 		// If not a civ hint available...
-		if ( bCivHint == -1 )
+		if (bCivHint == -1)
 		{
 			// Check if they are under our control...
 
@@ -838,24 +838,24 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 			// Not done yet.
 
 			// Are they working for us?
-			bMineId = GetIdOfMineForSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
+			bMineId = GetIdOfMineForSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
 
-			if ( PlayerControlsMine( bMineId ) )
+			if (PlayerControlsMine(bMineId))
 			{
-				return( CIV_QUOTE_MINERS_FOR_PLAYER );
+				return(CIV_QUOTE_MINERS_FOR_PLAYER);
 			}
 			else
 			{
-				return( CIV_QUOTE_MINERS_NOT_FOR_PLAYER );
+				return(CIV_QUOTE_MINERS_NOT_FOR_PLAYER);
 			}
 		}
 	}
 
 	// Is one availible?
 	// If we are to say low loyalty, do chance
-	if ( bCivHint != -1 && bCivLowLoyalty && !bMiners )
+	if (bCivHint != -1 && bCivLowLoyalty && !bMiners)
 	{
-		if ( Random( 100 ) < 25 )
+		if (Random(100) < 25)
 		{
 			// Get rid of hint...
 			bCivHint = -1;
@@ -863,128 +863,128 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 	}
 
 	// Say hint if availible...
-	if ( bCivHint != -1 )
+	if (bCivHint != -1)
 	{
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
 			(*pubCivHintToUse) = bCivHint;
 
 			// Set quote as used...
-			ConsiderCivilianQuotes( gWorldSectorX, gWorldSectorY, gbWorldSectorZ, TRUE );
+			ConsiderCivilianQuotes(gWorldSectorX, gWorldSectorY, gbWorldSectorZ, TRUE);
 
 			// retrun value....
-			return( CIV_QUOTE_HINT );
+			return(CIV_QUOTE_HINT);
 		}
 	}
 
-	if ( bCivLowLoyalty )
+	if (bCivLowLoyalty)
 	{
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
-			return( CIV_QUOTE_ADULTS_EXTREMLY_LOW_LOYALTY );
+			return(CIV_QUOTE_ADULTS_EXTREMLY_LOW_LOYALTY);
 		}
 		else
 		{
-			return( CIV_QUOTE_KIDS_EXTREMLY_LOW_LOYALTY );
+			return(CIV_QUOTE_KIDS_EXTREMLY_LOW_LOYALTY);
 		}
 	}
 
-	if ( bCivHighLoyalty )
+	if (bCivHighLoyalty)
 	{
-		if ( ubCivType == CIV_TYPE_ADULT )
+		if (ubCivType == CIV_TYPE_ADULT)
 		{
-			return( CIV_QUOTE_ADULTS_HIGH_LOYALTY );
+			return(CIV_QUOTE_ADULTS_HIGH_LOYALTY);
 		}
 		else
 		{
-			return( CIV_QUOTE_KIDS_HIGH_LOYALTY );
+			return(CIV_QUOTE_KIDS_HIGH_LOYALTY);
 		}
 	}
-	
+
 	// All purpose quote here....
-	if ( ubCivType == CIV_TYPE_ADULT )
+	if (ubCivType == CIV_TYPE_ADULT)
 	{
-		return( CIV_QUOTE_ADULTS_ALL_PURPOSE );
+		return(CIV_QUOTE_ADULTS_ALL_PURPOSE);
 	}
 	else
 	{
-		return( CIV_QUOTE_KIDS_ALL_PURPOSE );
+		return(CIV_QUOTE_KIDS_ALL_PURPOSE);
 	}
 #endif
 }
 
 
-void HandleCivQuote( )
+void HandleCivQuote()
 {
-	if ( gCivQuoteData.bActive )
+	if (gCivQuoteData.bActive)
 	{
 		// Check for min time....
-		if ( ( GetJA2Clock( ) - gCivQuoteData.uiTimeOfCreation ) > gCivQuoteData.uiDelayTime )
+		if ((GetJA2Clock() - gCivQuoteData.uiTimeOfCreation) > gCivQuoteData.uiDelayTime)
 		{
 			// Stop!
-			ShutDownQuoteBox( TRUE );
+			ShutDownQuoteBox(TRUE);
 		}
 	}
 }
 
-void StartCivQuote( SOLDIERTYPE *pCiv )
+void StartCivQuote(SOLDIERTYPE* pCiv)
 {
 	UINT16 ubCivQuoteID;
 	UINT16	ubEntryID = 0;
 	INT16	sScreenX, sScreenY;
 	UINT16	ubCivHintToUse;
 	UINT16 CivQuoteDelta = 0;
-	
+
 	UINT16 ubCivQuoteID2;
 	UINT16 RandomVal;
-	
+
 	// ATE: Check for old quote.....
 	// This could have been stored on last attempt...
-	if ( pCiv->bCurrentCivQuote == CIV_QUOTE_HINT )
+	if (pCiv->bCurrentCivQuote == CIV_QUOTE_HINT)
 	{
 		// Determine which quote to say.....
 		// CAN'T USE HINTS, since we just did one...
 		pCiv->bCurrentCivQuote = -1;
 		pCiv->bCurrentCivQuoteDelta = 0;
-		ubCivQuoteID = DetermineCivQuoteEntry( pCiv, &ubCivHintToUse, FALSE );
+		ubCivQuoteID = DetermineCivQuoteEntry(pCiv, &ubCivHintToUse, FALSE);
 	}
 	else
 	{
 		// Determine which quote to say.....
-		ubCivQuoteID = DetermineCivQuoteEntry( pCiv, &ubCivHintToUse, TRUE );
+		ubCivQuoteID = DetermineCivQuoteEntry(pCiv, &ubCivHintToUse, TRUE);
 	}
-	
-	if (ubCivQuoteID == CIV_QUOTE_ADULTS_REBELS || ubCivQuoteID == CIV_QUOTE_KIDS_REBELS || ubCivQuoteID == CIV_QUOTE_ENEMY_OFFER_SURRENDER ) 
+
+	if (ubCivQuoteID == CIV_QUOTE_ADULTS_REBELS || ubCivQuoteID == CIV_QUOTE_KIDS_REBELS || ubCivQuoteID == CIV_QUOTE_ENEMY_OFFER_SURRENDER)
 	{
 		RandomVal = 5;
 	}
-	else if (ubCivQuoteID == CIV_QUOTE_PC_MARRIED) 
+	else if (ubCivQuoteID == CIV_QUOTE_PC_MARRIED)
 	{
 		RandomVal = 2;
 	}
-	else if (ubCivQuoteID == CIV_QUOTE_HICKS_SEE_US_AT_NIGHT) 
+	else if (ubCivQuoteID == CIV_QUOTE_HICKS_SEE_US_AT_NIGHT)
 	{
 		RandomVal = 3;
 	}
-	else 
+	else
 		RandomVal = 15;
 
 #ifdef JA2UB		
-	if( ubCivQuoteID == 255 )
+	if (ubCivQuoteID == 255)
 	{
 		return;
 	}
 #endif	
-	
+
 	// Determine entry id
 	// ATE: Try and get entry from soldier pointer....
-	if ( ubCivQuoteID != CIV_QUOTE_HINT )
+	if (ubCivQuoteID != CIV_QUOTE_HINT)
 	{
-		if ( pCiv->bCurrentCivQuote == -1 )
+		if (pCiv->bCurrentCivQuote == -1)
 		{
 			// Pick random one
 			//pCiv->bCurrentCivQuote = (INT8)Random( gCivQuotes[ ubCivQuoteID ].ubNumEntries - 2 );
-			ubCivQuoteID2  = Random(RandomVal-2);
+			ubCivQuoteID2 = Random(RandomVal - 2);
 			pCiv->bCurrentCivQuoteDelta = 0;
 		}
 		else
@@ -993,11 +993,11 @@ void StartCivQuote( SOLDIERTYPE *pCiv )
 		}
 
 		//ubEntryID	= pCiv->bCurrentCivQuote + pCiv->bCurrentCivQuoteDelta;
-		ubEntryID	= ubCivQuoteID2 + pCiv->bCurrentCivQuoteDelta;
+		ubEntryID = ubCivQuoteID2 + pCiv->bCurrentCivQuoteDelta;
 	}
 	else
 	{
-		ubEntryID =ubCivHintToUse;
+		ubEntryID = ubCivHintToUse;
 
 		// ATE: set value for quote ID.....
 		//pCiv->bCurrentCivQuote			= ubCivQuoteID;
@@ -1007,9 +1007,9 @@ void StartCivQuote( SOLDIERTYPE *pCiv )
 	}
 
 	// Flugente: if we are an assassin, we speak like the militia we emulate
-	if ( pCiv->usSoldierFlagMask & SOLDIER_ASSASSIN )
+	if (pCiv->usSoldierFlagMask & SOLDIER_ASSASSIN)
 	{
-		switch ( pCiv->GetUniformType() )
+		switch (pCiv->GetUniformType())
 		{
 		case UNIFORM_MILITIA_REGULAR:
 			ubCivQuoteID = CIV_QUOTE_MEDIUM_MILITIA;
@@ -1025,13 +1025,13 @@ void StartCivQuote( SOLDIERTYPE *pCiv )
 
 	// Determine location...
 	// Get location of civ on screen.....
-	GetSoldierScreenPos( pCiv, &sScreenX, &sScreenY );
+	GetSoldierScreenPos(pCiv, &sScreenX, &sScreenY);
 
 	// begin quote
-	BeginCivQuote( pCiv, ubCivQuoteID, ubEntryID, sScreenX, sScreenY );
+	BeginCivQuote(pCiv, ubCivQuoteID, ubEntryID, sScreenX, sScreenY);
 
 	// Increment use
-	if ( ubCivQuoteID != CIV_QUOTE_HINT )
+	if (ubCivQuoteID != CIV_QUOTE_HINT)
 	{
 		//pCiv->bCurrentCivQuoteDelta++;
 		++CivQuoteDelta;
@@ -1041,64 +1041,64 @@ void StartCivQuote( SOLDIERTYPE *pCiv )
 			pCiv->bCurrentCivQuoteDelta = 0;
 		}
 		*/
-		if ( CivQuoteDelta == 2 )
+		if (CivQuoteDelta == 2)
 		{
 			CivQuoteDelta = 0;
 		}
 	}
 }
 
-void InitCivQuoteSystem( )
+void InitCivQuoteSystem()
 {
-	memset( &gCivQuotes, 0, sizeof( gCivQuotes ) );  //Not used 
+	memset(&gCivQuotes, 0, sizeof(gCivQuotes));  //Not used 
 
-	memset( &gCivQuoteData, 0, sizeof( gCivQuoteData ) );
-	gCivQuoteData.bActive				= FALSE;
-	gCivQuoteData.iVideoOverlay	= -1;
-	gCivQuoteData.iDialogueBox	= -1;
+	memset(&gCivQuoteData, 0, sizeof(gCivQuoteData));
+	gCivQuoteData.bActive = FALSE;
+	gCivQuoteData.iVideoOverlay = -1;
+	gCivQuoteData.iDialogueBox = -1;
 }
 
 //--------------------------------------------------------------
 //is allowed remove. Not used  and remove from SaveLoadGame.cpp.
-BOOLEAN SaveCivQuotesToSaveGameFile( HWFILE hFile )
+BOOLEAN SaveCivQuotesToSaveGameFile(HWFILE hFile)
 {
 	UINT32	uiNumBytesWritten;
 
-	FileWrite( hFile, &gCivQuotes, sizeof( gCivQuotes), &uiNumBytesWritten );
-	if( uiNumBytesWritten != sizeof( gCivQuotes ) )
+	FileWrite(hFile, &gCivQuotes, sizeof(gCivQuotes), &uiNumBytesWritten);
+	if (uiNumBytesWritten != sizeof(gCivQuotes))
 	{
-		return( FALSE );
+		return(FALSE);
 	}
 
-	return( TRUE );
+	return(TRUE);
 }
 
 // anv: used now
 //is allowed remove. Not used and remove from SaveLoadGame.cpp.
-BOOLEAN LoadCivQuotesFromLoadGameFile( HWFILE hFile )
+BOOLEAN LoadCivQuotesFromLoadGameFile(HWFILE hFile)
 {
 	UINT32	uiNumBytesRead;
 
 	// anv: reset uiTauntFinishTimes after game is loaded (so enemies can taunt after guiBaseJA2Clock is decreased)
-	memset( &uiTauntFinishTimes, 0, sizeof( uiTauntFinishTimes ) );
+	memset(&uiTauntFinishTimes, 0, sizeof(uiTauntFinishTimes));
 
-	FileRead( hFile, &gCivQuotes, sizeof( gCivQuotes ), &uiNumBytesRead );
-	if( uiNumBytesRead != sizeof( gCivQuotes ) )
+	FileRead(hFile, &gCivQuotes, sizeof(gCivQuotes), &uiNumBytesRead);
+	if (uiNumBytesRead != sizeof(gCivQuotes))
 	{
-		return( FALSE );
+		return(FALSE);
 	}
 
-	CopyNumEntriesIntoQuoteStruct( ); //Not used 
+	CopyNumEntriesIntoQuoteStruct(); //Not used 
 
-	return( TRUE );
+	return(TRUE);
 }
 //--------------------------------------------------------------
 
 // anv: start enemy taunt with probabilty depending on taunt settings
-void PossiblyStartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, UINT32 uiTargetID )
+void PossiblyStartEnemyTaunt(SOLDIERTYPE* pCiv, TAUNTTYPE iTauntType, UINT32 uiTargetID)
 {
-	SOLDIERTYPE *pTarget = NULL;
-	if( uiTargetID != NOBODY )
+	SOLDIERTYPE* pTarget = NULL;
+	if (uiTargetID != NOBODY)
 	{
 		pTarget = MercPtrs[uiTargetID];
 	}
@@ -1106,22 +1106,22 @@ void PossiblyStartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, UINT32 ui
 		return;
 
 	// taunts disabled?
-	if( gGameSettings.fOptions[TOPTION_ALLOW_TAUNTS] == FALSE )
+	if (gGameSettings.fOptions[TOPTION_ALLOW_TAUNTS] == FALSE)
 	{
 		return;
 	}
 	// uh, just in case
-	if( pCiv == NULL )
+	if (pCiv == NULL)
 	{
 		return;
 	}
 	// is enemy blocked from taunting at the moment?
-	if( uiTauntFinishTimes[pCiv->ubID] > GetJA2Clock() )
+	if (uiTauntFinishTimes[pCiv->ubID] > GetJA2Clock())
 	{
 		return;
 	}
 	// check if generated person
-	if ( !(IS_MERC_BODY_TYPE( pCiv )) || !(pCiv->ubProfile == NO_PROFILE) )
+	if (!(IS_MERC_BODY_TYPE(pCiv)) || !(pCiv->ubProfile == NO_PROFILE))
 	{
 		return;
 	}
@@ -1139,185 +1139,186 @@ void PossiblyStartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, UINT32 ui
 	}*/
 
 	// only visible enemies taunt (unless set otherwise)
-	if ( ( pCiv->bVisible == -1 ) && ( gTauntsSettings.fTauntOnlyVisibleEnemies == TRUE ) )
+	if ((pCiv->bVisible == -1) && (gTauntsSettings.fTauntOnlyVisibleEnemies == TRUE))
 	{
 		return;
 	}
 	// only enemies that are able to speak at the moment can taunt
-	if ( pCiv->stats.bLife < OKLIFE || pCiv->bCollapsed || pCiv->bBreathCollapsed )
+	if (pCiv->stats.bLife < OKLIFE || pCiv->bCollapsed || pCiv->bBreathCollapsed)
 	{
 		return;
 	}
 	// check probability
- 	switch(iTauntType)
+	UINT32 uiRandom = Random(100) + 1; // JADOL -- DEBUGGING ONLY 
+	switch (iTauntType)
 	{
-		case TAUNT_FIRE_GUN:
-			if( Random(100)+1 > gTauntsSettings.ubTauntFireGunChance )
-				return;
-			break;
-		case TAUNT_FIRE_LAUNCHER:
-			if( Random(100)+1 > gTauntsSettings.ubTauntFireLauncherChance )
-				return;
-			break;
-		case TAUNT_ATTACK_BLADE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntAttackBladeChance)
-				return;
-			break;
-		case TAUNT_ATTACK_HTH:
-			if( Random(100)+1 > gTauntsSettings.ubTauntAttackHTHChance )
-				return;
-			break;
+	case TAUNT_FIRE_GUN:
+		if (uiRandom > gTauntsSettings.ubTauntFireGunChance)
+			return;
+		break;
+	case TAUNT_FIRE_LAUNCHER:
+		if (uiRandom > gTauntsSettings.ubTauntFireLauncherChance)
+			return;
+		break;
+	case TAUNT_ATTACK_BLADE:
+		if (uiRandom > gTauntsSettings.ubTauntAttackBladeChance)
+			return;
+		break;
+	case TAUNT_ATTACK_HTH:
+		if (uiRandom > gTauntsSettings.ubTauntAttackHTHChance)
+			return;
+		break;
 
-		case TAUNT_THROW_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntThrowKnifeChance )
-				return;
-			break;
-		case TAUNT_THROW_GRENADE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntThrowGrenadeChance )
-				return;
-			break;
-		case TAUNT_CHARGE_BLADE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntChargeKnifeChance )
-				return;
-			break;
-		case TAUNT_CHARGE_HTH:
-			if( Random(100)+1 > gTauntsSettings.ubTauntChargeFistsChance )
-				return;
-			break;
+	case TAUNT_THROW_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntThrowKnifeChance)
+			return;
+		break;
+	case TAUNT_THROW_GRENADE:
+		if (uiRandom > gTauntsSettings.ubTauntThrowGrenadeChance)
+			return;
+		break;
+	case TAUNT_CHARGE_BLADE:
+		if (uiRandom > gTauntsSettings.ubTauntChargeKnifeChance)
+			return;
+		break;
+	case TAUNT_CHARGE_HTH:
+		if (uiRandom > gTauntsSettings.ubTauntChargeFistsChance)
+			return;
+		break;
 
-		case TAUNT_STEAL:
-			if( Random(100)+1 > gTauntsSettings.ubTauntStealChance )
-				return;
-			break;
+	case TAUNT_STEAL:
+		if (uiRandom > gTauntsSettings.ubTauntStealChance)
+			return;
+		break;
 
-		case TAUNT_RUN_AWAY:
-			if( Random(100)+1 > gTauntsSettings.ubTauntRunAwayChance)
-				return;
-			break;
-		case TAUNT_SEEK_NOISE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntSeekNoiseChance )
-				return;
-			break;
-		case TAUNT_ALERT:
-			if( Random(100)+1 > gTauntsSettings.ubTauntAlertChance )
-				return;
-			break;
-		case TAUNT_SUSPICIOUS:
-			if( Random(100)+1 > gTauntsSettings.ubTauntSuspiciousChance)
-				return;
-			break;
+	case TAUNT_RUN_AWAY:
+		if (uiRandom > gTauntsSettings.ubTauntRunAwayChance)
+			return;
+		break;
+	case TAUNT_SEEK_NOISE:
+		if (uiRandom > gTauntsSettings.ubTauntSeekNoiseChance)
+			return;
+		break;
+	case TAUNT_ALERT:
+		if (uiRandom > gTauntsSettings.ubTauntAlertChance)
+			return;
+		break;
+	case TAUNT_SUSPICIOUS:
+		if (uiRandom > gTauntsSettings.ubTauntSuspiciousChance)
+			return;
+		break;
 
-		case TAUNT_GOT_HIT:
-		case TAUNT_GOT_HIT_BLOODLOSS:
-		case TAUNT_GOT_HIT_EXPLOSION:
-		case TAUNT_GOT_HIT_FALLROOF:
-		case TAUNT_GOT_HIT_GAS:
-		case TAUNT_GOT_HIT_GUNFIRE:
-		case TAUNT_GOT_HIT_HTH:
-		case TAUNT_GOT_HIT_BLADE:
-		case TAUNT_GOT_HIT_OBJECT:
-		case TAUNT_GOT_HIT_STRUCTURE_EXPLOSION:
-		case TAUNT_GOT_HIT_TENTACLES:
-		case TAUNT_GOT_HIT_THROWING_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntGotHitChance )
-				return;
-			break;
+	case TAUNT_GOT_HIT:
+	case TAUNT_GOT_HIT_BLOODLOSS:
+	case TAUNT_GOT_HIT_EXPLOSION:
+	case TAUNT_GOT_HIT_FALLROOF:
+	case TAUNT_GOT_HIT_GAS:
+	case TAUNT_GOT_HIT_GUNFIRE:
+	case TAUNT_GOT_HIT_HTH:
+	case TAUNT_GOT_HIT_BLADE:
+	case TAUNT_GOT_HIT_OBJECT:
+	case TAUNT_GOT_HIT_STRUCTURE_EXPLOSION:
+	case TAUNT_GOT_HIT_TENTACLES:
+	case TAUNT_GOT_HIT_THROWING_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntGotHitChance)
+			return;
+		break;
 
-		case TAUNT_GOT_BLINDED:
-		case TAUNT_GOT_DEAFENED:
-			if( Random(100)+1 > gTauntsSettings.ubTauntGotDeafenedBlindedChance)
-				return;
-			break;
+	case TAUNT_GOT_BLINDED:
+	case TAUNT_GOT_DEAFENED:
+		if (uiRandom > gTauntsSettings.ubTauntGotDeafenedBlindedChance)
+			return;
+		break;
 
-		case TAUNT_GOT_ROBBED:
-			if( Random(100)+1 > gTauntsSettings.ubTauntGotRobbedChance)
-				return;
-			break;
+	case TAUNT_GOT_ROBBED:
+		if (uiRandom > gTauntsSettings.ubTauntGotRobbedChance)
+			return;
+		break;
 
-		case TAUNT_GOT_MISSED:
-		case TAUNT_GOT_MISSED_GUNFIRE:
-		case TAUNT_GOT_MISSED_BLADE:
-		case TAUNT_GOT_MISSED_HTH:
-		case TAUNT_GOT_MISSED_THROWING_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntGotMissedChance )
-				return;
-			break;
+	case TAUNT_GOT_MISSED:
+	case TAUNT_GOT_MISSED_GUNFIRE:
+	case TAUNT_GOT_MISSED_BLADE:
+	case TAUNT_GOT_MISSED_HTH:
+	case TAUNT_GOT_MISSED_THROWING_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntGotMissedChance)
+			return;
+		break;
 
-		case TAUNT_HIT:
-		case TAUNT_HIT_GUNFIRE:
-		case TAUNT_HIT_BLADE:
-		case TAUNT_HIT_HTH:
-		case TAUNT_HIT_THROWING_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntHitChance )
-				return;
-			break;
+	case TAUNT_HIT:
+	case TAUNT_HIT_GUNFIRE:
+	case TAUNT_HIT_BLADE:
+	case TAUNT_HIT_HTH:
+	case TAUNT_HIT_THROWING_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntHitChance)
+			return;
+		break;
 
-		case TAUNT_KILL:
-		case TAUNT_KILL_GUNFIRE:
-		case TAUNT_KILL_BLADE:
-		case TAUNT_KILL_HTH:
-		case TAUNT_KILL_THROWING_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntKillChance )
-				return;
-			break;
+	case TAUNT_KILL:
+	case TAUNT_KILL_GUNFIRE:
+	case TAUNT_KILL_BLADE:
+	case TAUNT_KILL_HTH:
+	case TAUNT_KILL_THROWING_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntKillChance)
+			return;
+		break;
 
-		case TAUNT_HEAD_POP:
-			if( Random(100)+1 > gTauntsSettings.ubTauntHeadPopChance )
-				return;
-			break;
+	case TAUNT_HEAD_POP:
+		if (uiRandom > gTauntsSettings.ubTauntHeadPopChance)
+			return;
+		break;
 
-		case TAUNT_MISS:
-		case TAUNT_MISS_GUNFIRE:
-		case TAUNT_MISS_BLADE:
-		case TAUNT_MISS_HTH:
-		case TAUNT_MISS_THROWING_KNIFE:
-			if( Random(100)+1 > gTauntsSettings.ubTauntMissChance )
-				return;
-			break;
+	case TAUNT_MISS:
+	case TAUNT_MISS_GUNFIRE:
+	case TAUNT_MISS_BLADE:
+	case TAUNT_MISS_HTH:
+	case TAUNT_MISS_THROWING_KNIFE:
+		if (uiRandom > gTauntsSettings.ubTauntMissChance)
+			return;
+		break;
 
-		case TAUNT_OUT_OF_AMMO:
-			if( Random(100)+1 > gTauntsSettings.ubTauntOutOfAmmoChance )
-				return;
-			break;
-		case TAUNT_RELOAD:
-			if( Random(100)+1 > gTauntsSettings.ubTauntReloadChance )
-				return;
-			break;
+	case TAUNT_OUT_OF_AMMO:
+		if (uiRandom > gTauntsSettings.ubTauntOutOfAmmoChance)
+			return;
+		break;
+	case TAUNT_RELOAD:
+		if (uiRandom > gTauntsSettings.ubTauntReloadChance)
+			return;
+		break;
 
-		case TAUNT_NOTICED_UNSEEN:
-			if( Random(100)+1 > gTauntsSettings.ubTauntNoticedUnseenChance )
-				return;
-			break;
-		case TAUNT_SAY_HI:
-			if( Random(100)+1 > gTauntsSettings.ubTauntSayHiChance )
-				return;
-			break;
-		case TAUNT_INFORM_ABOUT:
-			if( Random(100)+1 > gTauntsSettings.ubTauntInformAboutChance )
-				return;
-			break;
+	case TAUNT_NOTICED_UNSEEN:
+		if (uiRandom > gTauntsSettings.ubTauntNoticedUnseenChance)
+			return;
+		break;
+	case TAUNT_SAY_HI:
+		if (uiRandom > gTauntsSettings.ubTauntSayHiChance)
+			return;
+		break;
+	case TAUNT_INFORM_ABOUT:
+		if (uiRandom > gTauntsSettings.ubTauntInformAboutChance)
+			return;
+		break;
 
-		case TAUNT_RIPOSTE:
-			if( Random(100)+1 > gTauntsSettings.ubRiposteChance)
-				return;
-			break;
+	case TAUNT_RIPOSTE:
+		if (uiRandom > gTauntsSettings.ubRiposteChance)
+			return;
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
-	
-	StartEnemyTaunt( pCiv, iTauntType, pTarget );
+
+	StartEnemyTaunt(pCiv, iTauntType, pTarget);
 }
 
 // SANDRO - soldier taunts 
-void StartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTarget )
+void StartEnemyTaunt(SOLDIERTYPE* pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE* pTarget)
 {
-	CHAR16	sTauntText[ 320 ];	
-	CHAR16	gzTauntQuote[ 320 ];
+	CHAR16	sTauntText[320];
+	CHAR16	gzTauntQuote[320];
 	UINT16	iApplicableTaunts = 0;
 
 	// Flugente: zombies don't talk
-	if ( pCiv->IsZombie() )
+	if (pCiv->IsZombie())
 		return;
 
 	// sevenfm: play audio taunt if possible
@@ -1331,483 +1332,483 @@ void StartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTar
 	}
 
 	// anv: check all taunts, and remember those applicable
-	for(UINT16 i=0; i<num_found_taunt; ++i)
+	for (UINT16 i = 0; i < num_found_taunt; ++i)
 	{
 		// check if attitudes are ok
-		switch( pCiv->aiData.bAttitude )
+		switch (pCiv->aiData.bAttitude)
 		{
-			case CUNNINGAID:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_CUNNING_AID) )
-					continue;
-				break;
-			case CUNNINGSOLO:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_CUNNING_SOLO) )
-					continue;
-				break;
-			case BRAVEAID:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_BRAVE_AID) )
-					continue;
-			case BRAVESOLO:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_BRAVE_SOLO) )
-					continue;
-				break;
-			case DEFENSIVE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_DEFENSIVE) )
-					continue;
-				break;
-			case AGGRESSIVE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_A_AGGRESSIVE) )
-					continue;
-				break;
-			default:
-				break;
+		case CUNNINGAID:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_CUNNING_AID))
+				continue;
+			break;
+		case CUNNINGSOLO:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_CUNNING_SOLO))
+				continue;
+			break;
+		case BRAVEAID:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_BRAVE_AID))
+				continue;
+		case BRAVESOLO:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_BRAVE_SOLO))
+				continue;
+			break;
+		case DEFENSIVE:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_DEFENSIVE))
+				continue;
+			break;
+		case AGGRESSIVE:
+			if (!(zTaunt[i].uiFlags & TAUNT_A_AGGRESSIVE))
+				continue;
+			break;
+		default:
+			break;
 		}
 		// check if situation is ok
-		switch(iTauntType)
+		switch (iTauntType)
 		{
 			// actions
-			case TAUNT_FIRE_GUN:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_FIRE_GUN) )
-					continue;
-				break;
-			case TAUNT_FIRE_LAUNCHER:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_FIRE_LAUNCHER) )
-					continue;
-				break;
-			case TAUNT_ATTACK_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_ATTACK_BLADE) )
-					continue;
-				break;
-			case TAUNT_ATTACK_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_ATTACK_HTH) )
-					continue;
-				break;
+		case TAUNT_FIRE_GUN:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_FIRE_GUN))
+				continue;
+			break;
+		case TAUNT_FIRE_LAUNCHER:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_FIRE_LAUNCHER))
+				continue;
+			break;
+		case TAUNT_ATTACK_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_ATTACK_BLADE))
+				continue;
+			break;
+		case TAUNT_ATTACK_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_ATTACK_HTH))
+				continue;
+			break;
 
-			case TAUNT_THROW_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_THROW_KNIFE) )
-					continue;
-				break;
-			case TAUNT_THROW_GRENADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_THROW_GRENADE) )
-					continue;
-				break;
+		case TAUNT_THROW_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_THROW_KNIFE))
+				continue;
+			break;
+		case TAUNT_THROW_GRENADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_THROW_GRENADE))
+				continue;
+			break;
 
-			case TAUNT_OUT_OF_AMMO:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_OUT_OF_AMMO) )
-					continue;
-				break;
-			case TAUNT_RELOAD:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_RELOAD) )
-					continue;
-				break;
+		case TAUNT_OUT_OF_AMMO:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_OUT_OF_AMMO))
+				continue;
+			break;
+		case TAUNT_RELOAD:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_RELOAD))
+				continue;
+			break;
 
 			// AI routines
-			case TAUNT_CHARGE_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_CHARGE_BLADE) )
-					continue;
-				break;
-			case TAUNT_CHARGE_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_CHARGE_HTH) )
-					continue;
-				break;
-			case TAUNT_STEAL:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_STEAL) )
-					continue;
-				break;
-			case TAUNT_RUN_AWAY:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_RUN_AWAY) )
-					continue;
-				break;
-			case TAUNT_SEEK_NOISE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_SEEK_NOISE) )
-					continue;
-				break;
-			case TAUNT_ALERT:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_ALERT) )
-					continue;
-				break;
-			case TAUNT_SUSPICIOUS:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_SUSPICIOUS) )
-					continue;
-				break;
-			case TAUNT_NOTICED_UNSEEN:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_NOTICED_UNSEEN) )
-					continue;
-				break;
-			case TAUNT_SAY_HI:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_SAY_HI) )
-					continue;
-				break;
-			case TAUNT_INFORM_ABOUT:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_INFORM_ABOUT) )
-					continue;
-				break;
+		case TAUNT_CHARGE_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_CHARGE_BLADE))
+				continue;
+			break;
+		case TAUNT_CHARGE_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_CHARGE_HTH))
+				continue;
+			break;
+		case TAUNT_STEAL:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_STEAL))
+				continue;
+			break;
+		case TAUNT_RUN_AWAY:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_RUN_AWAY))
+				continue;
+			break;
+		case TAUNT_SEEK_NOISE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_SEEK_NOISE))
+				continue;
+			break;
+		case TAUNT_ALERT:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_ALERT))
+				continue;
+			break;
+		case TAUNT_SUSPICIOUS:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_SUSPICIOUS))
+				continue;
+			break;
+		case TAUNT_NOTICED_UNSEEN:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_NOTICED_UNSEEN))
+				continue;
+			break;
+		case TAUNT_SAY_HI:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_SAY_HI))
+				continue;
+			break;
+		case TAUNT_INFORM_ABOUT:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_INFORM_ABOUT))
+				continue;
+			break;
 
 			// got_hit_xxx
-			case TAUNT_GOT_HIT:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_GUNFIRE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_GUNFIRE) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_BLADE) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_HTH) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_FALLROOF:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_FALLROOF) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_BLOODLOSS:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_BLOODLOSS) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_EXPLOSION:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_EXPLOSION) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_GAS:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_GAS) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_TENTACLES:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_TENTACLES) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_STRUCTURE_EXPLOSION:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_STRUCTURE_EXPLOSION) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_OBJECT:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT_OBJECT) )
-					continue;
-				break;
-			case TAUNT_GOT_HIT_THROWING_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_HIT) )
-					continue;
-				break;
+		case TAUNT_GOT_HIT:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_GUNFIRE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_GUNFIRE))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_BLADE))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_HTH))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_FALLROOF:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_FALLROOF))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_BLOODLOSS:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_BLOODLOSS))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_EXPLOSION:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_EXPLOSION))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_GAS:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_GAS))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_TENTACLES:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_TENTACLES))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_STRUCTURE_EXPLOSION:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_STRUCTURE_EXPLOSION))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_OBJECT:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT_OBJECT))
+				continue;
+			break;
+		case TAUNT_GOT_HIT_THROWING_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_HIT))
+				continue;
+			break;
 
-			case TAUNT_GOT_DEAFENED:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_DEAFENED) )
-					continue;
-				break;
-			case TAUNT_GOT_BLINDED:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_BLINDED) )
-					continue;
-				break;
+		case TAUNT_GOT_DEAFENED:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_DEAFENED))
+				continue;
+			break;
+		case TAUNT_GOT_BLINDED:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_BLINDED))
+				continue;
+			break;
 
 			// got_missed_xxx
-			case TAUNT_GOT_MISSED:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_MISSED) )
-					continue;
-				break;
-			case TAUNT_GOT_MISSED_GUNFIRE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_MISSED_GUNFIRE) )
-					continue;
-				break;
-			case TAUNT_GOT_MISSED_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_MISSED_BLADE) )
-					continue;
-				break;
-			case TAUNT_GOT_MISSED_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_MISSED_HTH) )
-					continue;
-				break;
-			case TAUNT_GOT_MISSED_THROWING_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_GOT_MISSED_THROWING_KNIFE) )
-					continue;
-				break;
+		case TAUNT_GOT_MISSED:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_MISSED))
+				continue;
+			break;
+		case TAUNT_GOT_MISSED_GUNFIRE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_MISSED_GUNFIRE))
+				continue;
+			break;
+		case TAUNT_GOT_MISSED_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_MISSED_BLADE))
+				continue;
+			break;
+		case TAUNT_GOT_MISSED_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_MISSED_HTH))
+				continue;
+			break;
+		case TAUNT_GOT_MISSED_THROWING_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_GOT_MISSED_THROWING_KNIFE))
+				continue;
+			break;
 
 			// hit_xxx
-			case TAUNT_HIT:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HIT) )
-					continue;
-				break;
-			case TAUNT_HIT_GUNFIRE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HIT_GUNFIRE) )
-					continue;
-				break;
-			case TAUNT_HIT_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HIT_BLADE) )
-					continue;
-				break;
-			case TAUNT_HIT_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HIT_HTH) )
-					continue;
-				break;
-			case TAUNT_HIT_THROWING_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HIT_THROWING_KNIFE) )
-					continue;
-				break;
+		case TAUNT_HIT:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HIT))
+				continue;
+			break;
+		case TAUNT_HIT_GUNFIRE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HIT_GUNFIRE))
+				continue;
+			break;
+		case TAUNT_HIT_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HIT_BLADE))
+				continue;
+			break;
+		case TAUNT_HIT_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HIT_HTH))
+				continue;
+			break;
+		case TAUNT_HIT_THROWING_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HIT_THROWING_KNIFE))
+				continue;
+			break;
 
 			// kill_xxx
-			case TAUNT_KILL:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_KILL) )
-					continue;
-				break;
-			case TAUNT_KILL_GUNFIRE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_KILL_GUNFIRE) )
-					continue;
-				break;
-			case TAUNT_KILL_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_KILL_BLADE) )
-					continue;
-				break;
-			case TAUNT_KILL_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_KILL_HTH) )
-					continue;
-				break;
-			case TAUNT_KILL_THROWING_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_KILL_THROWING_KNIFE) )
-					continue;
-				break;
-			case TAUNT_HEAD_POP:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_HEAD_POP) )
-					continue;
-				break;
+		case TAUNT_KILL:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_KILL))
+				continue;
+			break;
+		case TAUNT_KILL_GUNFIRE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_KILL_GUNFIRE))
+				continue;
+			break;
+		case TAUNT_KILL_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_KILL_BLADE))
+				continue;
+			break;
+		case TAUNT_KILL_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_KILL_HTH))
+				continue;
+			break;
+		case TAUNT_KILL_THROWING_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_KILL_THROWING_KNIFE))
+				continue;
+			break;
+		case TAUNT_HEAD_POP:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_HEAD_POP))
+				continue;
+			break;
 
 			// miss_xxx
-			case TAUNT_MISS:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_MISS) )
-					continue;
-				break;
-			case TAUNT_MISS_GUNFIRE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_MISS_GUNFIRE) )
-					continue;
-				break;
-			case TAUNT_MISS_BLADE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_MISS_BLADE) )
-					continue;
-				break;
-			case TAUNT_MISS_HTH:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_MISS_HTH) )
-					continue;
-				break;
-			case TAUNT_MISS_THROWING_KNIFE:
-				if( !(zTaunt[ i ].uiFlags & TAUNT_S_MISS_THROWING_KNIFE) )
-					continue;
-				break;
+		case TAUNT_MISS:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_MISS))
+				continue;
+			break;
+		case TAUNT_MISS_GUNFIRE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_MISS_GUNFIRE))
+				continue;
+			break;
+		case TAUNT_MISS_BLADE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_MISS_BLADE))
+				continue;
+			break;
+		case TAUNT_MISS_HTH:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_MISS_HTH))
+				continue;
+			break;
+		case TAUNT_MISS_THROWING_KNIFE:
+			if (!(zTaunt[i].uiFlags & TAUNT_S_MISS_THROWING_KNIFE))
+				continue;
+			break;
 
 			// ripostes to merc quotes
-			case TAUNT_RIPOSTE:
-				if( !(gTacticalStatus.ubLastQuoteSaid == zTaunt[ i ].value[TAUNT_RIPOSTE_QUOTE]) )
-					continue;
-				break;
-
-			default:
+		case TAUNT_RIPOSTE:
+			if (!(gTacticalStatus.ubLastQuoteSaid == zTaunt[i].value[TAUNT_RIPOSTE_QUOTE]))
 				continue;
-				break;
+			break;
+
+		default:
+			continue;
+			break;
 		}
 
 		// class and predefined profiles
-		switch( pCiv->ubSoldierClass )
+		switch (pCiv->ubSoldierClass)
 		{
-			case SOLDIER_CLASS_ADMINISTRATOR:
-			case SOLDIER_CLASS_BANDIT:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_ADMIN) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_ADMIN] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ADMIN] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			case SOLDIER_CLASS_ARMY:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_ARMY) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_ARMY] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			case SOLDIER_CLASS_ELITE:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_ELITE) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_ELITE] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ELITE] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			case SOLDIER_CLASS_GREEN_MILITIA:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_GREEN) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_GREEN] != -1 ) && !( zTaunt[ i ].value[TAUNT_PROFILE_GREEN] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			case SOLDIER_CLASS_REG_MILITIA:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_REGULAR) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_ARMY] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			case SOLDIER_CLASS_ELITE_MILITIA:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_VETERAN) )
-					continue;
-				if( (zTaunt[ i ].value[TAUNT_PROFILE_ARMY] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile ) )
-					continue;
-				break;
-			default:
-				return;
-				break;
+		case SOLDIER_CLASS_ADMINISTRATOR:
+		case SOLDIER_CLASS_BANDIT:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_ADMIN))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_ADMIN] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_ADMIN] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		case SOLDIER_CLASS_ARMY:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_ARMY))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_ARMY] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		case SOLDIER_CLASS_ELITE:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_ELITE))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_ELITE] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_ELITE] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		case SOLDIER_CLASS_GREEN_MILITIA:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_GREEN))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_GREEN] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_GREEN] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		case SOLDIER_CLASS_REG_MILITIA:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_REGULAR))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_ARMY] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		case SOLDIER_CLASS_ELITE_MILITIA:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_C_VETERAN))
+				continue;
+			if ((zTaunt[i].value[TAUNT_PROFILE_ARMY] != -1) && !(zTaunt[i].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile))
+				continue;
+			break;
+		default:
+			return;
+			break;
 		}
 
 		// gender
-		switch( pCiv->ubBodyType )
+		switch (pCiv->ubBodyType)
 		{
-			case REGMALE:
-			case BIGMALE:
-			case STOCKYMALE:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_G_MALE) )
-					continue;
-				break;
-			case REGFEMALE:
-				if( !(zTaunt[ i ].uiFlags2 & TAUNT_G_FEMALE) )
-					continue;
-				break;
-			default:
-				return;
-				break;
+		case REGMALE:
+		case BIGMALE:
+		case STOCKYMALE:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_G_MALE))
+				continue;
+			break;
+		case REGFEMALE:
+			if (!(zTaunt[i].uiFlags2 & TAUNT_G_FEMALE))
+				continue;
+			break;
+		default:
+			return;
+			break;
 		}
 
 		// energy, health
-		if( zTaunt[ i ].value[TAUNT_ENERGY_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_ENERGY_GT] != -1)
 		{
-			if( pCiv->bBreath <= zTaunt[ i ].value[TAUNT_ENERGY_GT] )
+			if (pCiv->bBreath <= zTaunt[i].value[TAUNT_ENERGY_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_ENERGY_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_ENERGY_LT] != -1)
 		{
-			if( pCiv->bBreath >= zTaunt[ i ].value[TAUNT_ENERGY_LT] )
+			if (pCiv->bBreath >= zTaunt[i].value[TAUNT_ENERGY_LT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_ENERGY_MAX_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_ENERGY_MAX_GT] != -1)
 		{
-			if( pCiv->bBreathMax <= zTaunt[ i ].value[TAUNT_ENERGY_MAX_GT] )
+			if (pCiv->bBreathMax <= zTaunt[i].value[TAUNT_ENERGY_MAX_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_ENERGY_MAX_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_ENERGY_MAX_LT] != -1)
 		{
-			if( pCiv->bBreathMax >= zTaunt[ i ].value[TAUNT_ENERGY_MAX_LT] )
+			if (pCiv->bBreathMax >= zTaunt[i].value[TAUNT_ENERGY_MAX_LT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_HEALTH_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_HEALTH_GT] != -1)
 		{
-			if( pCiv->stats.bLife <= zTaunt[ i ].value[TAUNT_HEALTH_GT] )
+			if (pCiv->stats.bLife <= zTaunt[i].value[TAUNT_HEALTH_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_HEALTH_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_HEALTH_GT] != -1)
 		{
-			if( pCiv->stats.bLife <= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] )
+			if (pCiv->stats.bLife <= zTaunt[i].value[TAUNT_TARGET_HEALTH_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_HEALTH_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_HEALTH_LT] != -1)
 		{
-			if( pCiv->stats.bLife >= zTaunt[ i ].value[TAUNT_HEALTH_LT] )
+			if (pCiv->stats.bLife >= zTaunt[i].value[TAUNT_HEALTH_LT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_HEALTH_MAX_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_HEALTH_MAX_GT] != -1)
 		{
-			if( pCiv->stats.bLifeMax <= zTaunt[ i ].value[TAUNT_HEALTH_MAX_GT] )
+			if (pCiv->stats.bLifeMax <= zTaunt[i].value[TAUNT_HEALTH_MAX_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_HEALTH_MAX_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_HEALTH_MAX_LT] != -1)
 		{
-			if( pCiv->stats.bLifeMax >= zTaunt[ i ].value[TAUNT_HEALTH_MAX_LT] )
+			if (pCiv->stats.bLifeMax >= zTaunt[i].value[TAUNT_HEALTH_MAX_LT])
 				continue;
 		}
 		// morale
-		if( zTaunt[ i ].value[TAUNT_MORALE_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_MORALE_GT] != -1)
 		{
-			if( pCiv->aiData.bMorale <= zTaunt[ i ].value[TAUNT_MORALE_GT] )
+			if (pCiv->aiData.bMorale <= zTaunt[i].value[TAUNT_MORALE_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_MORALE_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_MORALE_LT] != -1)
 		{
-			if( pCiv->aiData.bMorale >= zTaunt[ i ].value[TAUNT_MORALE_LT] )
+			if (pCiv->aiData.bMorale >= zTaunt[i].value[TAUNT_MORALE_LT])
 				continue;
 		}
 		// experience
-		if( zTaunt[ i ].value[TAUNT_EXP_LEVEL_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_EXP_LEVEL_GT] != -1)
 		{
-			if( pCiv->stats.bExpLevel <= zTaunt[ i ].value[TAUNT_EXP_LEVEL_GT] )
+			if (pCiv->stats.bExpLevel <= zTaunt[i].value[TAUNT_EXP_LEVEL_GT])
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_EXP_LEVEL_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_EXP_LEVEL_LT] != -1)
 		{
-			if( pCiv->stats.bExpLevel >= zTaunt[ i ].value[TAUNT_EXP_LEVEL_LT] )
+			if (pCiv->stats.bExpLevel >= zTaunt[i].value[TAUNT_EXP_LEVEL_LT])
 				continue;
 		}
 
 		// game progress
-		if( zTaunt[ i ].value[TAUNT_PROGRESS_GT] != -1 )
+		if (zTaunt[i].value[TAUNT_PROGRESS_GT] != -1)
 		{
-			if( zTaunt[ i ].value[TAUNT_PROGRESS_GT] >= CurrentPlayerProgressPercentage() )
+			if (zTaunt[i].value[TAUNT_PROGRESS_GT] >= CurrentPlayerProgressPercentage())
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_PROGRESS_LT] != -1 )
+		if (zTaunt[i].value[TAUNT_PROGRESS_LT] != -1)
 		{
-			if( zTaunt[ i ].value[TAUNT_PROGRESS_GT] <= CurrentPlayerProgressPercentage() )
+			if (zTaunt[i].value[TAUNT_PROGRESS_GT] <= CurrentPlayerProgressPercentage())
 				continue;
 		}
 
 		// facts
-		if( zTaunt[ i ].value[TAUNT_FACT_TRUE] != -1 )
+		if (zTaunt[i].value[TAUNT_FACT_TRUE] != -1)
 		{
-			if( gubFact[ zTaunt[ i ].value[TAUNT_FACT_TRUE] ] != TRUE )
+			if (gubFact[zTaunt[i].value[TAUNT_FACT_TRUE]] != TRUE)
 				continue;
 		}
-		if( zTaunt[ i ].value[TAUNT_FACT_FALSE] != -1 )
+		if (zTaunt[i].value[TAUNT_FACT_FALSE] != -1)
 		{
-			if( gubFact[ zTaunt[ i ].value[TAUNT_FACT_FALSE] ] != FALSE )
+			if (gubFact[zTaunt[i].value[TAUNT_FACT_FALSE]] != FALSE)
 				continue;
 		}
 
 		// target limitations
-		if( pTarget != NULL )
+		if (pTarget != NULL)
 		{
 			// target should be zombie
-			if( zTaunt[ i ].uiFlags2 & TAUNT_T_ZOMBIE )
+			if (zTaunt[i].uiFlags2 & TAUNT_T_ZOMBIE)
 			{
-			// anv: moved ifdef - if zombies are off, we want to skip any taunts with TAUNT_T_ZOMBIE flag
-				if( !pTarget->IsZombie() )
+				// anv: moved ifdef - if zombies are off, we want to skip any taunts with TAUNT_T_ZOMBIE flag
+				if (!pTarget->IsZombie())
 					continue;
 			}
 
 			// target merc profile
-			if( zTaunt[ i ].value[TAUNT_TARGET_MERC_PROFILE] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_MERC_PROFILE] != -1)
 			{
-				if( pTarget->ubProfile != zTaunt[ i ].value[TAUNT_TARGET_MERC_PROFILE] )
+				if (pTarget->ubProfile != zTaunt[i].value[TAUNT_TARGET_MERC_PROFILE])
 					continue;
 			}
 			// target type
-			if( zTaunt[ i ].value[TAUNT_TARGET_TYPE] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_TYPE] != -1)
 			{
-				if( pTarget->ubProfile != zTaunt[ i ].value[TAUNT_TARGET_TYPE] )
+				if (pTarget->ubProfile != zTaunt[i].value[TAUNT_TARGET_TYPE])
 					continue;
 			}
 			// target gender
-			switch( pTarget->ubBodyType )
+			switch (pTarget->ubBodyType)
 			{
-				case REGMALE:
-				case BIGMALE:
-				case STOCKYMALE:
-					if( !(zTaunt[ i ].uiFlags2 & TAUNT_T_MALE) )
-						continue;
-					break;
-				case REGFEMALE:
-					if( !(zTaunt[ i ].uiFlags2 & TAUNT_T_FEMALE) )
-						continue;
-					break;
-				default:
-					return;
-					break;
+			case REGMALE:
+			case BIGMALE:
+			case STOCKYMALE:
+				if (!(zTaunt[i].uiFlags2 & TAUNT_T_MALE))
+					continue;
+				break;
+			case REGFEMALE:
+				if (!(zTaunt[i].uiFlags2 & TAUNT_T_FEMALE))
+					continue;
+				break;
+			default:
+				return;
+				break;
 			}
 			// target appearance
-			if( zTaunt[ i ].value[TAUNT_TARGET_APPEARANCE] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_APPEARANCE] != -1)
 			{
 				// check if pTarget has his own predefined profile (ubProfile = 200 for generated characters)
-				if( pTarget->ubProfile != NO_PROFILE )
+				if (pTarget->ubProfile != NO_PROFILE)
 				{
-					if( gMercProfiles[pTarget->ubProfile].bAppearance != zTaunt[ i ].value[TAUNT_TARGET_APPEARANCE] )
+					if (gMercProfiles[pTarget->ubProfile].bAppearance != zTaunt[i].value[TAUNT_TARGET_APPEARANCE])
 						continue;
 				}
 				else
@@ -1815,172 +1816,172 @@ void StartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTar
 			}
 
 			// target type
-			switch( zTaunt[ i ].value[TAUNT_TARGET_TYPE] )
+			switch (zTaunt[i].value[TAUNT_TARGET_TYPE])
 			{
-				case 0:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__PLAYER_CHARACTER )
-						continue;
-					break;
-				case 1:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__AIM_MERC )
-						continue;
-					break;
-				case 2:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__MERC )
-						continue;
-					break;
-				case 3:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__NPC )
-						continue;
-					break;
-				case 4:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__EPC )
-						continue;
-					break;
-				case 5:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__NPC_WITH_UNEXTENDABLE_CONTRACT )
-						continue;
-					break;
-				case 6:
-					if( pTarget->ubWhatKindOfMercAmI != MERC_TYPE__VEHICLE )
-						continue;
-					break;
-				default:
-					break;
+			case 0:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__PLAYER_CHARACTER)
+					continue;
+				break;
+			case 1:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__AIM_MERC)
+					continue;
+				break;
+			case 2:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__MERC)
+					continue;
+				break;
+			case 3:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__NPC)
+					continue;
+				break;
+			case 4:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__EPC)
+					continue;
+				break;
+			case 5:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__NPC_WITH_UNEXTENDABLE_CONTRACT)
+					continue;
+				break;
+			case 6:
+				if (pTarget->ubWhatKindOfMercAmI != MERC_TYPE__VEHICLE)
+					continue;
+				break;
+			default:
+				break;
 			}
 
 			// target energy, health
-			if( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_ENERGY_GT] != -1)
 			{
-				if( pTarget->bBreath <= zTaunt[ i ].value[TAUNT_TARGET_ENERGY_GT] )
+				if (pTarget->bBreath <= zTaunt[i].value[TAUNT_TARGET_ENERGY_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_ENERGY_LT] != -1)
 			{
-				if( pTarget->bBreath >= zTaunt[ i ].value[TAUNT_TARGET_ENERGY_LT] )
+				if (pTarget->bBreath >= zTaunt[i].value[TAUNT_TARGET_ENERGY_LT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_GT] != -1)
 			{
-				if( pTarget->bBreathMax <= zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_GT] )
+				if (pTarget->bBreathMax <= zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_LT] != -1)
 			{
-				if( pTarget->bBreathMax >= zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_LT] )
+				if (pTarget->bBreathMax >= zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_LT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_HEALTH_GT] != -1)
 			{
-				if( pTarget->stats.bLife <= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] )
+				if (pTarget->stats.bLife <= zTaunt[i].value[TAUNT_TARGET_HEALTH_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_HEALTH_GT] != -1)
 			{
-				if( pTarget->stats.bLife <= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] )
+				if (pTarget->stats.bLife <= zTaunt[i].value[TAUNT_TARGET_HEALTH_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_HEALTH_LT] != -1)
 			{
-				if( pTarget->stats.bLife >= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_LT] )
+				if (pTarget->stats.bLife >= zTaunt[i].value[TAUNT_TARGET_HEALTH_LT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_GT] != -1)
 			{
-				if( pTarget->stats.bLifeMax <= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_GT] )
+				if (pTarget->stats.bLifeMax <= zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_LT] != -1)
 			{
-				if( pTarget->stats.bLifeMax >= zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_LT] )
+				if (pTarget->stats.bLifeMax >= zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_LT])
 					continue;
 			}
 			// morale
-			if( zTaunt[ i ].value[TAUNT_TARGET_MORALE_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_MORALE_GT] != -1)
 			{
-				if( pTarget->aiData.bMorale <= zTaunt[ i ].value[TAUNT_TARGET_MORALE_GT] )
+				if (pTarget->aiData.bMorale <= zTaunt[i].value[TAUNT_TARGET_MORALE_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_MORALE_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_MORALE_LT] != -1)
 			{
-				if( pTarget->aiData.bMorale >= zTaunt[ i ].value[TAUNT_TARGET_MORALE_LT] )
+				if (pTarget->aiData.bMorale >= zTaunt[i].value[TAUNT_TARGET_MORALE_LT])
 					continue;
 			}
 			// experience
-			if( zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_GT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_GT] != -1)
 			{
-				if( pTarget->stats.bExpLevel <= zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_GT] )
+				if (pTarget->stats.bExpLevel <= zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_GT])
 					continue;
 			}
-			if( zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_LT] != -1 )
+			if (zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_LT] != -1)
 			{
-				if( pTarget->stats.bExpLevel >= zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_LT] )
+				if (pTarget->stats.bExpLevel >= zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_LT])
 					continue;
 			}
 		}
 		else // pTarget==NULL
 		{
-			if( ( zTaunt[ i ].value[TAUNT_TARGET_MERC_PROFILE] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_APPEARANCE] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_ENERGY_MAX_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_HEALTH_MAX_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_EXP_LEVEL_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_MORALE_GT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_MORALE_LT] != -1 ) ||
-				( zTaunt[ i ].value[TAUNT_TARGET_TYPE] != -1 ) || 
-				( zTaunt[ i ].uiFlags2 & TAUNT_T_ZOMBIE ) )
-					continue;
+			if ((zTaunt[i].value[TAUNT_TARGET_MERC_PROFILE] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_APPEARANCE] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_ENERGY_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_ENERGY_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_ENERGY_MAX_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_HEALTH_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_HEALTH_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_HEALTH_MAX_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_EXP_LEVEL_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_MORALE_GT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_MORALE_LT] != -1) ||
+				(zTaunt[i].value[TAUNT_TARGET_TYPE] != -1) ||
+				(zTaunt[i].uiFlags2 & TAUNT_T_ZOMBIE))
+				continue;
 
 		}
 		// everything ok, current taunt is applicable, remember it
 		zApplicableTaunts[iApplicableTaunts] = zTaunt[i];
 		iApplicableTaunts++;
-		if(iApplicableTaunts >= MAX_APPLICABLE_TAUNTS)
+		if (iApplicableTaunts >= MAX_APPLICABLE_TAUNTS)
 			continue;
 	}
 	// are there any applicable taunts?
-	if( iApplicableTaunts > 0 )
+	if (iApplicableTaunts > 0)
 	{
 		// use random one
 		// use censored version if setting is set
-		UINT16 iChosenTaunt = Random(iApplicableTaunts); 
-		if( gTauntsSettings.fTauntCensoredMode == TRUE && zApplicableTaunts[ iChosenTaunt ].szCensoredText[0] != 0 )
+		UINT16 iChosenTaunt = Random(iApplicableTaunts);
+		if (gTauntsSettings.fTauntCensoredMode == TRUE && zApplicableTaunts[iChosenTaunt].szCensoredText[0] != 0)
 		{
-			swprintf( sTauntText, zApplicableTaunts[ iChosenTaunt ].szCensoredText );
+			swprintf(sTauntText, zApplicableTaunts[iChosenTaunt].szCensoredText);
 		}
 		else
 		{
-			swprintf( sTauntText, zApplicableTaunts[ iChosenTaunt ].szText );
+			swprintf(sTauntText, zApplicableTaunts[iChosenTaunt].szText);
 		}
 
-		swprintf( gzTauntQuote, L"\"%s\"", sTauntText );
+		swprintf(gzTauntQuote, L"\"%s\"", sTauntText);
 
 		// block this enemy from taunting for a time being
-		uiTauntFinishTimes[pCiv->ubID] = GetJA2Clock() + min( gTauntsSettings.sMaxDelay , max( gTauntsSettings.sMinDelay, FindDelayForString( gzTauntQuote ) + gTauntsSettings.sModDelay ) ); 
+		uiTauntFinishTimes[pCiv->ubID] = GetJA2Clock() + min(gTauntsSettings.sMaxDelay, max(gTauntsSettings.sMinDelay, FindDelayForString(gzTauntQuote) + gTauntsSettings.sModDelay));
 
-		if( gTauntsSettings.fTauntMakeNoise == TRUE )
-			MakeNoise( pCiv->ubID, pCiv->sGridNo, pCiv->pathing.bLevel, pCiv->bOverTerrainType, (UINT8)gTauntsSettings.sVolume, NOISE_VOICE, gzTauntQuote );
+		if (gTauntsSettings.fTauntMakeNoise == TRUE)
+			MakeNoise(pCiv->ubID, pCiv->sGridNo, pCiv->pathing.bLevel, pCiv->bOverTerrainType, (UINT8)gTauntsSettings.sVolume, NOISE_VOICE, gzTauntQuote);
 		else
 		{
-			if(gTauntsSettings.fTauntShowPopupBox == TRUE)
-			{	
-				if( gbPublicOpplist[gbPlayerNum][pCiv->ubID] == SEEN_CURRENTLY || gTauntsSettings.fTauntAlwaysShowPopupBox == TRUE )
+			if (gTauntsSettings.fTauntShowPopupBox == TRUE)
+			{
+				if (gbPublicOpplist[gbPlayerNum][pCiv->ubID] == SEEN_CURRENTLY || gTauntsSettings.fTauntAlwaysShowPopupBox == TRUE)
 				{
-					ShowTauntPopupBox( pCiv, gzTauntQuote );
+					ShowTauntPopupBox(pCiv, gzTauntQuote);
 				}
 			}
-			if(gTauntsSettings.fTauntShowInLog == TRUE)
+			if (gTauntsSettings.fTauntShowInLog == TRUE)
 			{
-				if( gbPublicOpplist[gbPlayerNum][pCiv->ubID] == SEEN_CURRENTLY || gTauntsSettings.fTauntAlwaysShowInLog == TRUE )
+				if (gbPublicOpplist[gbPlayerNum][pCiv->ubID] == SEEN_CURRENTLY || gTauntsSettings.fTauntAlwaysShowInLog == TRUE)
 				{
-					ScreenMsg( FONT_GRAY2, MSG_INTERFACE, L"%s: %s", pCiv->GetName(), gzTauntQuote );
+					ScreenMsg(FONT_GRAY2, MSG_INTERFACE, L"%s: %s", pCiv->GetName(), gzTauntQuote);
 				}
 			}
 		}
@@ -1992,82 +1993,82 @@ void StartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTar
 
 }
 
-void ShowTauntPopupBox( SOLDIERTYPE *pCiv, STR16 gzTauntQuote )
+void ShowTauntPopupBox(SOLDIERTYPE* pCiv, STR16 gzTauntQuote)
 {
 	INT16	sX, sY;
 	INT16	sScreenX, sScreenY;
 	VIDEO_OVERLAY_DESC		VideoOverlayDesc;
 
 	// stop if other civ quote is already being shown 
-	if( gCivQuoteData.bActive == TRUE )
+	if (gCivQuoteData.bActive == TRUE)
 	{
 		return;
 	}
 
 	// Determine location...
 	// Get location of civ on screen.....
-	GetSoldierScreenPos( pCiv, &sScreenX, &sScreenY );
+	GetSoldierScreenPos(pCiv, &sScreenX, &sScreenY);
 	sX = sScreenX;
 	// Flugente: have the box appear a bit above the soldier. Otherwise it will obstruct us from aiming at him, which is annoying if it happens very often
 	sY = sScreenY - 40;
 
 	// Create video oeverlay....
-	memset( &VideoOverlayDesc, 0, sizeof( VIDEO_OVERLAY_DESC ) );
+	memset(&VideoOverlayDesc, 0, sizeof(VIDEO_OVERLAY_DESC));
 
 	// Prepare text box
-	gCivQuoteData.iDialogueBox = PrepareMercPopupBox( gCivQuoteData.iDialogueBox , BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzTauntQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight );
+	gCivQuoteData.iDialogueBox = PrepareMercPopupBox(gCivQuoteData.iDialogueBox, BASIC_MERC_POPUP_BACKGROUND, BASIC_MERC_POPUP_BORDER, gzTauntQuote, DIALOGUE_DEFAULT_WIDTH, 0, 0, 0, &gusCivQuoteBoxWidth, &gusCivQuoteBoxHeight);
 
 	// OK, find center for box......
-	sX = sX - ( gusCivQuoteBoxWidth / 2 );
-	sY = sY - ( gusCivQuoteBoxHeight / 2 );
+	sX = sX - (gusCivQuoteBoxWidth / 2);
+	sY = sY - (gusCivQuoteBoxHeight / 2);
 
 	// OK, limit to screen......
 	{
-		if ( sX < 0 )
+		if (sX < 0)
 		{
 			sX = 0;
 		}
 
 		// CHECK FOR LEFT/RIGHT
-		if ( ( sX + gusCivQuoteBoxWidth ) > SCREEN_WIDTH )
+		if ((sX + gusCivQuoteBoxWidth) > SCREEN_WIDTH)
 		{
 			sX = SCREEN_WIDTH - gusCivQuoteBoxWidth;
 		}
 
 		// Now check for top
-		if ( sY < gsVIEWPORT_WINDOW_START_Y )
+		if (sY < gsVIEWPORT_WINDOW_START_Y)
 		{
 			sY = gsVIEWPORT_WINDOW_START_Y;
 		}
 
 		// Check for bottom
-		if ( ( sY + gusCivQuoteBoxHeight ) > (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT))
+		if ((sY + gusCivQuoteBoxHeight) > (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT))
 		{
 			sY = (SCREEN_HEIGHT - INV_INTERFACE_HEIGHT) - gusCivQuoteBoxHeight;
 		}
 	}
 
-	VideoOverlayDesc.sLeft			= sX;
-	VideoOverlayDesc.sTop				= sY;
-	VideoOverlayDesc.sRight			= VideoOverlayDesc.sLeft + gusCivQuoteBoxWidth;
-	VideoOverlayDesc.sBottom		= VideoOverlayDesc.sTop + gusCivQuoteBoxHeight;
-	VideoOverlayDesc.sX					= VideoOverlayDesc.sLeft;
-	VideoOverlayDesc.sY					= VideoOverlayDesc.sTop;
+	VideoOverlayDesc.sLeft = sX;
+	VideoOverlayDesc.sTop = sY;
+	VideoOverlayDesc.sRight = VideoOverlayDesc.sLeft + gusCivQuoteBoxWidth;
+	VideoOverlayDesc.sBottom = VideoOverlayDesc.sTop + gusCivQuoteBoxHeight;
+	VideoOverlayDesc.sX = VideoOverlayDesc.sLeft;
+	VideoOverlayDesc.sY = VideoOverlayDesc.sTop;
 	VideoOverlayDesc.BltCallback = RenderCivQuoteBoxOverlay;
 
-	gCivQuoteData.iVideoOverlay =	RegisterVideoOverlay( 0, &VideoOverlayDesc );
+	gCivQuoteData.iVideoOverlay = RegisterVideoOverlay(0, &VideoOverlayDesc);
 
 	//Define main region
-	MSYS_DefineRegion( &(gCivQuoteData.MouseRegion), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop,	VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
-						CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback );
+	MSYS_DefineRegion(&(gCivQuoteData.MouseRegion), VideoOverlayDesc.sLeft, VideoOverlayDesc.sTop, VideoOverlayDesc.sRight, VideoOverlayDesc.sBottom, MSYS_PRIORITY_HIGHEST,
+		CURSOR_NORMAL, MSYS_NO_CALLBACK, QuoteOverlayClickCallback);
 	// Add region
-	MSYS_AddRegion( &(gCivQuoteData.MouseRegion) );
+	MSYS_AddRegion(&(gCivQuoteData.MouseRegion));
 
 	gCivQuoteData.bActive = TRUE;
 
-	gCivQuoteData.uiTimeOfCreation = GetJA2Clock( );
-	
-	gCivQuoteData.uiDelayTime = min( gTauntsSettings.sMaxDelay , max( gTauntsSettings.sMinDelay, FindDelayForString( gzTauntQuote ) + gTauntsSettings.sModDelay ) );
+	gCivQuoteData.uiTimeOfCreation = GetJA2Clock();
+
+	gCivQuoteData.uiDelayTime = min(gTauntsSettings.sMaxDelay, max(gTauntsSettings.sMinDelay, FindDelayForString(gzTauntQuote) + gTauntsSettings.sModDelay));
 
 	gCivQuoteData.pCiv = pCiv;
 }
@@ -2157,7 +2158,7 @@ STR VoiceTauntFileName[] =
 };
 
 // sevenfm: voice taunts
-BOOLEAN PlayVoiceTaunt(SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTarget)
+BOOLEAN PlayVoiceTaunt(SOLDIERTYPE* pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE* pTarget)
 {
 	CHAR8 filename[1024];
 	CHAR8 filenameExtra[1024];
@@ -2175,14 +2176,17 @@ BOOLEAN PlayVoiceTaunt(SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTa
 
 	// show some information about taunts
 	if (gTauntsSettings.fTauntVoiceShowInfo)
+	{
 		ScreenMsg(FONT_MCOLOR_LTGREEN, MSG_INTERFACE, L"Soldier [%d] TauntType %d", pCiv->ubID, iTauntType);
+	}
 
 	// cannot taunt when dead or collapsed
 	if (pCiv->stats.bLife < OKLIFE || pCiv->bCollapsed || pCiv->bBreathCollapsed)
 	{
 		if (gTauntsSettings.fTauntVoiceShowInfo)
+		{
 			ScreenMsg(FONT_MCOLOR_LTGREEN, MSG_INTERFACE, L"Bad soldier state (dying or collapsed)");
-
+		}
 		return FALSE;
 	}
 
@@ -2193,13 +2197,26 @@ BOOLEAN PlayVoiceTaunt(SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTa
 
 		return FALSE;
 	}
-
+	// JADOL -- Voice Taunts resources are merging from VENGEAGE RELOADED Voice-Data-Taunts/Voice resource, so all needed code will adjusted as VR resources
+	// VR- Voice Taunts will be stored at Data/VoiceTaunts
 	strcpy(filename, "VoiceTaunts");
 
 	// prepare team
 	if (pCiv->bTeam == ENEMY_TEAM)
 	{
 		strcat(filename, "\\Army\\");
+
+		if (pCiv->ubBodyType == REGFEMALE)
+			strcat(filename, "Female\\");
+		else
+			strcat(filename, "Male\\");
+
+		if (pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE)
+			strcat(filename, "Elite\\");
+		else if (pCiv->ubSoldierClass == SOLDIER_CLASS_ARMY)
+			strcat(filename, "Regular\\");
+		else if (pCiv->ubSoldierClass == SOLDIER_CLASS_ADMINISTRATOR)
+			strcat(filename, "Admin\\");
 	}
 	else if (pCiv->bTeam == MILITIA_TEAM)
 	{
@@ -2218,29 +2235,29 @@ BOOLEAN PlayVoiceTaunt(SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTa
 		return FALSE;
 	}
 
-	// prepare gender
-	if (pCiv->ubBodyType <= STOCKYMALE)
-	{
-		strcat(filename, "Male\\");
-	}
-	else if (pCiv->ubBodyType == REGFEMALE)
-	{
-		strcat(filename, "Female\\");
-	}
-	else
-	{
-		if (gTauntsSettings.fTauntVoiceShowInfo)
-			ScreenMsg(FONT_MCOLOR_LTGREEN, MSG_INTERFACE, L"Incorrect bodytype");
+	//// prepare gender
+	//if (pCiv->ubBodyType <= STOCKYMALE)
+	//{
+	//	strcat(filename, "Male\\");
+	//}
+	//else if (pCiv->ubBodyType == REGFEMALE)
+	//{
+	//	strcat(filename, "Female\\");
+	//}
+	//else
+	//{
+	//	if (gTauntsSettings.fTauntVoiceShowInfo)
+	//		ScreenMsg(FONT_MCOLOR_LTGREEN, MSG_INTERFACE, L"Incorrect bodytype");
 
-		return FALSE;
-	}
+	//	return FALSE;
+	//}
 
 	// count possible voices
 	UINT8 ubVoiceCount;
 	for (ubVoiceCount = 1; ubVoiceCount < 100; ubVoiceCount++)
 	{
 		sprintf(buf, "%s%02d", filename, ubVoiceCount);
-		strcat(buf, "\\alert.ogg");		
+		strcat(buf, "\\alert.ogg");
 
 		// check that folder exists
 		if (!FileExists(buf))
@@ -2305,7 +2322,7 @@ BOOLEAN PlayVoiceTaunt(SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTa
 	// log taunt file names
 	if (gTauntsSettings.fTauntVoiceShowInfo)
 	{
-		FILE	*OutFile;
+		FILE* OutFile;
 		if ((OutFile = fopen("VoiceTauntLog.txt", "a+t")) != NULL)
 		{
 			fprintf(OutFile, "Soldier [%d] TauntType %d %s\n",

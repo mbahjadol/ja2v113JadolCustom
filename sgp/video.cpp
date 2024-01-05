@@ -1852,8 +1852,11 @@ void RefreshScreen(void *DummyVariable)
 		}
 		if ( gfRenderScroll )
 		{
-			//			ScrollJA2Background( guiScrollDirection, gsScrollXIncrement, gsScrollYIncrement, gpPrimarySurface, gpBackBuffer, TRUE, PREVIOUS_MOUSE_DATA );
-			ScrollJA2Background( guiScrollDirection, gsScrollXIncrement, gsScrollYIncrement, gpBackBuffer, gpBackBuffer, TRUE, PREVIOUS_MOUSE_DATA );
+			// JADOL -- I don't know what the difference of this one !
+			// this one is OK refer to https://github.com/1dot13/source/commit/46aa0b6220a3dddbe9814e8f0b0919ffe455a3c9
+						ScrollJA2Background( guiScrollDirection, gsScrollXIncrement, gsScrollYIncrement, gpPrimarySurface, gpBackBuffer, TRUE, PREVIOUS_MOUSE_DATA );
+			//ScrollJA2Background( guiScrollDirection, gsScrollXIncrement, gsScrollYIncrement, gpBackBuffer, gpBackBuffer, TRUE, PREVIOUS_MOUSE_DATA );
+			// ---
 		}
 
 		gfIgnoreScrollDueToCenterAdjust = FALSE;

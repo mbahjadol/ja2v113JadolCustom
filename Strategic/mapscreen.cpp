@@ -7327,6 +7327,7 @@ void GetMapKeyboardInput( UINT32 *puiNewEvent )
 					break;
 
 				case F1:
+					OutputDebugString(String("Ini testing aja kok yaah "));
 				case F2:
 				case F3:
 				case F4:
@@ -8102,6 +8103,7 @@ void GetMapKeyboardInput( UINT32 *puiNewEvent )
 						{
 							static UINT16 gQuoteNum = 0;
 							// Get Soldier
+							MapScreenMessage(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Quote Enum No: %d", gQuoteNum);
 							TacticalCharacterDialogue( MercPtrs[ gCharactersList[ bSelectedInfoChar ].usSolID ], gQuoteNum );
 							gQuoteNum++;
 						}
@@ -8111,6 +8113,7 @@ void GetMapKeyboardInput( UINT32 *puiNewEvent )
 							// Get Soldier
 							if ( giHighLine != -1 )
 							{
+								MapScreenMessage(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Quote Enum No: %d", gQuoteNum);
 								TacticalCharacterDialogue( MercPtrs[ gCharactersList[ giHighLine ].usSolID ], gQuoteNum );
 								gQuoteNum++;
 							}
@@ -16224,7 +16227,7 @@ void RandomAwakeSelectedMercConfirmsStrategicMove( void )
 		// select that merc so that when he speaks we're showing his portrait and not someone else
 		ChangeSelectedInfoChar( ubSelectedMercIndex[ ubChosenMerc ], FALSE );
 
-		MercPtrs[ ubSelectedMercID[ ubChosenMerc ] ]->DoMercBattleSound( BATTLE_SOUND_OK1 );
+		MercPtrs[ ubSelectedMercID[ ubChosenMerc ] ]->DoMercBattleSound( BATTLE_SOUND_OK );
 		//TacticalCharacterDialogue( MercPtrs[ ubSelectedMercID[ ubChosenMerc ] ], ubQuoteNum );
 	}
 }

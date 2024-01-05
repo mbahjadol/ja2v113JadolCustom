@@ -339,6 +339,17 @@ BOOLEAN DoesMercHaveDisability( SOLDIERTYPE *pSoldier, UINT8 aVal )
 	return FALSE;
 }
 
+BOOLEAN DoesMercHaveAttitude(SOLDIERTYPE* pSoldier, UINT8 aVal)
+{
+	if (pSoldier->ubProfile != NO_PROFILE)
+	{
+		if (gMercProfiles[pSoldier->ubProfile].bAttitude == aVal)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
 BOOLEAN DoesMercHavePersonality( SOLDIERTYPE *pSoldier, UINT8 aVal )
 {
 	// personalities are new trait system only!

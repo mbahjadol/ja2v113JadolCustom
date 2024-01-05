@@ -115,9 +115,37 @@
 #include "AIInternals.h"				// sevenfm
 #include "Interface Cursors.h"			// sevenfm
 #include "strategic.h"					// shadooow for CreateNewMerc
+#include "Structure Wrap.h"
+
+#include "Turn Based Input.h"				// JADOL -- Tidying up the source code
+#include "Turn Based Input_GKI_Handler.h"	// JADOL -- Modularizing GetKeyboardInput DequeueEvent Handler
+
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
 class SOLDIERTYPE;
+
+BOOLEAN gfMouseLockedOnBorder = FALSE;
+INT32 gusMapPos;
+UINT16 gusItemExplosion = NULL;
+INT8 gCreatedMonsterType = NULL;
+
+UINT16 usitem = 1623;
+INT32 mappos = 0;
+
+BOOLEAN gfFirstCycleMovementStarted = FALSE;
+
+UINT32 guiSoldierFlags;
+UINT32 guiUITargetSoldierId = NOBODY;
+
+SOLDIERTYPE* gpExchangeSoldier1;
+SOLDIERTYPE* gpExchangeSoldier2;
+
+// Flugente: fortification
+INT16	gCurrentFortificationStructure = -1;
+UINT8	gCurrentFortificationTileLibraryIndex = 0;
+
+BOOLEAN	gfNextFireJam = FALSE;
+INT16 brstmode = 0; //dddd
 
 extern UIKEYBOARD_HOOK					gUIKeyboardHook;
 extern BOOLEAN	fRightButtonDown;
@@ -126,7 +154,7 @@ extern BOOLEAN fIgnoreLeftUp;
 extern UINT32	guiCurrentEvent;
 extern UINT8	gubIntTileCheckFlags;
 extern UINT32	guiCurrentUICursor;
-extern SOLDIERTYPE *gpSMCurrentMerc;
+extern SOLDIERTYPE* gpSMCurrentMerc;
 extern INT32 gsOverItemsGridNo;
 extern INT16 gsOverItemsLevel;
 extern BOOLEAN	gfUIShowExitSouth;
@@ -136,21 +164,15 @@ extern BOOLEAN	fX2ButtonDown;
 
 extern INT32	giStartingMemValue;
 
-
 extern BOOLEAN gfBeginBurstSpreadTracking;
 extern BOOLEAN gfRTClickLeftHoldIntercepted;
 
 extern BOOLEAN gfReportHitChances;
 
-BOOLEAN gfFirstCycleMovementStarted = FALSE;
-
 extern UINT32 guiVObjectSize;
 extern UINT32 guiVSurfaceSize;
 
 extern BOOLEAN gfNextShotKills;
-UINT32 guiSoldierFlags;
-UINT32 guiUITargetSoldierId = NOBODY;
-
 // sevenfm: for cover dialog
 extern COVER_DRAW_MODE gubDrawMode;
 
@@ -166,251 +188,96 @@ extern DragSelection	gDragSelection;
 extern  MOUSE_REGION    gMPanelRegion;
 
 extern UINT32 guiNewUICursor;
-extern SOLDIERTYPE *pTMilitiaSoldier;
+extern SOLDIERTYPE* pTMilitiaSoldier;
 
-void HandleTalkingMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent );
-void HandleMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent );
-void HandleItemMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent );
-void HandleOpenDoorMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent );
-void HandleSectorExitMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent );
-void HandleStanceChangeFromUIKeys( UINT8 ubAnimHeight );
+extern BOOLEAN ValidQuickExchangePosition();
 
-extern BOOLEAN ValidQuickExchangePosition( );
+extern SOLDIERTYPE* FindNextActiveSquad(SOLDIERTYPE* pSoldier);
+extern void ToggleItemGlow(BOOLEAN fOn);
+extern void HandleTalkingMenuBackspace(void);
+extern void BeginKeyPanelFromKeyShortcut();
 
-
-BOOLEAN HandleUIReloading( SOLDIERTYPE *pSoldier );
-
-
-extern SOLDIERTYPE *FindNextActiveSquad( SOLDIERTYPE *pSoldier );
-extern SOLDIERTYPE *FindPrevActiveSquad( SOLDIERTYPE *pSoldier );
-extern void ToggleItemGlow( BOOLEAN fOn );
-extern void HandleTalkingMenuBackspace( void );
-extern void BeginKeyPanelFromKeyShortcut( );
-
-
-
-extern INT32		iSMPanelButtons[ NUM_SM_BUTTONS ];
-extern INT32		iTEAMPanelButtons[ NUM_TEAM_BUTTONS ];
+extern INT32		iSMPanelButtons[NUM_SM_BUTTONS];
+extern INT32		iTEAMPanelButtons[NUM_TEAM_BUTTONS];
 extern INT32		giSMStealthButton;
-
-SOLDIERTYPE *gpExchangeSoldier1;
-SOLDIERTYPE *gpExchangeSoldier2;
-
-// Flugente: fortification
-INT16	gCurrentFortificationStructure = -1;
-UINT8	gCurrentFortificationTileLibraryIndex = 0;
 
 extern UINT32 guiMessageBoxImage;
 extern UINT16 guiMessageBoxImageIndex;
 
-BOOLEAN ConfirmActionCancel( INT32 usMapPos, INT32 usOldMapPos );
-
-BOOLEAN	gfNextFireJam = FALSE;
-INT16 brstmode = 0; //dddd
 extern INT16 ITEMDESC_START_X;
 extern INT16 ITEMDESC_START_Y;
 
-
-BOOLEAN gfMouseLockedOnBorder = FALSE;
 extern int iWindowedMode;
 
-extern OBJECTTYPE *gpItemDescObject;
+extern OBJECTTYPE* gpItemDescObject;
 extern BOOLEAN gfInItemStackPopup;
 extern BOOLEAN gfInKeyRingPopup;
 
-
-//Little functions called by keyboard input
-void SwapGoggles(SOLDIERTYPE *pTeamSoldier);
-// HEADROCK HAM B2.8: Function to switch team's goggles uniformly
-void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision);
-void SeperateItems();
-void StackAndSort( BOOLEAN fRestrictToAmmo );
-void CreateRandomItem();
-void MakeSelectedSoldierTired();
-void ToggleRealTime( UINT32 *puiNewEvent );
-void ToggleViewAllMercs();
-void ToggleViewAllItems();
-void TestExplosion();
-void CycleSelectedMercsItem();
-void ToggleWireFrame();
-void RefreshSoldier();
-void ChangeSoldiersBodyType( UINT8 ubBodyType, BOOLEAN fCreateNewPalette );
-void TeleportSelectedSoldier();
-void ToggleTurnMode();// ary-05/05/2009 : add forced turn mode
-void ToggleTreeTops();
-void ToggleZBuffer();
-void TogglePlanningMode();
-void SetBurstMode();
-void SetScopeMode( INT32 usMapPos );
-void ObliterateSector();
-void RandomizeMercProfile();
-void CreateNextCivType();
-void ToggleCliffDebug();
-void CreateCow();
-void CreateBloodCat();
-void CreatePlayerControlledCow();
-void ToggleRealTimeConfirm();
-void TestMeanWhile( INT32 iID );
-void CreatePlayerControlledMonster();
-void ChangeCurrentSquad( INT32 iSquad );
-void HandleSelectMercSlot( UINT8 ubPanelSlot, INT8 bCode );
-void EscapeUILock( );
-
-#ifdef JA2BETAVERSION
-void ToggleMapEdgepoints();
-#endif
-#ifdef JA2TESTVERSION
-void ToggleMercsNeverQuit();
-#endif
-#ifdef JA2TESTVERSION
-void DumpSectorDifficultyInfo( void );
-#endif
-
-void HandleStealthChangeFromUIKeys( );
-
-extern BOOLEAN CompatibleAmmoForGun( OBJECTTYPE *pTryObject, OBJECTTYPE *pTestObject );
-extern void DetermineWhichAssignmentMenusCanBeShown( void );
-extern void DetermineWhichMilitiaControlMenusCanBeShown( void ); //lalien
+extern BOOLEAN CompatibleAmmoForGun(OBJECTTYPE* pTryObject, OBJECTTYPE* pTestObject);
+extern void DetermineWhichAssignmentMenusCanBeShown(void);
+extern void DetermineWhichMilitiaControlMenusCanBeShown(void); //lalien
 // The_Bob - real time sneaking, 01-06-09
 extern BOOLEAN WeSeeNoOne(void); // Needed to control entering turn-based with ctrl-x
 
-void	QueryTBMButton( UINT32 *puiNewEvent );
-void	QueryTBWheel( UINT32 *puiNewEvent );
-void	QueryTBX1Button( UINT32 *puiNewEvent );
-void	QueryTBX2Button( UINT32 *puiNewEvent );
-
-void	MercCreationCallBack(UINT8 ubResult);
-void	ItemCreationCallBack( UINT8 ubResult );
-void	CheatCreateItem();
-// silversurfer: added for merc portrait swapping in tactical
-void	SwapMercPortraits ( SOLDIERTYPE *pSoldier, INT8 bDirection );
-extern	INT8 GetTeamSlotFromPlayerID( UINT8 ubID );
-extern FACETYPE	*gpCurrentTalkingFace;
+extern	INT8 GetTeamSlotFromPlayerID(UINT8 ubID);
+extern FACETYPE* gpCurrentTalkingFace;
 
 // Flugente:  toggle display of enemy role indicators
 extern BOOLEAN gDisplayEnemyRoles;
 
-// sevenfm: new mouse commands
-void HandleAltMouseTBWheel( void );
-void HandleAltMouseTBMButton( UINT32 *puiNewEvent );
-void HandleAltMouseTBX1Button( UINT32 *puiNewEvent );
-void HandleAltMouseTBX2Button( UINT32 *puiNewEvent );
+extern BOOLEAN AnyItemsVisibleOnLevel(ITEM_POOL* pItemPool, INT8 bZLevel);
 
-// sevenfm: original mouse commands functionality
-void HandleMouseTBWheel( void );
-void HandleMouseTBMButton( UINT32 *puiNewEvent );
-void HandleMouseTBX1Button( UINT32 *puiNewEvent );
-void HandleMouseTBX2Button( UINT32 *puiNewEvent );
+extern OBJECTTYPE* gpItemDescOrigAttachmentObject;
 
-// sevenfm: check availability for actions
-BOOLEAN CheckAutoBandage(void);
+extern BOOLEAN	gUIActionModeChangeDueToMouseOver;
 
-// sevenfm: common functionality
-void HandleTBSelectAllMercs( void );
-void HandleTBToggleStealthAll( void );
-void HandleTBToggleFireMode( void );
-void HandleTBJumpThroughWindow( void );
-void HandleTBJump( void );
-void HandleTBLook( UINT32 *puiNewEvent );
-void HandleTBSelectAllMercs( void );
-void HandleTBCycleThroughKnownEnemies( void );
-void HandleTBCycleThroughKnownEnemiesBackward( void );
-void HandleTBCycleThroughVisibleEnemies( void );
-void HandleTBCycleThroughVisibleEnemiesBackward( void );
-void HandleTBLocateSoldier( void );
-void HandleTBChangeLevel( void );
-void HandleTBSwapHands( void );
-void HandleTBSwapGunsling( void );
-void HandleTBSwapKnife( void );
-void HandleTBSwapSidearm( void );
-void HandleTBSwapGoogles( void );
-void HandleTBToggleFormation( void );
-void HandleTBEnterTurnbased( void );
-void HandleTBToggleSneak( void );
-void HandleTBToggleStealth( void );
-void HandleTBReload( void );
-void HandleTBReloadAll( void );
-void HandleTBShowCover( void );
-void HandleTBShowMines( void );
-void HandleTBShowLOS( void );
-void HandleTBToggleTrapNetworkView( void );
-void HandleTBGotoHigherStance(void);
-void HandleTBGotoLowerStance(void);
-void HandleTBLocateNextMerc( void );
-void HandleTBLocatePrevMerc( void );
-void HandleTBLevelDown(void);
-void HandleTBLevelUp(void);
-void HandleTBBackpacks(void);
-void HandleTBDropBackpacks( void );
-void HandleTBPickUpBackpacks( void );
-void HandleTBSoldierRun( void );
-void HandleTBSkillsMenu(void);
+extern	BOOLEAN		gfDisableRegionActive;
+extern	BOOLEAN		gfUserTurnRegionActive;
 
-void HandleTacticalReload(void);
-void HandleTacticalTakeItem( void );
-void HandleTacticalDropItem( UINT8 ubSlot );
-void HandleTacticalTakeInvItem( INT32 iType );
-void HandleTacticalStoreInvItem( void );
-INT32 InvItemType( UINT16 usItem );
-void HandleTacticalInventoryMenu( void );
-void HandleTacticalMoveItems( void );
-void TacticalInventoryMessageBoxCallBack( UINT8 ubExitValue );
-void FortificationSettingCallBack( UINT8 ubExitValue );
-void HandleTacticalCoverMenu( void );
-void TacticalCoverMessageBoxCallBack( UINT8 ubExitValue );
-void ActivateCheatsMessageBoxCallBack( UINT8 ubExitValue );
-void HandleTacticalAmmoCrates( UINT8 magType );
-void HandleTacticalTransformItem( void );
-void HandleTacticalTransformFlashlight(void);
-void HandleTacticalTransformLaser(void);
-void HandleTacticalTransformStock(void);
-void HandleTacticalTransformScope(void);
-BOOLEAN FindTransformation(UINT16 usItem, TransformInfoStruct **pTransformation, BOOLEAN fTactical = FALSE);
-BOOLEAN FindLaserTransformation(UINT16 usItem, TransformInfoStruct **pTransformation);
-BOOLEAN FindStockTransformation(UINT16 usItem, TransformInfoStruct **pTransformation);
-BOOLEAN FindFlashlightTransformation(UINT16 usItem, TransformInfoStruct **pTransformation);
-BOOLEAN FindScopeTransformation(UINT16 usItem, TransformInfoStruct **pTransformation);
+extern INT8 gBadMercBodyType;
+extern INT8 gCivilianBodyType;
 
-void	GetTBMouseButtonInput( UINT32 *puiNewEvent )
+
+void	GetTBMouseButtonInput(UINT32* puiNewEvent)
 {
-	QueryTBLeftButton( puiNewEvent );
-	QueryTBRightButton( puiNewEvent );
-	QueryTBWheel( puiNewEvent );
-	QueryTBMButton( puiNewEvent  );
-	QueryTBX1Button( puiNewEvent  );
-	QueryTBX2Button( puiNewEvent  );
+	QueryTBLeftButton(puiNewEvent);
+	QueryTBRightButton(puiNewEvent);
+	QueryTBWheel(puiNewEvent);
+	QueryTBMButton(puiNewEvent);
+	QueryTBX1Button(puiNewEvent);
+	QueryTBX2Button(puiNewEvent);
 }
 
-void	QueryTBLeftButton( UINT32 *puiNewEvent )
+void	QueryTBLeftButton(UINT32* puiNewEvent)
 {
-	SOLDIERTYPE								*pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
 	static BOOLEAN	fClickHoldIntercepted = FALSE;
 	static BOOLEAN	fCanCheckForSpeechAdvance = FALSE;
-	static INT32		sMoveClickGridNo					= 0;
+	static INT32		sMoveClickGridNo = 0;
 
 
 	// LEFT MOUSE BUTTON
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
 	{
-		if (!GetMouseMapPos( &usMapPos ) && !gfUIShowExitSouth )
+		if (!GetMouseMapPos(&usMapPos) && !gfUIShowExitSouth)
 		{
 			return;
 		}
 
-		if ( gViewportRegion.ButtonState & MSYS_LEFT_BUTTON )
+		if (gViewportRegion.ButtonState & MSYS_LEFT_BUTTON)
 		{
-			if ( !fLeftButtonDown )
+			if (!fLeftButtonDown)
 			{
 				fLeftButtonDown = TRUE;
-				RESETCOUNTER( LMOUSECLICK_DELAY_COUNTER );
+				RESETCOUNTER(LMOUSECLICK_DELAY_COUNTER);
 
 				{
-					switch( gCurrentUIMode )
+					switch (gCurrentUIMode)
 					{
 					case CONFIRM_ACTION_MODE:
 
-						if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+						if (GetSoldier(&pSoldier, gusSelectedSoldier))
 						{
 							pSoldier->sStartGridNo = usMapPos;
 						}
@@ -418,25 +285,25 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 					case MOVE_MODE:
 
-						if ( giUIMessageOverlay != -1 )
+						if (giUIMessageOverlay != -1)
 						{
-							EndUIMessage( );
+							EndUIMessage();
 						}
 						else
 						{
-							if ( !HandleCheckForExitArrowsInput( FALSE ) && gpItemPointer == NULL )
+							if (!HandleCheckForExitArrowsInput(FALSE) && gpItemPointer == NULL)
 							{
 								// First check if we clicked on a guy, if so, make selected if it's ours
-								if ( gfUIFullTargetFound && ( guiUIFullTargetFlags & OWNED_MERC )	)
+								if (gfUIFullTargetFound && (guiUIFullTargetFlags & OWNED_MERC))
 								{
-									if ( !( guiUIFullTargetFlags & UNCONSCIOUS_MERC ) )
+									if (!(guiUIFullTargetFlags & UNCONSCIOUS_MERC))
 									{
 										fClickHoldIntercepted = TRUE;
 
 										// Select guy
-										if(	GetSoldier( &pSoldier, gusUIFullTargetID ) && gpItemPointer == NULL )
+										if (GetSoldier(&pSoldier, gusUIFullTargetID) && gpItemPointer == NULL)
 										{
-											if( pSoldier->bAssignment >= ON_DUTY )
+											if (pSoldier->bAssignment >= ON_DUTY)
 											{
 												// do nothing
 												fClickHoldIntercepted = FALSE;
@@ -454,54 +321,54 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 								}
 								else
 								{
-									if ( InUIPlanMode( ) )
+									if (InUIPlanMode())
 									{
-										AddUIPlan( usMapPos, UIPLAN_ACTION_MOVETO );
+										AddUIPlan(usMapPos, UIPLAN_ACTION_MOVETO);
 									}
 									else
 									{
 										// We're on terrain in which we can walk, walk
 										// If we're on terrain,
-										if ( gusSelectedSoldier != NOBODY )
+										if (gusSelectedSoldier != NOBODY)
 										{
-											GetSoldier( &pSoldier, gusSelectedSoldier );
+											GetSoldier(&pSoldier, gusSelectedSoldier);
 
-											INT8 bReturnVal = HandleMoveModeInteractiveClick( usMapPos, puiNewEvent );
+											INT8 bReturnVal = HandleMoveModeInteractiveClick(usMapPos, puiNewEvent);
 
 											// All's OK for interactive tile?
-											if ( bReturnVal == -2 )
+											if (bReturnVal == -2)
 											{
 												// Confirm!
-												if ( SelectedMercCanAffordMove(	)	)
+												if (SelectedMercCanAffordMove())
 												{
 													*puiNewEvent = C_WAIT_FOR_CONFIRM;
 												}
 											}
-											else if ( bReturnVal == 0 )
+											else if (bReturnVal == 0)
 											{
-												if ( gfUIAllMoveOn )
+												if (gfUIAllMoveOn)
 												{
 													*puiNewEvent = C_WAIT_FOR_CONFIRM;
 												}
 												else
 												{
-													if ( gsCurrentActionPoints == 0 )
+													if (gsCurrentActionPoints == 0)
 													{
-														ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+														ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 													}
-													else if ( SelectedMercCanAffordMove(	)	)
+													else if (SelectedMercCanAffordMove())
 													{
 														BOOLEAN fResult;
 
-														if ( ( fResult = UIOKMoveDestination( MercPtrs[ gusSelectedSoldier ], usMapPos ) ) == 1 )
+														if ((fResult = UIOKMoveDestination(MercPtrs[gusSelectedSoldier], usMapPos)) == 1)
 														{
 															// ATE: CHECK IF WE CAN GET TO POSITION
 															// Check if we are not in combat
-															GetSoldier( &pSoldier, gusSelectedSoldier );
+															GetSoldier(&pSoldier, gusSelectedSoldier);
 
-															if ( gsCurrentActionPoints == 0 )
+															if (gsCurrentActionPoints == 0)
 															{
-																ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+																ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 															}
 															else
 															{
@@ -510,9 +377,9 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 														}
 														else
 														{
-															if ( fResult == 2 )
+															if (fResult == 2)
 															{
-																ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NOBODY_USING_REMOTE_STR ] );
+																ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NOBODY_USING_REMOTE_STR]);
 															}
 															else
 															{
@@ -556,7 +423,7 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 						break;
 					}
 				}
-				if ( gfUIWaitingForUserSpeechAdvance )
+				if (gfUIWaitingForUserSpeechAdvance)
 				{
 					fCanCheckForSpeechAdvance = TRUE;
 				}
@@ -564,16 +431,16 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 			}
 
 			// HERE FOR CLICK-DRAG CLICK
-			switch( gCurrentUIMode )
+			switch (gCurrentUIMode)
 			{
 
 			case MOVE_MODE:
 
 				// First check if we clicked on a guy, if so, make selected if it's ours
-				if ( gfUIFullTargetFound )
+				if (gfUIFullTargetFound)
 				{
 					// Select guy
-					if ( ( guiUIFullTargetFlags & SELECTED_MERC) && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC ) && !( MercPtrs[ gusUIFullTargetID ]->flags.uiStatusFlags & SOLDIER_VEHICLE ) )
+					if ((guiUIFullTargetFlags & SELECTED_MERC) && !(guiUIFullTargetFlags & UNCONSCIOUS_MERC) && !(MercPtrs[gusUIFullTargetID]->flags.uiStatusFlags & SOLDIER_VEHICLE))
 					{
 						*puiNewEvent = M_CHANGE_TO_ADJPOS_MODE;
 						fIgnoreLeftUp = FALSE;
@@ -583,7 +450,7 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 			}
 
 			// IF HERE, DO A CLICK-HOLD IF IN INTERVAL
-			if ( COUNTERDONE( LMOUSECLICK_DELAY_COUNTER ) && !fClickHoldIntercepted )
+			if (COUNTERDONE(LMOUSECLICK_DELAY_COUNTER) && !fClickHoldIntercepted)
 			{
 				/* removed warning C4060 (jonathanl)
 				// Switch on UI mode
@@ -598,13 +465,13 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 		}
 		else
 		{
-			if ( fLeftButtonDown	)
+			if (fLeftButtonDown)
 			{
-				if ( !fIgnoreLeftUp )
+				if (!fIgnoreLeftUp)
 				{
 
 					// FIRST CHECK FOR ANYTIME ( NON-INTERVAL ) CLICKS
-					switch( gCurrentUIMode )
+					switch (gCurrentUIMode)
 					{
 					case ADJUST_STANCE_MODE:
 
@@ -614,27 +481,27 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 					}
 
 					// CHECK IF WE CLICKED-HELD
-					if ( COUNTERDONE( LMOUSECLICK_DELAY_COUNTER ) )
+					if (COUNTERDONE(LMOUSECLICK_DELAY_COUNTER))
 					{
 						// LEFT CLICK-HOLD EVENT
 						// Switch on UI mode
-						switch( gCurrentUIMode )
+						switch (gCurrentUIMode)
 						{
 						case CONFIRM_ACTION_MODE:
 
-							if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+							if (GetSoldier(&pSoldier, gusSelectedSoldier))
 							{
-								if ( pSoldier->bDoBurst )
+								if (pSoldier->bDoBurst)
 								{
 									pSoldier->sEndGridNo = usMapPos;
 
 									gfBeginBurstSpreadTracking = FALSE;
 
-									if ( pSoldier->sEndGridNo != pSoldier->sStartGridNo )
+									if (pSoldier->sEndGridNo != pSoldier->sStartGridNo)
 									{
 										pSoldier->flags.fDoSpread = TRUE;
 
-										PickBurstLocations( pSoldier );
+										PickBurstLocations(pSoldier);
 
 										*puiNewEvent = CA_MERC_SHOOT;
 									}
@@ -656,22 +523,22 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 					{
 						//LEFT CLICK NORMAL EVENT
 						// Switch on UI mode
-						if ( !fClickHoldIntercepted )
+						if (!fClickHoldIntercepted)
 						{
-							if ( giUIMessageOverlay != -1 )
+							if (giUIMessageOverlay != -1)
 							{
-								EndUIMessage( );
+								EndUIMessage();
 							}
 							else
 							{
-								if ( !HandleCheckForExitArrowsInput( TRUE ) )
+								if (!HandleCheckForExitArrowsInput(TRUE))
 								{
-									if ( gpItemPointer != NULL )
+									if (gpItemPointer != NULL)
 									{
-										if ( HandleItemPointerClick( usMapPos ) )
+										if (HandleItemPointerClick(usMapPos))
 										{
 											// getout of mode
-											EndItemPointer( );
+											EndItemPointer();
 
 											*puiNewEvent = A_CHANGE_TO_MOVE;
 										}
@@ -679,28 +546,28 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 									else
 									{
 										// Check for wiating for keyboard advance
-										if ( gfUIWaitingForUserSpeechAdvance && fCanCheckForSpeechAdvance)
+										if (gfUIWaitingForUserSpeechAdvance && fCanCheckForSpeechAdvance)
 										{
 											// We have a key, advance!
-											DialogueAdvanceSpeech( );
+											DialogueAdvanceSpeech();
 										}
 										else
 										{
-											switch( gCurrentUIMode )
+											switch (gCurrentUIMode)
 											{
 											case MENU_MODE:
 
 												// If we get a hit here and we're in menu mode, quit the menu mode
-												EndMenuEvent( guiCurrentEvent );
+												EndMenuEvent(guiCurrentEvent);
 												break;
 
 											case IDLE_MODE:
 
 												// First check if we clicked on a guy, if so, make selected if it's ours
-												if ( gfUIFullTargetFound )
+												if (gfUIFullTargetFound)
 												{
 													// Select guy
-													if ( guiUIFullTargetFlags & OWNED_MERC && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC ) )
+													if (guiUIFullTargetFlags & OWNED_MERC && !(guiUIFullTargetFlags & UNCONSCIOUS_MERC))
 													{
 														*puiNewEvent = I_SELECT_MERC;
 													}
@@ -712,14 +579,14 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 												// Check if we should activate an interactive tile!
 												// Select guy
-												if ( ( guiUIFullTargetFlags & OWNED_MERC ) && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC ) )
+												if ((guiUIFullTargetFlags & OWNED_MERC) && !(guiUIFullTargetFlags & UNCONSCIOUS_MERC))
 												{
 													// Select guy
-													if(	GetSoldier( &pSoldier, gusUIFullTargetID ) && ( gpItemPointer == NULL ) && !( pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE ) )
+													if (GetSoldier(&pSoldier, gusUIFullTargetID) && (gpItemPointer == NULL) && !(pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE))
 													{
-														if( pSoldier->bAssignment >= ON_DUTY )
+														if (pSoldier->bAssignment >= ON_DUTY)
 														{
-															PopupAssignmentMenuInTactical( pSoldier );
+															PopupAssignmentMenuInTactical(pSoldier);
 														}
 													}
 												}
@@ -732,7 +599,7 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 											case HANDCURSOR_MODE:
 
-												HandleHandCursorClick( usMapPos, puiNewEvent );
+												HandleHandCursorClick(usMapPos, puiNewEvent);
 												break;
 
 											case RADIOCURSOR_MODE:
@@ -742,9 +609,9 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 											case JUMPOVER_MODE:
 
-												if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+												if (GetSoldier(&pSoldier, gusSelectedSoldier))
 												{
-													if ( EnoughPoints( pSoldier, gsCurrentActionPoints, 0, TRUE ) )
+													if (EnoughPoints(pSoldier, gsCurrentActionPoints, 0, TRUE))
 													{
 														*puiNewEvent = JP_JUMP;
 													}
@@ -753,25 +620,25 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 											case ACTION_MODE:
 
-												if ( InUIPlanMode( ) )
+												if (InUIPlanMode())
 												{
-													AddUIPlan( usMapPos, UIPLAN_ACTION_FIRE );
+													AddUIPlan(usMapPos, UIPLAN_ACTION_FIRE);
 												}
 												else
 												{
-													if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+													if (GetSoldier(&pSoldier, gusSelectedSoldier))
 													{
-														if ( !HandleUIReloading( pSoldier ) )
+														if (!HandleUIReloading(pSoldier))
 														{
 															// ATE: Reset refine aim..
 															pSoldier->aiData.bShownAimTime = 0;
 
-															if ( gsCurrentActionPoints == 0 )
+															if (gsCurrentActionPoints == 0)
 															{
-																ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+																ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 															}
 															// Determine if we have enough action points!
-															else if ( UIMouseOnValidAttackLocation( pSoldier ) && SelectedMercCanAffordAttack( ) )
+															else if (UIMouseOnValidAttackLocation(pSoldier) && SelectedMercCanAffordAttack())
 															{
 																*puiNewEvent = A_CHANGE_TO_CONFIM_ACTION;
 																pSoldier->sStartGridNo = usMapPos;
@@ -798,7 +665,7 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 											case TALKCURSOR_MODE:
 
-												if ( HandleTalkInit( ) )
+												if (HandleTalkInit())
 												{
 													*puiNewEvent = TA_TALKINGMENU;
 												}
@@ -817,13 +684,13 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 											case EXITSECTORMENU_MODE:
 
-												RemoveSectorExitMenu( FALSE );
+												RemoveSectorExitMenu(FALSE);
 												break;
 
 											case OPENDOOR_MENU_MODE:
 
-												CancelOpenDoorMenu( );
-												HandleOpenDoorMenu( );
+												CancelOpenDoorMenu();
+												HandleOpenDoorMenu();
 												*puiNewEvent = A_CHANGE_TO_MOVE;
 												break;
 
@@ -838,13 +705,13 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 				// Reset flag
 				fLeftButtonDown = FALSE;
-				fIgnoreLeftUp	= FALSE;
+				fIgnoreLeftUp = FALSE;
 				fClickHoldIntercepted = FALSE;
 				fCanCheckForSpeechAdvance = FALSE;
 				gfFirstCycleMovementStarted = FALSE;
 
 				// Reset counter
-				RESETCOUNTER( LMOUSECLICK_DELAY_COUNTER );
+				RESETCOUNTER(LMOUSECLICK_DELAY_COUNTER);
 
 			}
 
@@ -858,9 +725,9 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 		// OK, handle special cases like if we are dragging and holding for a burst spread and
 		// release mouse over another mouse region
-		if ( gfBeginBurstSpreadTracking )
+		if (gfBeginBurstSpreadTracking)
 		{
-			if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+			if (GetSoldier(&pSoldier, gusSelectedSoldier))
 			{
 				pSoldier->flags.fDoSpread = FALSE;
 			}
@@ -870,43 +737,43 @@ void	QueryTBLeftButton( UINT32 *puiNewEvent )
 
 }
 
-void	QueryTBRightButton( UINT32 *puiNewEvent )
+void	QueryTBRightButton(UINT32* puiNewEvent)
 {
 	static BOOLEAN	fClickHoldIntercepted = FALSE;
 	static BOOLEAN	fClickIntercepted = FALSE;
-	SOLDIERTYPE		*pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
 	BOOLEAN				fDone = FALSE;
-	if (!GetMouseMapPos( &usMapPos ) )
+	if (!GetMouseMapPos(&usMapPos))
 	{
 		return;
 	}
 
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
 	{
 
 		// RIGHT MOUSE BUTTON
-		if ( gViewportRegion.ButtonState & MSYS_RIGHT_BUTTON )
+		if (gViewportRegion.ButtonState & MSYS_RIGHT_BUTTON)
 		{
-			if ( !fRightButtonDown )
+			if (!fRightButtonDown)
 			{
 				fRightButtonDown = TRUE;
-				RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
+				RESETCOUNTER(RMOUSECLICK_DELAY_COUNTER);
 			}
 
 			// CHECK COMBINATIONS
-			if ( fLeftButtonDown )
+			if (fLeftButtonDown)
 			{
 			}
 			else
 			{
-				if ( gpItemPointer == NULL )
+				if (gpItemPointer == NULL)
 				{
 					// IF HERE, DO A CLICK-HOLD IF IN INTERVAL
-					if ( COUNTERDONE( RMOUSECLICK_DELAY_COUNTER ) && !fClickHoldIntercepted )
+					if (COUNTERDONE(RMOUSECLICK_DELAY_COUNTER) && !fClickHoldIntercepted)
 					{
 						// Switch on UI mode
-						switch( gCurrentUIMode )
+						switch (gCurrentUIMode)
 						{
 						case IDLE_MODE:
 						case ACTION_MODE:
@@ -922,25 +789,25 @@ void	QueryTBRightButton( UINT32 *puiNewEvent )
 							// ATE:
 							fDone = FALSE;
 
-							if ( ( guiUIFullTargetFlags & OWNED_MERC ) && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC ) )
+							if ((guiUIFullTargetFlags & OWNED_MERC) && !(guiUIFullTargetFlags & UNCONSCIOUS_MERC))
 							{
 								// Select guy
-								if(	GetSoldier( &pSoldier, gusUIFullTargetID ) && ( gpItemPointer == NULL ) && !( pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE ) )
+								if (GetSoldier(&pSoldier, gusUIFullTargetID) && (gpItemPointer == NULL) && !(pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE))
 								{
 									//if( pSoldier->bAssignment >= ON_DUTY )
 									{
-										PopupAssignmentMenuInTactical( pSoldier );
+										PopupAssignmentMenuInTactical(pSoldier);
 										fClickHoldIntercepted = TRUE;
 									}
 								}
 							}
 
-							if( fDone == TRUE )
+							if (fDone == TRUE)
 							{
 								break;
 							}
 
-							if ( gusSelectedSoldier != NOBODY && !fClickHoldIntercepted )
+							if (gusSelectedSoldier != NOBODY && !fClickHoldIntercepted)
 							{
 								*puiNewEvent = U_MOVEMENT_MENU;
 								fClickHoldIntercepted = TRUE;
@@ -970,38 +837,38 @@ void	QueryTBRightButton( UINT32 *puiNewEvent )
 		}
 		else
 		{
-			if ( fRightButtonDown )
+			if (fRightButtonDown)
 			{
 
-				if ( fLeftButtonDown )
+				if (fLeftButtonDown)
 				{
 					fIgnoreLeftUp = TRUE;
 
-					if ( gpItemPointer == NULL )
+					if (gpItemPointer == NULL)
 					{
 						// ATE:
-						if ( gusSelectedSoldier != NOBODY )
+						if (gusSelectedSoldier != NOBODY)
 						{
-							switch( gCurrentUIMode )
+							switch (gCurrentUIMode)
 							{
 							case CONFIRM_MOVE_MODE:
 							case MOVE_MODE:
 
-								if ( gfUICanBeginAllMoveCycle )
+								if (gfUICanBeginAllMoveCycle)
 								{
 									*puiNewEvent = M_CYCLE_MOVE_ALL;
 								}
 								else
 								{
-									if ( !gfFirstCycleMovementStarted )
+									if (!gfFirstCycleMovementStarted)
 									{
 										gfFirstCycleMovementStarted = TRUE;
 
 										// OK, set this guy's movement mode to crawling fo rthat we will start cycling in run.....
-										if ( MercPtrs[ gusSelectedSoldier ]->usUIMovementMode != RUNNING )
+										if (MercPtrs[gusSelectedSoldier]->usUIMovementMode != RUNNING)
 										{
 											// ATE: UNLESS WE ARE IN RUNNING MODE ALREADY
-											MercPtrs[ gusSelectedSoldier ]->usUIMovementMode = CRAWLING;
+											MercPtrs[gusSelectedSoldier]->usUIMovementMode = CRAWLING;
 										}
 									}
 
@@ -1012,11 +879,11 @@ void	QueryTBRightButton( UINT32 *puiNewEvent )
 							}
 
 							// ATE: Added cancel of burst mode....
-							if ( gfBeginBurstSpreadTracking )
+							if (gfBeginBurstSpreadTracking)
 							{
 								gfBeginBurstSpreadTracking = FALSE;
 								gfRTClickLeftHoldIntercepted = TRUE;
-								MercPtrs[ gusSelectedSoldier ]->flags.fDoSpread				= FALSE;
+								MercPtrs[gusSelectedSoldier]->flags.fDoSpread = FALSE;
 								fClickHoldIntercepted = TRUE;
 								*puiNewEvent = A_END_ACTION;
 								gCurrentUIMode = MOVE_MODE;
@@ -1026,123 +893,123 @@ void	QueryTBRightButton( UINT32 *puiNewEvent )
 				}
 				else
 				{
-					if ( !fClickHoldIntercepted && !fClickIntercepted )
+					if (!fClickHoldIntercepted && !fClickIntercepted)
 					{
-						if ( gpItemPointer == NULL )
-					{
-						// ATE:
-						if ( gusSelectedSoldier != NOBODY )
+						if (gpItemPointer == NULL)
 						{
-							// sevenfm: ALT+RMB - TraitsMenu
-							if(_KeyDown(ALT))
+							// ATE:
+							if (gusSelectedSoldier != NOBODY)
 							{
-								switch( gCurrentUIMode )
+								// sevenfm: ALT+RMB - TraitsMenu
+								if (_KeyDown(ALT))
 								{
-								case MOVE_MODE:
-								case TALKCURSOR_MODE:
-								case ACTION_MODE:
-								case CONFIRM_ACTION_MODE:
-								case LOOKCURSOR_MODE:
-									TraitsMenu(usMapPos);
-									fClickIntercepted = TRUE;
-									break;
-								}
-							}
-							// anv: CTRL+RMB - VehicleMenu
-							else if(_KeyDown(CTRL))
-							{
-								switch( gCurrentUIMode )
-								{										
-								case HANDCURSOR_MODE:
-									HandleHandCursorRightClick( usMapPos, puiNewEvent );
-									break;
-								}
-							}
-							else
-							{
-								gfPlotNewMovement = TRUE;//shadooow: this fixes AP cost sometimes not recalculating when changing modes via right click
-								// Switch on UI mode
-								switch( gCurrentUIMode )
-								{
-								case IDLE_MODE:
-
-									break;
-
-								case MOVE_MODE:
-									// anv: don't switch if passengers are blocked from attacking
-									pSoldier = MercPtrs[ gusSelectedSoldier ];
-									if( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER | SOLDIER_PASSENGER ) )
+									switch (gCurrentUIMode)
 									{
-										SOLDIERTYPE *pVehicle = GetSoldierStructureForVehicle( pSoldier->iVehicleId );
-										INT8 bSeatIndex = GetSeatIndexFromSoldier( pSoldier );
-										if( gNewVehicle[ pVehicleList[ pSoldier->iVehicleId ].ubVehicleType ].VehicleSeats[bSeatIndex].fBlockedShots == TRUE )
+									case MOVE_MODE:
+									case TALKCURSOR_MODE:
+									case ACTION_MODE:
+									case CONFIRM_ACTION_MODE:
+									case LOOKCURSOR_MODE:
+										TraitsMenu(usMapPos);
+										fClickIntercepted = TRUE;
+										break;
+									}
+								}
+								// anv: CTRL+RMB - VehicleMenu
+								else if (_KeyDown(CTRL))
+								{
+									switch (gCurrentUIMode)
+									{
+									case HANDCURSOR_MODE:
+										HandleHandCursorRightClick(usMapPos, puiNewEvent);
+										break;
+									}
+								}
+								else
+								{
+									gfPlotNewMovement = TRUE;//shadooow: this fixes AP cost sometimes not recalculating when changing modes via right click
+									// Switch on UI mode
+									switch (gCurrentUIMode)
+									{
+									case IDLE_MODE:
+
+										break;
+
+									case MOVE_MODE:
+										// anv: don't switch if passengers are blocked from attacking
+										pSoldier = MercPtrs[gusSelectedSoldier];
+										if (pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER | SOLDIER_PASSENGER))
 										{
-											ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pVehicleSeatsStrings[0] );
-											break;
+											SOLDIERTYPE* pVehicle = GetSoldierStructureForVehicle(pSoldier->iVehicleId);
+											INT8 bSeatIndex = GetSeatIndexFromSoldier(pSoldier);
+											if (gNewVehicle[pVehicleList[pSoldier->iVehicleId].ubVehicleType].VehicleSeats[bSeatIndex].fBlockedShots == TRUE)
+											{
+												ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pVehicleSeatsStrings[0]);
+												break;
+											}
 										}
+										// We have here a change to action mode
+										*puiNewEvent = M_CHANGE_TO_ACTION;
+										fClickIntercepted = TRUE;
+										break;
+
+									case ACTION_MODE:
+
+										// We have here a change to action mode
+										*puiNewEvent = A_CHANGE_TO_MOVE;
+										fClickIntercepted = TRUE;
+										break;
+
+									case CONFIRM_MOVE_MODE:
+
+										*puiNewEvent = A_CHANGE_TO_MOVE;
+										fClickIntercepted = TRUE;
+										break;
+
+									case HANDCURSOR_MODE:
+										// If we cannot actually do anything, return to movement mode
+										*puiNewEvent = A_CHANGE_TO_MOVE;
+										break;
+
+									case RADIOCURSOR_MODE:
+										// If we cannot actually do anything, return to movement mode
+										*puiNewEvent = A_CHANGE_TO_MOVE;
+										break;
+
+									case LOOKCURSOR_MODE:
+									case TALKCURSOR_MODE:
+
+										// If we cannot actually do anything, return to movement mode
+										*puiNewEvent = A_CHANGE_TO_MOVE;
+										break;
+
+									case CONFIRM_ACTION_MODE:
+
+										if (GetSoldier(&pSoldier, gusSelectedSoldier))
+										{
+											HandleRightClickAdjustCursor(pSoldier, usMapPos);
+										}
+										fClickIntercepted = TRUE;
+										break;
+
+									case MENU_MODE:
+
+										// If we get a hit here and we're in menu mode, quit the menu mode
+										EndMenuEvent(guiCurrentEvent);
+										fClickIntercepted = TRUE;
+										break;
+
 									}
-									// We have here a change to action mode
-									*puiNewEvent = M_CHANGE_TO_ACTION;
-									fClickIntercepted = TRUE;
-									break;
-
-								case ACTION_MODE:
-
-									// We have here a change to action mode
-									*puiNewEvent = A_CHANGE_TO_MOVE;
-									fClickIntercepted = TRUE;
-									break;
-
-								case CONFIRM_MOVE_MODE:
-
-									*puiNewEvent = A_CHANGE_TO_MOVE;
-									fClickIntercepted = TRUE;
-									break;
-
-								case HANDCURSOR_MODE:
-									// If we cannot actually do anything, return to movement mode
-									*puiNewEvent = A_CHANGE_TO_MOVE;
-									break;
-
-								case RADIOCURSOR_MODE:
-									// If we cannot actually do anything, return to movement mode
-									*puiNewEvent = A_CHANGE_TO_MOVE;
-									break;
-
-								case LOOKCURSOR_MODE:
-								case TALKCURSOR_MODE:
-
-									// If we cannot actually do anything, return to movement mode
-									*puiNewEvent = A_CHANGE_TO_MOVE;
-									break;
-
-								case CONFIRM_ACTION_MODE:
-
-									if ( GetSoldier( &pSoldier, gusSelectedSoldier ) )
-									{
-										HandleRightClickAdjustCursor( pSoldier, usMapPos );
-									}
-									fClickIntercepted = TRUE;
-									break;
-
-								case MENU_MODE:
-
-									// If we get a hit here and we're in menu mode, quit the menu mode
-									EndMenuEvent( guiCurrentEvent );
-									fClickIntercepted = TRUE;
-									break;
-
 								}
 							}
-							}
-					}
-					else
-					{
-						if ( gfUIFullTargetFound )
+						}
+						else
+						{
+							if (gfUIFullTargetFound)
 							{
 								gfItemPointerDifferentThanDefault = !gfItemPointerDifferentThanDefault;
 							}
-					}
+						}
 					}
 				}
 			}
@@ -1152,45 +1019,42 @@ void	QueryTBRightButton( UINT32 *puiNewEvent )
 			fClickIntercepted = FALSE;
 
 			// Reset counter
-			RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
+			RESETCOUNTER(RMOUSECLICK_DELAY_COUNTER);
 
 		}
 	}
 
 }
 
-
-extern BOOLEAN	gUIActionModeChangeDueToMouseOver;
-
-void GetTBMousePositionInput( UINT32 *puiNewEvent )
+void GetTBMousePositionInput(UINT32* puiNewEvent)
 {
 	INT32 usMapPos;
 	static INT32			usOldMapPos = 0;
-	SOLDIERTYPE		*pSoldier;
+	SOLDIERTYPE* pSoldier;
 	BOOLEAN						bHandleCode;
 	static BOOLEAN		fOnValidGuy = FALSE;
 	static UINT32			uiMoveTargetSoldierId = NOBODY;
 
 
-	if (!GetMouseMapPos( &usMapPos ) )
+	if (!GetMouseMapPos(&usMapPos))
 	{
 		return;
 	}
 
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
 	{
 		// Handle highlighting stuff
-		HandleObjectHighlighting( );
+		HandleObjectHighlighting();
 
 		// Check if we have an item in our hands...
-		if ( gpItemPointer != NULL )
+		if (gpItemPointer != NULL)
 		{
 			*puiNewEvent = A_ON_TERRAIN;
 			return;
 		}
 
 		// Switch on modes
-		switch( gCurrentUIMode )
+		switch (gCurrentUIMode)
 		{
 		case LOCKUI_MODE:
 			*puiNewEvent = LU_ON_TERRAIN;
@@ -1213,11 +1077,11 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 			break;
 
 		case TALKCURSOR_MODE:
-			if ( uiMoveTargetSoldierId != NOBODY )
+			if (uiMoveTargetSoldierId != NOBODY)
 			{
-				if( gfUIFullTargetFound )
+				if (gfUIFullTargetFound)
 				{
-					if ( gusUIFullTargetID != uiMoveTargetSoldierId )
+					if (gusUIFullTargetID != uiMoveTargetSoldierId)
 					{
 						*puiNewEvent = A_CHANGE_TO_MOVE;
 						return;
@@ -1237,9 +1101,9 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 			uiMoveTargetSoldierId = NOBODY;
 
 			// Check for being on terrain
-			if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+			if (GetSoldier(&pSoldier, gusSelectedSoldier))
 			{
-				if ( IsValidJumpLocation( pSoldier, usMapPos, TRUE ) )
+				if (IsValidJumpLocation(pSoldier, usMapPos, TRUE))
 				{
 					gsJumpOverGridNo = usMapPos;
 					*puiNewEvent = JP_ON_TERRAIN;
@@ -1247,13 +1111,13 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 				}
 				else
 				{
-					if( gfUIFullTargetFound )
+					if (gfUIFullTargetFound)
 					{
 						// ATE: Don't do this automatically for enemies......
-						if ( MercPtrs[ gusUIFullTargetID ]->bTeam != ENEMY_TEAM )
+						if (MercPtrs[gusUIFullTargetID]->bTeam != ENEMY_TEAM)
 						{
 							uiMoveTargetSoldierId = gusUIFullTargetID;
-							if ( IsValidTalkableNPC( (UINT8)gusUIFullTargetID, FALSE, FALSE, FALSE ) && !_KeyDown( SHIFT ) && !AM_AN_EPC( pSoldier ) && !ValidQuickExchangePosition( ) )
+							if (IsValidTalkableNPC((UINT8)gusUIFullTargetID, FALSE, FALSE, FALSE) && !_KeyDown(SHIFT) && !AM_AN_EPC(pSoldier) && !ValidQuickExchangePosition())
 							{
 								*puiNewEvent = T_CHANGE_TO_TALKING;
 								return;
@@ -1273,14 +1137,14 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 
 			fOnValidGuy = FALSE;
 
-			if ( gfUIFullTargetFound	)
+			if (gfUIFullTargetFound)
 				//if ( gfUIFullTargetFound )
 			{
-				if ( IsValidTargetMerc( (UINT8)gusUIFullTargetID ) )
+				if (IsValidTargetMerc((UINT8)gusUIFullTargetID))
 				{
 					guiUITargetSoldierId = gusUIFullTargetID;
 
-					if ( MercPtrs[ gusUIFullTargetID ]->bTeam != gbPlayerNum )
+					if (MercPtrs[gusUIFullTargetID]->bTeam != gbPlayerNum)
 					{
 						fOnValidGuy = TRUE;
 						//ddd turn off flag that indicates aim/autofire mode adjustment (aimed burst/auto)
@@ -1288,7 +1152,7 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 					}
 					else
 					{
-						if ( gUIActionModeChangeDueToMouseOver )
+						if (gUIActionModeChangeDueToMouseOver)
 						{
 							*puiNewEvent = A_CHANGE_TO_MOVE;
 							return;
@@ -1298,7 +1162,7 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 			}
 			else
 			{
-				if ( gUIActionModeChangeDueToMouseOver )
+				if (gUIActionModeChangeDueToMouseOver)
 				{
 					*puiNewEvent = A_CHANGE_TO_MOVE;
 					return;
@@ -1313,7 +1177,7 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 
 		case TALKINGMENU_MODE:
 
-			if ( HandleTalkingMenu( ) )
+			if (HandleTalkingMenu())
 			{
 				*puiNewEvent = A_CHANGE_TO_MOVE;
 			}
@@ -1321,18 +1185,18 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 
 		case EXITSECTORMENU_MODE:
 
-			if ( HandleSectorExitMenu( ) )
+			if (HandleSectorExitMenu())
 			{
 				*puiNewEvent = A_CHANGE_TO_MOVE;
 			}
 			break;
 
 		case OPENDOOR_MENU_MODE:
-			bHandleCode = HandleOpenDoorMenu( ); // I think its nicer to avoid assignments in conditionals (jonathanl)
-			if ( bHandleCode )
+			bHandleCode = HandleOpenDoorMenu(); // I think its nicer to avoid assignments in conditionals (jonathanl)
+			if (bHandleCode)
 			{
 				// OK, IF we are not canceling, set ui back!
-				if ( bHandleCode == 2 )
+				if (bHandleCode == 2)
 				{
 					*puiNewEvent = A_CHANGE_TO_MOVE;
 				}
@@ -1345,7 +1209,7 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 		case JUMPOVER_MODE:
 
 			// ATE: Make sure!
-			if ( gsJumpOverGridNo != usMapPos )
+			if (gsJumpOverGridNo != usMapPos)
 			{
 				*puiNewEvent = A_CHANGE_TO_MOVE;
 			}
@@ -1357,7 +1221,7 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 
 		case CONFIRM_MOVE_MODE:
 
-			if ( usMapPos != usOldMapPos )
+			if (usMapPos != usOldMapPos)
 			{
 				// Switch event out of confirm mode
 				*puiNewEvent = A_CHANGE_TO_MOVE;
@@ -1366,29 +1230,29 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 				gfUIAllMoveOn = FALSE;
 
 				// ERASE PATH
-				ErasePath( TRUE );
+				ErasePath(TRUE);
 			}
 			break;
 
 		case CONFIRM_ACTION_MODE:
 
 			// DONOT CANCEL IF BURST
-			if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+			if (GetSoldier(&pSoldier, gusSelectedSoldier))
 			{
-				if ( pSoldier->bDoBurst )
+				if (pSoldier->bDoBurst)
 				{
 					pSoldier->sEndGridNo = usMapPos;
 
-					if ( pSoldier->sEndGridNo != pSoldier->sStartGridNo && fLeftButtonDown )
+					if (pSoldier->sEndGridNo != pSoldier->sStartGridNo && fLeftButtonDown)
 					{
 						pSoldier->flags.fDoSpread = TRUE;
 						gfBeginBurstSpreadTracking = TRUE;
 					}
 
-					if ( pSoldier->flags.fDoSpread )
+					if (pSoldier->flags.fDoSpread)
 					{
 						// Accumulate gridno
-						AccumulateBurstLocation( usMapPos );
+						AccumulateBurstLocation(usMapPos);
 
 						*puiNewEvent = CA_ON_TERRAIN;
 						break;
@@ -1397,9 +1261,9 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 			}
 
 			// First check if we are on a guy, if so, make selected if it's ours
-			if ( gfUIFullTargetFound )
+			if (gfUIFullTargetFound)
 			{
-				if ( guiUITargetSoldierId != gusUIFullTargetID )
+				if (guiUITargetSoldierId != gusUIFullTargetID)
 				{
 					// Switch event out of confirm mode
 					*puiNewEvent = CA_END_CONFIRM_ACTION;
@@ -1412,14 +1276,14 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 			else
 			{
 				// OK, if we were on a guy, and now we are off, go back!
-				if ( fOnValidGuy )
+				if (fOnValidGuy)
 				{
 					// Switch event out of confirm mode
 					*puiNewEvent = CA_END_CONFIRM_ACTION;
 				}
 				else
 				{
-					if ( ConfirmActionCancel( usMapPos, usOldMapPos ) )
+					if (ConfirmActionCancel(usMapPos, usOldMapPos))
 					{
 						// Switch event out of confirm mode
 						*puiNewEvent = CA_END_CONFIRM_ACTION;
@@ -1447,19 +1311,18 @@ void GetTBMousePositionInput( UINT32 *puiNewEvent )
 	}
 }
 
-
-void GetPolledKeyboardInput( UINT32 *puiNewEvent )
+void GetPolledKeyboardInput(UINT32* puiNewEvent)
 {
 	static BOOLEAN	fShifted = FALSE;
 	static BOOLEAN	fShifted2 = FALSE;
 	static BOOLEAN	fCtrlDown = FALSE;
 	static BOOLEAN	fAltDown = FALSE;
-	static BOOLEAN	fDeleteDown=FALSE;
-	static BOOLEAN	fEndDown=FALSE;
+	static BOOLEAN	fDeleteDown = FALSE;
+	static BOOLEAN	fEndDown = FALSE;
 
 	// CHECK FOR POLLED KEYS!!
 	// CHECK FOR CTRL
-	switch( gCurrentUIMode )
+	switch (gCurrentUIMode)
 	{
 	case DONT_CHANGEMODE:
 	case CONFIRM_MOVE_MODE:
@@ -1472,18 +1335,18 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 	case HANDCURSOR_MODE:
 	case RADIOCURSOR_MODE:
 
-		if ( _KeyDown( CTRL )	)
+		if (_KeyDown(CTRL))
 		{
-			if ( fCtrlDown == FALSE )
+			if (fCtrlDown == FALSE)
 			{
-				ErasePath( TRUE );
+				ErasePath(TRUE);
 				gfPlotNewMovement = TRUE;
 			}
 			fCtrlDown = TRUE;
 			*puiNewEvent = HC_ON_TERRAIN;
 
 		}
-		if ( !(_KeyDown( CTRL ) ) && fCtrlDown )
+		if (!(_KeyDown(CTRL)) && fCtrlDown)
 		{
 			fCtrlDown = FALSE;
 			*puiNewEvent = M_ON_TERRAIN;
@@ -1493,31 +1356,31 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 	}
 
 	// CHECK FOR ALT
-	switch( gCurrentUIMode )
+	switch (gCurrentUIMode)
 	{
 	case MOVE_MODE:
 
-		if ( _KeyDown( ALT )	)
+		if (_KeyDown(ALT))
 		{
-			if ( fAltDown == FALSE )
+			if (fAltDown == FALSE)
 			{
 				// Get currently selected guy and change reverse....
-				if ( gusSelectedSoldier != NOBODY )
+				if (gusSelectedSoldier != NOBODY)
 				{
 					gUIUseReverse = TRUE;
-					ErasePath( TRUE );
+					ErasePath(TRUE);
 					gfPlotNewMovement = TRUE;
 				}
 			}
 			fAltDown = TRUE;
 
 		}
-		if ( !(_KeyDown( ALT ) ) && fAltDown )
+		if (!(_KeyDown(ALT)) && fAltDown)
 		{
-			if ( gusSelectedSoldier != NOBODY )
+			if (gusSelectedSoldier != NOBODY)
 			{
 				gUIUseReverse = FALSE;
-				ErasePath( TRUE );
+				ErasePath(TRUE);
 				gfPlotNewMovement = TRUE;
 			}
 
@@ -1527,7 +1390,7 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 	}
 
 	// Check realtime input!
-	if ( ( ( gTacticalStatus.uiFlags & REALTIME ) || !( gTacticalStatus.uiFlags & INCOMBAT ) ) )
+	if (((gTacticalStatus.uiFlags & REALTIME) || !(gTacticalStatus.uiFlags & INCOMBAT)))
 	{
 		//if ( _KeyDown( CAPS )	) //&& !fShifted )
 		//{
@@ -1546,18 +1409,18 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 		//}
 
 
-		if ( _KeyDown( SHIFT )	) //&& !fShifted )
+		if (_KeyDown(SHIFT)) //&& !fShifted )
 		{
 			fShifted2 = TRUE;
-			if ( gCurrentUIMode != MOVE_MODE && gCurrentUIMode != CONFIRM_MOVE_MODE )
+			if (gCurrentUIMode != MOVE_MODE && gCurrentUIMode != CONFIRM_MOVE_MODE)
 			{
 				//puiNewEvent = M_ON_TERRAIN;
 			}
 		}
-		if ( !(_KeyDown( SHIFT ) ) && fShifted2 )
+		if (!(_KeyDown(SHIFT)) && fShifted2)
 		{
 			fShifted2 = FALSE;
-			if ( gCurrentUIMode != ACTION_MODE && gCurrentUIMode != CONFIRM_ACTION_MODE )
+			if (gCurrentUIMode != ACTION_MODE && gCurrentUIMode != CONFIRM_ACTION_MODE)
 			{
 				//	*puiNewEvent = A_ON_TERRAIN;
 			}
@@ -1565,10 +1428,10 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 
 	}
 
-	if( _KeyDown( DEL ) && !fDeleteDown)
+	if (_KeyDown(DEL) && !fDeleteDown)
 	{
 
-		if ( _KeyDown( ALT )	)
+		if (_KeyDown(ALT))
 			SwitchToHostileTrapsView();	// added by Flugente
 		else
 			SwitchToEnemyView();
@@ -1576,21 +1439,21 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 		fDeleteDown = TRUE;
 	}
 
-	if( !_KeyDown( DEL ) && fDeleteDown )
+	if (!_KeyDown(DEL) && fDeleteDown)
 	{
 
-		if ( _KeyDown( ALT )	)
+		if (_KeyDown(ALT))
 			SwitchMineViewOff();	// added by Flugente
 		else
 			SwitchViewOff();
-		
+
 		fDeleteDown = FALSE;
 	}
 
-	if( _KeyDown( END ) && !fEndDown)
+	if (_KeyDown(END) && !fEndDown)
 	{
 
-		if ( _KeyDown( ALT )	)
+		if (_KeyDown(ALT))
 			SwitchToTrapNetworkView();	// added by Flugente
 		else
 			SwitchToMercView();
@@ -1598,86 +1461,100 @@ void GetPolledKeyboardInput( UINT32 *puiNewEvent )
 		fEndDown = TRUE;
 	}
 
-	if( !_KeyDown( END ) && fEndDown )
+	if (!_KeyDown(END) && fEndDown)
 	{
-		if ( _KeyDown( ALT )	)
+		if (_KeyDown(ALT))
 			SwitchMineViewOff();	// added by Flugente
 		else
 			SwitchViewOff();
-		
+
 
 		fEndDown = FALSE;
 	}
 }
 
-UINT16 usitem = 1623;
-
-void CheatCreateItem( )
+void CheatCreateItem()
 {
-	if ( gusSelectedSoldier != NOBODY )
+	if (gusSelectedSoldier != NOBODY)
 	{
 		INT16 status = 100;
 		FLOAT temperature = 0.0;
 
-		if ( Item[usitem].foodtype )
+		if (Item[usitem].foodtype)
 			temperature = OVERHEATING_MAX_TEMPERATURE;
 
 		// Flugente: spawn items while debugging
 		OBJECTTYPE newobj;
-		CreateItem( usitem, status, &newobj );
+		CreateItem(usitem, status, &newobj);
 		(newobj)[0]->data.bTemperature = temperature;
-					
-		if ( !AutoPlaceObject( MercPtrs[ gusSelectedSoldier ], &newobj, FALSE ) )
-			AddItemToPool( MercPtrs[ gusSelectedSoldier ]->sGridNo, &newobj, 1, 0, 0, -1 );
+
+		if (!AutoPlaceObject(MercPtrs[gusSelectedSoldier], &newobj, FALSE))
+			AddItemToPool(MercPtrs[gusSelectedSoldier]->sGridNo, &newobj, 1, 0, 0, -1);
 	}
 }
 
-INT32 mappos = 0;
-
 void CheatNewMerc(int nProfileID)
 {
-		if (nProfileID >= NUM_PROFILES || nProfileID < 0)
-		{
-			ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Invalid Profile ID.");
-			return;
-		}
+	if (nProfileID >= NUM_PROFILES || nProfileID < 0)
+	{
+		ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Invalid Profile ID.");
+		return;
+	}
 
-		MERC_HIRE_STRUCT HireMercStruct;
-		memset(&HireMercStruct, 0, sizeof(MERC_HIRE_STRUCT));		
-		HireMercStruct.ubProfileID = nProfileID;
+	MERC_HIRE_STRUCT HireMercStruct;
+	memset(&HireMercStruct, 0, sizeof(MERC_HIRE_STRUCT));
+	HireMercStruct.ubProfileID = nProfileID;
 
-		//DEF: temp
-		HireMercStruct.sSectorX = gWorldSectorX;
-		HireMercStruct.sSectorY = gWorldSectorY;
-		HireMercStruct.bSectorZ = gbWorldSectorZ;
-		HireMercStruct.ubInsertionCode = INSERTION_CODE_GRIDNO;
-		HireMercStruct.usInsertionData = mappos;
-		HireMercStruct.fCopyProfileItemsOver = TRUE;
-		HireMercStruct.iTotalContractLength = 7;
+	//DEF: temp
+	HireMercStruct.sSectorX = gWorldSectorX;
+	HireMercStruct.sSectorY = gWorldSectorY;
+	HireMercStruct.bSectorZ = gbWorldSectorZ;
+	HireMercStruct.ubInsertionCode = INSERTION_CODE_GRIDNO;
+	HireMercStruct.usInsertionData = mappos;
+	HireMercStruct.fCopyProfileItemsOver = TRUE;
+	HireMercStruct.iTotalContractLength = 7;
 
-		//specify when the merc should arrive
-		HireMercStruct.uiTimeTillMercArrives = 0;
+	//specify when the merc should arrive
+	HireMercStruct.uiTimeTillMercArrives = 0;
 
-		//if we succesfully hired the merc
-		INT8 bReturnCode = HireMerc(&HireMercStruct);
+	//if we succesfully hired the merc
+	INT8 bReturnCode = HireMerc(&HireMercStruct);
 
-		if (bReturnCode == MERC_HIRE_FAILED)
-		{
-			ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Merc hire failed:	Either already hired or dislikes you.");
-		}
-		// WDS - make number of mercenaries, etc. be configurable
-		else if (bReturnCode == MERC_HIRE_OVER_PLAYER_LIMIT)
-		{
-			ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Can't hire that many mercs.");
-		}
-		else
-		{
-			// Get soldier from profile
-			SOLDIERTYPE *pSoldier = FindSoldierByProfileID(nProfileID, FALSE);
+	if (bReturnCode == MERC_HIRE_FAILED)
+	{
+		ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Merc hire failed:	Either already hired or dislikes you.");
+	}
+	// WDS - make number of mercenaries, etc. be configurable
+	else if (bReturnCode == MERC_HIRE_OVER_PLAYER_LIMIT)
+	{
+		ScreenMsg(FONT_ORANGE, MSG_BETAVERSION, L"Can't hire that many mercs.");
+	}
+	else
+	{
+		// Get soldier from profile
+		SOLDIERTYPE* pSoldier = FindSoldierByProfileID(nProfileID, FALSE);
 
-			MercArrivesCallback(pSoldier->ubID);
-			SelectSoldier(pSoldier->ubID, FALSE, TRUE);
-		}
+		MercArrivesCallback(pSoldier->ubID);
+		SelectSoldier(pSoldier->ubID, FALSE, TRUE);
+	}
+}
+
+void CheatSelectExplosionCallBack(UINT8 ubResult)
+{
+	//STR16 info = L"STUN(131), TEARGAS(132), MUSTARD(133), MINI_G(134), HAND_G(135), RDX(136), TNT(137), HMX(138), C1(139), MORTAR_SHELL(140),\n"
+	//	"MINE(141), C4(142), TRIP_FLARE(143), TRIP_KLAXON(144), SHPD_CHRGE(145), BRK_LGT(146), GL_HE_G(147), GL_TEARGAS_G(148),\n"
+	//	"GL_STUN_G(149), GL_SMOKE_G(150), SMOKE_G(151), TANK_SHELL(152), STRUCTURE_IGNITE(153), CREATURE_COCKTAIL(154),\n"
+	//	"STRUCTURE_EXPLOSION(155), GREAT_BIG_EXPLOSION(156), BIG_TEAR_GAS(157), SMALL_CREATURE_GAS(158), \n"
+	//	"LARGE_CREATURE_GAS(159), VERY_SMALL_CREATURE_GAS(270), SMALL_SMOKE(1702), MOLOTOV_EXPLOSION(979), GAS_EXPLOSION(1703), \n"
+	//	"FRAG_EXPLOSION(1704)";
+
+	if (ubResult == MSG_BOX_RETURN_OK && wcscmp(gszMsgBoxInputString, L"") > 0)
+	{
+		usitem = _wtoi(gszMsgBoxInputString);
+		if (((usitem >= 131) && (usitem <= 159)) || usitem == 270 || usitem == 979 || usitem == 1702 || usitem == 1703 || usitem == 1704)
+			CreateExplosion(usitem, gusMapPos);
+	}
+	memset(gszMsgBoxInputString, 0, sizeof(gszMsgBoxInputString));
 }
 
 void MercCreationCallBack(UINT8 ubResult)
@@ -1689,21 +1566,18 @@ void MercCreationCallBack(UINT8 ubResult)
 	memset(gszMsgBoxInputString, 0, sizeof(gszMsgBoxInputString));
 }
 
-void ItemCreationCallBack( UINT8 ubResult )
+void ItemCreationCallBack(UINT8 ubResult)
 {
-	if (ubResult == MSG_BOX_RETURN_OK && wcscmp(gszMsgBoxInputString,L"") > 0)
+	if (ubResult == MSG_BOX_RETURN_OK && wcscmp(gszMsgBoxInputString, L"") > 0)
 	{
-		usitem = _wtoi( gszMsgBoxInputString );
-		CheatCreateItem( );
+		usitem = _wtoi(gszMsgBoxInputString);
+		CheatCreateItem();
 
 	}
-	memset(gszMsgBoxInputString,0,sizeof(gszMsgBoxInputString));
+	memset(gszMsgBoxInputString, 0, sizeof(gszMsgBoxInputString));
 }
 
-extern	BOOLEAN		gfDisableRegionActive;
-extern	BOOLEAN		gfUserTurnRegionActive;
-
-void GetKeyboardInput( UINT32 *puiNewEvent )
+void GetKeyboardInput(UINT32* puiNewEvent)
 {
 	InputAtom					InputEvent;
 	BOOLEAN						fKeyTaken = FALSE;
@@ -1713,84 +1587,82 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 	static BOOLEAN	fShifted2 = FALSE;
 	static BOOLEAN	fAltDown = FALSE;
 	INT32 usMapPos;
-	
-	CHAR16	zString[128]; 
 
 	GetCursorPos(&MousePos);
 	ScreenToClient(ghWindow, &MousePos); // In window coords!
 
-	GetMouseMapPos( &usMapPos );
+	GetMouseMapPos(&usMapPos);
 
 	while (DequeueEvent(&InputEvent) == TRUE)
 	{
 		// HOOK INTO MOUSE HOOKS
-		switch(InputEvent.usEvent)
+		switch (InputEvent.usEvent)
 		{
 		case LEFT_BUTTON_DOWN:
-			MouseSystemHook(LEFT_BUTTON_DOWN, (INT16)MousePos.x, (INT16)MousePos.y,_LeftButtonDown, _RightButtonDown);
+			MouseSystemHook(LEFT_BUTTON_DOWN, (INT16)MousePos.x, (INT16)MousePos.y, _LeftButtonDown, _RightButtonDown);
 			break;
 		case LEFT_BUTTON_UP:
-			MouseSystemHook(LEFT_BUTTON_UP, (INT16)MousePos.x, (INT16)MousePos.y ,_LeftButtonDown, _RightButtonDown);
+			MouseSystemHook(LEFT_BUTTON_UP, (INT16)MousePos.x, (INT16)MousePos.y, _LeftButtonDown, _RightButtonDown);
 			break;
 		case RIGHT_BUTTON_DOWN:
-			MouseSystemHook(RIGHT_BUTTON_DOWN, (INT16)MousePos.x, (INT16)MousePos.y,_LeftButtonDown, _RightButtonDown);
+			MouseSystemHook(RIGHT_BUTTON_DOWN, (INT16)MousePos.x, (INT16)MousePos.y, _LeftButtonDown, _RightButtonDown);
 			break;
 		case RIGHT_BUTTON_UP:
-			MouseSystemHook(RIGHT_BUTTON_UP, (INT16)MousePos.x, (INT16)MousePos.y,_LeftButtonDown, _RightButtonDown);
+			MouseSystemHook(RIGHT_BUTTON_UP, (INT16)MousePos.x, (INT16)MousePos.y, _LeftButtonDown, _RightButtonDown);
 			break;
 
 		}
 
 		// handle for fast help text for interface stuff
-		if( IsTheInterfaceFastHelpTextActive() )
+		if (IsTheInterfaceFastHelpTextActive())
 		{
-			if( InputEvent.usEvent == KEY_UP )
+			if (InputEvent.usEvent == KEY_UP)
 			{
-				ShutDownUserDefineHelpTextRegions( );
+				ShutDownUserDefineHelpTextRegions();
 			}
 
 			continue;
 		}
 
 		// Check for waiting for keyboard advance
-		if ( gfUIWaitingForUserSpeechAdvance && InputEvent.usEvent == KEY_UP )
+		if (gfUIWaitingForUserSpeechAdvance && InputEvent.usEvent == KEY_UP)
 		{
 			// We have a key, advance!
-			DialogueAdvanceSpeech( );
+			DialogueAdvanceSpeech();
 
 			// Ignore anything else
 			continue;
 		}
 
 		// ATE: if game paused because fo player, unpasue with any key
-		if ( gfPauseDueToPlayerGamePause && InputEvent.usEvent == KEY_UP )
+		if (gfPauseDueToPlayerGamePause && InputEvent.usEvent == KEY_UP)
 		{
-			HandlePlayerPauseUnPauseOfGame( );
+			HandlePlayerPauseUnPauseOfGame();
 
 			continue;
 		}
 
-		if ( (InputEvent.usEvent == KEY_DOWN ) )
+		if ((InputEvent.usEvent == KEY_DOWN))
 		{
-			if ( giUIMessageOverlay != -1 )
+			if (giUIMessageOverlay != -1)
 			{
-				EndUIMessage( );
+				EndUIMessage();
 				continue;
 			}
 
 			// End auto bandage if we want....
-			if ( gTacticalStatus.fAutoBandageMode )
+			if (gTacticalStatus.fAutoBandageMode)
 			{
-				AutoBandage( FALSE );
+				AutoBandage(FALSE);
 				*puiNewEvent = LU_ENDUILOCK;
 			}
 		}
 
-		if ( gUIKeyboardHook != NULL )
+		if (gUIKeyboardHook != NULL)
 		{
-			fKeyTaken = gUIKeyboardHook( &InputEvent );
+			fKeyTaken = gUIKeyboardHook(&InputEvent);
 		}
-		if ( fKeyTaken )
+		if (fKeyTaken)
 		{
 			continue;
 		}
@@ -1802,24 +1674,24 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 		}
 		*/
 
-		if ((InputEvent.usEvent == KEY_UP )&& ( InputEvent.usParam == PAUSE ) && !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV) )
+		if ((InputEvent.usEvent == KEY_UP) && (InputEvent.usParam == PAUSE) && !(gTacticalStatus.uiFlags & ENGAGED_IN_CONV))
 		{
 			// Pause game!
-			HandlePlayerPauseUnPauseOfGame( );
+			HandlePlayerPauseUnPauseOfGame();
 		}
 
 		// FIRST DO KEYS THAT ARE USED EVERYWHERE!
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == 'x') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == 'x') && (InputEvent.usKeyState & ALT_DOWN))
 		{
-			HandleShortCutExitState( );
+			HandleShortCutExitState();
 			//*puiNewEvent = I_EXIT;
 		}
 #ifdef JA2UB
-//Ja25 No meanwhiles
+		//Ja25 No meanwhiles
 #else
-		if ((InputEvent.usEvent == KEY_UP )&& ( InputEvent.usParam == ESC) )
+		if ((InputEvent.usEvent == KEY_UP) && (InputEvent.usParam == ESC))
 		{
-			if ( AreInMeanwhile() && gCurrentMeanwhileDef.ubMeanwhileID != INTERROGATION )
+			if (AreInMeanwhile() && gCurrentMeanwhileDef.ubMeanwhileID != INTERROGATION)
 			{
 				DeleteTalkingMenu();
 				EndMeanwhile();
@@ -1827,37 +1699,37 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 
 			// Flugente: speed up dynamic dialogue boxes
 			// Note that this will behave oddly on the morning of January 1st 1970 :-)
-			DelayBoxDestructionBy( -gGameExternalOptions.sDynamicDialogueTimeOffset );
+			DelayBoxDestructionBy(-gGameExternalOptions.sDynamicDialogueTimeOffset);
 		}
 #endif
 
 		// BEGIN: by Lejardo for mouse-locking in game screen
 		// WANNE: If the game runs in windowed mode, the user can "lock" / "unlock" the mouse cursor
-		if ( iWindowedMode && !gfInKeyRingPopup && !gfInItemStackPopup)
+		if (iWindowedMode && !gfInKeyRingPopup && !gfInItemStackPopup)
 		{
-			if ((InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == 'z' )
-			{			
-				if( (InputEvent.usKeyState & CTRL_DOWN) && !(InputEvent.usKeyState & ALT_DOWN))
+			if ((InputEvent.usEvent == KEY_DOWN) && InputEvent.usParam == 'z')
+			{
+				if ((InputEvent.usKeyState & CTRL_DOWN) && !(InputEvent.usKeyState & ALT_DOWN))
 				{
 					// Unlock the mouse cursor
 					if (gfMouseLockedOnBorder)
 					{
-						FreeMouseCursor( FALSE );
+						FreeMouseCursor(FALSE);
 
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WINDOWED_MODE_RELEASE_MOUSE] );
+						ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WINDOWED_MODE_RELEASE_MOUSE]);
 					}
 					// Lock the mouse cursor
 					else
 					{
 						SGPRect			LJDRect;
 
-						LJDRect.iLeft 	= 0;
-						LJDRect.iTop 	= 0;
-						LJDRect.iRight 	= SCREEN_WIDTH;
+						LJDRect.iLeft = 0;
+						LJDRect.iTop = 0;
+						LJDRect.iRight = SCREEN_WIDTH;
 						LJDRect.iBottom = SCREEN_HEIGHT;
-						RestrictMouseCursor( &LJDRect );
+						RestrictMouseCursor(&LJDRect);
 
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WINDOWED_MODE_LOCK_MOUSE] );
+						ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WINDOWED_MODE_LOCK_MOUSE]);
 					}
 
 					gfMouseLockedOnBorder = !gfMouseLockedOnBorder;
@@ -1867,7 +1739,7 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 		// END: by Lejardo for mouse-locking in game screen
 
 		// WANNE: Just disabled for now, because we don't need it yet.
-		/*						
+		/*
 		// WANNE: If the game hangs on enemy turn, just press ALT + CTRL + E and the game will continue with enemy turn!!
 		if ( (InputEvent.usEvent == KEY_DOWN )&& (InputEvent.usKeyState & CTRL_DOWN) && ( InputEvent.usParam == 'e') )
 		{
@@ -1880,18 +1752,18 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 						EndTurn( 1 );
 					}
 				}
-			}		
+			}
 		}
 		*/
-			
+
 		if (!is_networked)
 		{
 			// Allow to load everywhere
-			if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == 'l') )
+			if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == 'l'))
 			{
-				if( InputEvent.usKeyState & ALT_DOWN )
+				if (InputEvent.usKeyState & ALT_DOWN)
 				{
-					if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) )
+					if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV))
 					{
 						gTacticalStatus.ubDisablePlayerInterrupts = FALSE;
 
@@ -1899,7 +1771,7 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 						gfCameDirectlyFromGame = TRUE;
 
 						SetOptionsPreviousScreen(GAME_SCREEN);
-						
+
 						EscapeUILock();
 						// cancel, the player can move when it is not its turn!
 						//Heinz: 28.02.09 BUGFIX: player doesn't need to see save/load screen
@@ -1907,26 +1779,26 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 						DoQuickLoad();
 					}
 				}
-				else if( InputEvent.usKeyState & CTRL_DOWN )
+				else if (InputEvent.usKeyState & CTRL_DOWN)
 				{
 					// WANNE: Do not allow saving via the save screen when it is not our turn,
 					// because there is an exploit when you close the save window without saving, you can move your merc even it is not your turn
 					// IF UI HAS LOCKED, ONLY ALLOW EXIT!
-					if ( gfDisableRegionActive || gfUserTurnRegionActive )
+					if (gfDisableRegionActive || gfUserTurnRegionActive)
 					{
 						continue;
 					}
 
-					if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) )
+					if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV))
 					{
 						gfSaveGame = FALSE;
 						gfCameDirectlyFromGame = TRUE;
 
 						SetOptionsPreviousScreen(GAME_SCREEN);
-						LeaveTacticalScreen( SAVE_LOAD_SCREEN );
+						LeaveTacticalScreen(SAVE_LOAD_SCREEN);
 					}
 				}
-			}						
+			}
 		}
 
 		if (is_networked)
@@ -1976,30 +1848,30 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 				}
 			}
 			*/
-		
-//#ifdef DISABLE_MP_INTERRUPTS_IN_COOP
 
-			// WANNE: Not needed to show the override turn dialog
-//#else
+			//#ifdef DISABLE_MP_INTERRUPTS_IN_COOP
 
-			if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == 'e') )
+						// WANNE: Not needed to show the override turn dialog
+			//#else
+
+			if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == 'e'))
 			{
-				if( InputEvent.usKeyState & ALT_DOWN )
+				if (InputEvent.usKeyState & ALT_DOWN)
 				{
-					if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) )
+					if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV))
 					{
 						overide_turn();
 					}
-				}			
+				}
 			}
 
-//#endif
+			//#endif
 
-			if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == 'k') )
+			if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == 'k'))
 			{
-				if( InputEvent.usKeyState & ALT_DOWN )
+				if (InputEvent.usKeyState & ALT_DOWN)
 				{
-					if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) )
+					if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV))
 					{
 						kick_player();
 					}
@@ -2009,7 +1881,7 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 			// OJW - 090209 - ingame chat
 			if (InputEvent.usEvent == KEY_UP && InputEvent.usParam == 'y')
 			{
-				if( !(InputEvent.usKeyState & ALT_DOWN) &&  !(InputEvent.usKeyState & CTRL_DOWN))
+				if (!(InputEvent.usKeyState & ALT_DOWN) && !(InputEvent.usKeyState & CTRL_DOWN))
 				{
 					OpenChatMsgBox();
 					continue;
@@ -2019,11 +1891,11 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 
 
 		// Break of out IN CONV...
-		if ( CHEATER_CHEAT_LEVEL( ) )
+		if (CHEATER_CHEAT_LEVEL())
 		{
-			if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == ENTER ) && ( InputEvent.usKeyState & ALT_DOWN ) )
+			if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == ENTER) && (InputEvent.usKeyState & ALT_DOWN))
 			{
-				if ( gTacticalStatus.uiFlags & ENGAGED_IN_CONV )
+				if (gTacticalStatus.uiFlags & ENGAGED_IN_CONV)
 				{
 					gTacticalStatus.uiFlags &= (~ENGAGED_IN_CONV);
 					giNPCReferenceCount = 0;
@@ -2031,14 +1903,14 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 			}
 		}
 
-		if ( gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT) )
+		if (gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT))
 		{
 			{
-				if ( gTacticalStatus.ubCurrentTeam != gbPlayerNum )
+				if (gTacticalStatus.ubCurrentTeam != gbPlayerNum)
 				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
+					if (CHEATER_CHEAT_LEVEL())
 					{
-						if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == ENTER ) && ( InputEvent.usKeyState & ALT_DOWN ) )
+						if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == ENTER) && (InputEvent.usKeyState & ALT_DOWN))
 						{
 							// ESCAPE ENEMY'S TURN
 							EndAIDeadlock();
@@ -2046,102 +1918,102 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 							// Decrease global busy	counter...
 							gTacticalStatus.ubAttackBusyCount = 0;
 #ifdef DEBUG_ATTACKBUSY
-							OutputDebugString( "Resetting attack busy due to keyboard interrupt.\n");
+							OutputDebugString("Resetting attack busy due to keyboard interrupt.\n");
 #endif
 							guiPendingOverrideEvent = LU_ENDUILOCK;
-							UIHandleLUIEndLock( NULL );
+							UIHandleLUIEndLock(NULL);
 
 						}
 					}
 					//Madd: removed from cheat mode
-					if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == ENTER ) && ( InputEvent.usKeyState & CTRL_DOWN ) )
+					if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == ENTER) && (InputEvent.usKeyState & CTRL_DOWN))
 					{
-						EscapeUILock( );
+						EscapeUILock();
 					}
 				}
 				else
 				{
-					if ( CHEATER_CHEAT_LEVEL( ) && (InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == ENTER ) && ( InputEvent.usKeyState & CTRL_DOWN ) )
+					if (CHEATER_CHEAT_LEVEL() && (InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == ENTER) && (InputEvent.usKeyState & CTRL_DOWN))
 					{
 						//UNLOCK UI
-						EscapeUILock( );
+						EscapeUILock();
 					}
-					else if ( (InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == ENTER	)
+					else if ((InputEvent.usEvent == KEY_DOWN) && InputEvent.usParam == ENTER)
 					{
 						// Cycle through enemys
-						CycleThroughKnownEnemies( );
+						CycleThroughKnownEnemies();
 					}
 				}
 			}
 		}
 
-		if ( gfInTalkPanel )
+		if (gfInTalkPanel)
 		{
-			HandleTalkingMenuKeys( &InputEvent, puiNewEvent );
+			HandleTalkingMenuKeys(&InputEvent, puiNewEvent);
 		}
 
 		// Do some checks based on what mode we are in
-		switch( gCurrentUIMode )
+		switch (gCurrentUIMode)
 		{
 		case EXITSECTORMENU_MODE:
 
-			HandleSectorExitMenuKeys( &InputEvent, puiNewEvent );
+			HandleSectorExitMenuKeys(&InputEvent, puiNewEvent);
 			continue;
 
 		case GETTINGITEM_MODE:
 
-			HandleItemMenuKeys( &InputEvent, puiNewEvent );
+			HandleItemMenuKeys(&InputEvent, puiNewEvent);
 			continue;
 
 		case MENU_MODE:
 
-			HandleMenuKeys( &InputEvent, puiNewEvent );
+			HandleMenuKeys(&InputEvent, puiNewEvent);
 			continue;
 
 		case OPENDOOR_MENU_MODE:
 
-			HandleOpenDoorMenuKeys( &InputEvent, puiNewEvent );
+			HandleOpenDoorMenuKeys(&InputEvent, puiNewEvent);
 			continue;
 		}
 
 
 		// CHECK ESC KEYS HERE....
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == ESC ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == ESC))
 		{
 			//EscapeUILock( );
 #ifdef JA2TESTVERSION
-			if ( InAirRaid( ) )
+			if (InAirRaid())
 			{
-				EndAirRaid( );
+				EndAirRaid();
 			}
 #endif
 
 			// Cancel out of spread burst...
 			gfBeginBurstSpreadTracking = FALSE;
 			gfRTClickLeftHoldIntercepted = TRUE;
-			if ( gusSelectedSoldier != NOBODY )
+			if (gusSelectedSoldier != NOBODY)
 			{
-				MercPtrs[ gusSelectedSoldier ]->flags.fDoSpread				= FALSE;
+				MercPtrs[gusSelectedSoldier]->flags.fDoSpread = FALSE;
 			}
 
 			// Before anything, delete popup box!
-			EndUIMessage( );
+			EndUIMessage();
 
 			// CANCEL FROM PLANNING MODE!
-			if ( InUIPlanMode( ) )
+			if (InUIPlanMode())
 			{
-				EndUIPlan( );
+				EndUIPlan();
 				continue;
 			}
 
-			if ( InItemDescriptionBox( ) )
+			if (InItemDescriptionBox())
 			{
-				DeleteItemDescriptionBox( );
+				DeleteItemDescriptionBox();
 				continue;
 			}
-			else if( InKeyRingPopup( ) )
+			else if (InKeyRingPopup())
 			{
-				DeleteKeyRingPopup( );
+				DeleteKeyRingPopup();
 				continue;
 			}
 
@@ -2186,10 +2058,10 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 				continue;
 			}
 
-			if ( gCurrentUIMode == MENU_MODE )
+			if (gCurrentUIMode == MENU_MODE)
 			{
 				// If we get a hit here and we're in menu mode, quit the menu mode
-				EndMenuEvent( guiCurrentEvent );
+				EndMenuEvent(guiCurrentEvent);
 				continue;
 			}
 
@@ -2210,7 +2082,7 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 					if (!fFound)
 					{
 						UINT8 cnt = gTacticalStatus.Team[gbPlayerNum].bFirstID;
-						for (SOLDIERTYPE *pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
+						for (SOLDIERTYPE* pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
 						{
 							if (pSoldier->bActive && pSoldier->bInSector && pSoldier->flags.uiStatusFlags & SOLDIER_MULTI_SELECTED && WeaponReady(pSoldier))
 							{
@@ -2255,23 +2127,23 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 		}
 
 		// CHECK ESC KEYS HERE....
-		if ((InputEvent.usEvent == KEY_DOWN ) && ( InputEvent.usParam == BACKSPACE ) )
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == BACKSPACE))
 		{
-			StopAnyCurrentlyTalkingSpeech( );
+			StopAnyCurrentlyTalkingSpeech();
 		}
 
 		// IF UI HAS LOCKED, ONLY ALLOW EXIT!
-		if ( gfDisableRegionActive || gfUserTurnRegionActive )
+		if (gfDisableRegionActive || gfUserTurnRegionActive)
 		{
 			continue;
 		}
 
 		// Check all those we want if enemy's turn
-		if ((InputEvent.usEvent == KEY_UP )&& ( InputEvent.usParam == 'q') )
+		if ((InputEvent.usEvent == KEY_UP) && (InputEvent.usParam == 'q'))
 		{
-			if ( InputEvent.usKeyState & ALT_DOWN )
+			if (InputEvent.usKeyState & ALT_DOWN)
 			{
-				if ( CHEATER_CHEAT_LEVEL( ) )
+				if (CHEATER_CHEAT_LEVEL())
 				{
 					static BOOLEAN fShowRoofs = TRUE;
 					INT32 x;
@@ -2280,30 +2152,30 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 					// Toggle removal of roofs...
 					fShowRoofs = !fShowRoofs;
 
-					for ( x = 0; x < WORLD_MAX; x++ )
+					for (x = 0; x < WORLD_MAX; x++)
 					{
-						for ( usType = FIRSTROOF; usType <= LASTSLANTROOF; usType++ )
+						for (usType = FIRSTROOF; usType <= LASTSLANTROOF; usType++)
 						{
-							HideStructOfGivenType( x, usType, (BOOLEAN)(!fShowRoofs) );
+							HideStructOfGivenType(x, usType, (BOOLEAN)(!fShowRoofs));
 						}
 					}
 					InvalidateWorldRedundency();
-					SetRenderFlags( RENDER_FLAG_FULL );
+					SetRenderFlags(RENDER_FLAG_FULL);
 				}
 
 			}
-			else if ( InputEvent.usKeyState & CTRL_DOWN )
+			else if (InputEvent.usKeyState & CTRL_DOWN)
 			{
 #ifdef JA2BETAVERSION
-				if ( CHEATER_CHEAT_LEVEL( ) )
+				if (CHEATER_CHEAT_LEVEL())
 				{
-					LeaveTacticalScreen( ANIEDIT_SCREEN );
+					LeaveTacticalScreen(ANIEDIT_SCREEN);
 				}
 #endif
 			}
 			else
 			{
-				if ( INFORMATION_CHEAT_LEVEL( ) )
+				if (INFORMATION_CHEAT_LEVEL())
 				{
 					*puiNewEvent = I_SOLDIERDEBUG;
 				}
@@ -2335,19 +2207,19 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 		}
 
 #ifdef JA2TESTVERSION
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == '0') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == '0') && (InputEvent.usKeyState & ALT_DOWN))
 		{
 			INT32 i = 0;
 			INT32 sGridNo;
-			INT32 iTime = GetJA2Clock( );
+			INT32 iTime = GetJA2Clock();
 			UINT8	ubLevel;
 
-			for ( i = 0; i < 1000; i++ )
+			for (i = 0; i < 1000; i++)
 			{
-				CalculateLaunchItemChanceToGetThrough( MercPtrs[ gusSelectedSoldier ], &(MercPtrs[ gusSelectedSoldier ]->inv[ HANDPOS ] ), usMapPos, 0, 0, &sGridNo, TRUE, (INT8 *)&ubLevel, TRUE );
+				CalculateLaunchItemChanceToGetThrough(MercPtrs[gusSelectedSoldier], &(MercPtrs[gusSelectedSoldier]->inv[HANDPOS]), usMapPos, 0, 0, &sGridNo, TRUE, (INT8*)&ubLevel, TRUE);
 			}
 
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Physics 100 times: %d", ( GetJA2Clock( ) - iTime )	);
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Physics 100 times: %d", (GetJA2Clock() - iTime));
 
 		}
 #endif
@@ -2355,2414 +2227,347 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 
 #ifdef NETWORKED
 		// DEF: Test Networking
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == '0') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == '0') && (InputEvent.usKeyState & ALT_DOWN))
 		{
 			DisplayMultiPlayerInfo();
 		}
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == '9') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == '9') && (InputEvent.usKeyState & ALT_DOWN))
 		{
 			DisplayDirectPlayInfo();
 		}
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == '8') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == '8') && (InputEvent.usKeyState & ALT_DOWN))
 		{
 			DisplayDirectPlayPlayerInfo();
 		}
 
-		if ((InputEvent.usEvent == KEY_DOWN )&& ( InputEvent.usParam == '7') && ( InputEvent.usKeyState & ALT_DOWN ))
+		if ((InputEvent.usEvent == KEY_DOWN) && (InputEvent.usParam == '7') && (InputEvent.usKeyState & ALT_DOWN))
 		{
 			SetDisplayFlag();
 		}
 #endif
-
-		if( InputEvent.usEvent == KEY_DOWN )
+		// INPUT KEY HERE EVENT HERE ...
+		if (InputEvent.usEvent == KEY_DOWN)
 		{
 			BOOLEAN fAlt, fCtrl, fShift;
 			fAlt = InputEvent.usKeyState & ALT_DOWN ? TRUE : FALSE;
 			fCtrl = InputEvent.usKeyState & CTRL_DOWN ? TRUE : FALSE;
 			fShift = InputEvent.usKeyState & SHIFT_DOWN ? TRUE : FALSE;
-			switch( InputEvent.usParam )
+			switch (InputEvent.usParam)
 			{
 			case SPACE:
-
-				// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-				if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV )	&&
-					( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ NEXTMERC_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-				{
-					if ( !InKeyRingPopup( ) )
-					{
-						
-						if (_KeyDown(CTRL))
-						{							
-							checkLBEArrayIntegrity();
-						}
-						else if (_KeyDown(ALT))
-						{
-							checkLBEArrayIntegrity(true);
-						}
-						else if (_KeyDown(SHIFT))
-						{
-							SOLDIERTYPE *pNewSoldier;
-							INT32		iCurrentSquad;
-
-							if ( gusSelectedSoldier != NOBODY )
-							{
-								// only allow if nothing in hand and if in SM panel, the Change Squad button must be enabled
-								if ( ( ( gsCurInterfacePanel != TEAM_PANEL ) || ( ButtonList[ iTEAMPanelButtons[ CHANGE_SQUAD_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-								{
-									//Select next squad
-									iCurrentSquad = CurrentSquad( );
-
-									pNewSoldier = FindNextActiveSquad( MercPtrs[ gusSelectedSoldier ] );
-
-									if ( pNewSoldier->bAssignment != iCurrentSquad )
-									{
-										HandleLocateSelectMerc( pNewSoldier->ubID, LOCATEANDSELECT_MERC );
-
-										if ( gGameExternalOptions.fUseXMLSquadNames && pNewSoldier->bAssignment < min(ON_DUTY, gSquadNameVector.size() ) )
-											ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ACTIVE_STRING ], gSquadNameVector[pNewSoldier->bAssignment].c_str() );
-										else
-											//ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ACTIVE ], ( CurrentSquad( ) + 1 ) );
-											ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ACTIVE ], ( pNewSoldier->bAssignment + 1 ) );
-
-										// Center to guy....
-										//LocateSoldier( gusSelectedSoldier, SETLOCATOR );
-									}
-								}
-							}
-						}
-						else
-						{
-							if ( gusSelectedSoldier != NOBODY )
-							{ //Select next merc
-								UINT8 bID;
-
-								bID = FindNextMercInTeamPanel( MercPtrs[ gusSelectedSoldier ], FALSE, FALSE );
-
-								HandleLocateSelectMerc( bID, LOCATEANDSELECT_MERC );
-
-								ErasePath(TRUE);
-								gfPlotNewMovement = TRUE;
-
-								// Center to guy....
-								LocateSoldier( gusSelectedSoldier, SETLOCATOR );
-							}
-						}
-
-						*puiNewEvent = M_ON_TERRAIN;
-					}
-				}
+				GKIWhenDQEOnKD::On_SPACE(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case LEFTARROW:
-				// used for map scrolling
-				if ( fCtrl )
-				{
-					if ( gusSelectedSoldier != NOBODY )
-						SwapMercPortraits( MercPtrs[ gusSelectedSoldier ], -1 );
-				}
+				GKIWhenDQEOnKD::On_LEFTARROW(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case RIGHTARROW:
-				// used for map scrolling
-				if ( fCtrl )
-				{
-					if ( gusSelectedSoldier != NOBODY )
-						SwapMercPortraits( MercPtrs[ gusSelectedSoldier ], 1 );
-				}
+				GKIWhenDQEOnKD::On_RIGHTARROW(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case INSERT:
-				GoIntoOverheadMap();
+				GKIWhenDQEOnKD::On_INSERT(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case DEL:
-				// used for LOS display
+				GKIWhenDQEOnKD::On_DELETE(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case HOME:
-				if ( gGameSettings.fOptions[ TOPTION_3D_CURSOR ] )
-				{
-					gGameSettings.fOptions[ TOPTION_3D_CURSOR ] = FALSE;
-
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_3DCURSOR_OFF ] );
-				}
-				else
-				{
-					gGameSettings.fOptions[ TOPTION_3D_CURSOR ] = TRUE;
-
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_3DCURSOR_ON ] );
-				}
+				GKIWhenDQEOnKD::On_HOME(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case END:
-				// Lalien: commented out, to fix "end move & LOS bug" (same button has two different actions)
-				//		if ( gusSelectedSoldier != NOBODY )
-				//		{
-				//			if ( CheckForMercContMove( MercPtrs[ gusSelectedSoldier ] ) )
-				//			{
-				//				// Continue
-				//				ContinueMercMovement( MercPtrs[ gusSelectedSoldier ] );
-				//				ErasePath( TRUE );
-				//			}
-				//		}
+				GKIWhenDQEOnKD::On_END(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case PGUP:
-				if ( CHEATER_CHEAT_LEVEL( ) )
-				{
-					if( fCtrl )
-						AttemptToChangeFloorLevel( -1 ); //try to go up towards ground level
-				}
-
-				if ( guiCurrentScreen != DEBUG_SCREEN )
-				{
-					if ( gusSelectedSoldier != NOBODY )
-					{
-						// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-						if ( ( gpItemPointer == NULL ) )
-						{
-							GotoHeigherStance( MercPtrs[ gusSelectedSoldier ] );
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_PGUP(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case PGDN:
-				if ( CHEATER_CHEAT_LEVEL( ) )
-				{
-					if( fCtrl )
-						AttemptToChangeFloorLevel( +1 ); //try to enter a lower underground level
-				}
-
-				if ( guiCurrentScreen != DEBUG_SCREEN )
-				{
-					if ( gusSelectedSoldier != NOBODY )
-					{
-						// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-						if ( ( gpItemPointer == NULL ) )
-						{
-							GotoLowerStance( MercPtrs[ gusSelectedSoldier ] );
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_PGDN(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case BACKSPACE:
 				// used for stopping speech
+				GKIWhenDQEOnKD::On_BACKSPACE(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case TAB:
-				// go to next tab in enhanced description box
-				if( ( fCtrl ) && InItemDescriptionBox( ) && gGameSettings.fOptions[ TOPTION_ENHANCED_DESC_BOX ] == TRUE )
-				{			
-					if ( (Item[ gpItemDescObject->usItem ].usItemClass & IC_WEAPON || Item[ gpItemDescObject->usItem ].usItemClass & IC_PUNCH) 
-						&& gubDescGenPage == 0 && gubDescBoxPage == 1 )
-					{
-						gubDescGenPage = 1;
-					}
-					else if ( gubDescBoxPage < 2 )
-					{
-						gubDescGenPage = 0;
-						gubDescBoxPage++;
-					}
-					else
-					{					
-						gubDescBoxPage = 0;
-					}
-					HandleItemDescTabButton( );
-				}
-				// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-				else if ( ( gpItemPointer == NULL ) &&
-					( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ UPDOWN_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-				{
-					UIHandleChangeLevel( NULL );
-
-					if ( gsCurInterfacePanel == SM_PANEL )
-					{
-						// Remember soldier's new value
-						gpSMCurrentMerc->bUIInterfaceLevel = (INT8)gsInterfaceLevel;
-					}
-				}
+				GKIWhenDQEOnKD::On_TAB(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F1:
-				if( fShift )
-				{
-					HandleSelectMercSlot( 0, LOCATE_MERC_ONCE );
-				}
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 15 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 10 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 0, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F1(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F2:
-				if( fShift )
-					HandleSelectMercSlot( 1, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 1 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 11 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 1, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F2(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F3:
-				if( fShift )
-					HandleSelectMercSlot( 2, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 2 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 12 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 2, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F3(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F4:
-				if( fShift )
-					HandleSelectMercSlot( 3, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 3 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 13 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 3, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F4(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F5:
-				if( fShift )
-					HandleSelectMercSlot( 4, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 4 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 14 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 4, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F5(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F6:
-				if( fShift )
-					HandleSelectMercSlot( 5, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 5 );
-				}
-				else if( fCtrl )
-				{
-					TestMeanWhile( 15 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 5, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F6(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F7:
-				if( fShift )
-					HandleSelectMercSlot( 6, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 16 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 6, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F7(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F8:
-				if( fShift )
-					HandleSelectMercSlot( 7, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 7 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 7, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F8(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F9:
-				if( fShift )
-					HandleSelectMercSlot( 8, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fCtrl )
-				{
-					TestMeanWhile( 8 );
-				}
-#endif
-				else
-				{
-#ifdef JA2EDITOR
-					*puiNewEvent = I_ENTER_EDIT_MODE;
-					gfMercResetUponEditorEntry = !fAlt;
-					break;
-#endif
-					HandleSelectMercSlot( 8, LOCATEANDSELECT_MERC );
-				}
+				GKIWhenDQEOnKD::On_F9(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F10:
-				if( fShift )
-					HandleSelectMercSlot( 9, LOCATE_MERC_ONCE );
-#ifdef JA2TESTVERSION
-				else if( fAlt )
-				{
-					TestMeanWhile( 9 );
-				}
-#endif
-				else
-					HandleSelectMercSlot( 9, LOCATEANDSELECT_MERC );
+				GKIWhenDQEOnKD::On_F10(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F11:
-				if( fAlt )
-				{
-#ifdef JA2TESTVERSION
-					SOLDIERTYPE *pSoldier;
-
-					// Get selected soldier
-					if( GetSoldier( &pSoldier, gusSelectedSoldier ) )
-					{
-						if( pSoldier->ubID == 46 )
-						{
-							// Change guy to drunk larry
-							ForceSoldierProfileID( pSoldier, 47 );
-						}
-						else
-						{
-							// Change guy to normal larry
-							ForceSoldierProfileID( pSoldier, 46 );
-						}
-
-						// Dirty interface
-						DirtyMercPanelInterface( pSoldier, DIRTYLEVEL2 );
-					}
-#endif
-				}
-
-				else
-				{
-					if( DEBUG_CHEAT_LEVEL( ) )
-					{
-						GetMouseMapPos( &gsQdsEnteringGridNo );
-						LeaveTacticalScreen( QUEST_DEBUG_SCREEN );
-					}
-				}
+				GKIWhenDQEOnKD::On_F11(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case F12:
-#ifdef JA2TESTVERSION
-				if( fAlt )
-				{
-					UINT8 ubProfile = TONY;
-
-					GetMouseMapPos( &gsQdsEnteringGridNo );
-					AddShopkeeperToGridNo( ubProfile, gsQdsEnteringGridNo );
-					EnterShopKeeperInterfaceScreen( ubProfile );
-				}
-#endif
-				//clear tactical of messages
-				if( fCtrl )
-				{
-					ClearTacticalMessageQueue( );
-				}
-				else if ( !fAlt )
-				{
-					ClearDisplayedListOfTacticalStrings( );
-				}
+				GKIWhenDQEOnKD::On_F12(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case '-':
 			case '_':
-				//if the display cover or line of sight is being displayed
-				if( _KeyDown( END ) || _KeyDown( DEL ) )
-				{
-					//if( _KeyDown( DEL ) )
-						//ChangeSizeOfDisplayCover( gGameSettings.ubSizeOfDisplayCover - 1 );
-
-					//if( _KeyDown( END ) )
-						//ChangeSizeOfLOS( gGameSettings.ubSizeOfLOS - 1 );
-				}
-				else
-				{
-					if( fAlt )
-					{
-						if(MusicGetVolume() >= 20)
-							MusicSetVolume(MusicGetVolume()-20);
-						else
-							MusicSetVolume(0);
-					}
-					else if( fCtrl )
-					{
-#ifdef JA2TESTVERSION
-						gTacticalStatus.bRealtimeSpeed = max( 1, gTacticalStatus.bRealtimeSpeed - 1 );
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Decreasing Realtime speed to %d", gTacticalStatus.bRealtimeSpeed );
-#endif
-					}
-					else
-					{
-#ifdef JA2TESTVERSION
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Using Normal Scroll Speed"	);
-						gubCurScrollSpeedID = 1;
-#endif
-					}
-				}
+				GKIWhenDQEOnKD::On_MinusOrUnderscore(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case '+':
-#ifdef JA2TESTVERSION
-				if( fAlt )
-				{
-					if(MusicGetVolume() <= 107)
-						MusicSetVolume(MusicGetVolume()+20);
-					else
-						MusicSetVolume(127);
-				}
-				else if( fCtrl )
-				{
-					gTacticalStatus.bRealtimeSpeed = min( MAX_REALTIME_SPEED_VAL, gTacticalStatus.bRealtimeSpeed+1 );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Increasing Realtime speed to %d", gTacticalStatus.bRealtimeSpeed );
-				}
-				else
-				{
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Using Higher Scroll Speed"	);
-					gubCurScrollSpeedID = 2;
-				}
-#endif
+				GKIWhenDQEOnKD::On_Plus(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case '=':
-				//if the display cover or line of sight is being displayed
-				if( _KeyDown( END ) || _KeyDown( DEL ) )
-				{
-					//f( _KeyDown( DEL ) )
-						//ChangeSizeOfDisplayCover( gGameSettings.ubSizeOfDisplayCover + 1 );
-
-					//if( _KeyDown( END ) )
-						//ChangeSizeOfLOS( gGameSettings.ubSizeOfLOS + 1 );
-				}
-				else
-				{
-
-#ifdef JA2TESTVERSION
-					if( fAlt )
-					{
-						WarpGameTime( 60, TRUE );
-						break;
-					}
-#endif
-
-					// ATE: This key will select everybody in the sector
-					// Buggler: Disabled check for all merc display cover in turnbased mode
-					//if ( !(gTacticalStatus.uiFlags & INCOMBAT) )
-					//{
-						HandleTBSelectAllMercs();
-					//}
-				}
+				GKIWhenDQEOnKD::On_Equal(puiNewEvent, fAlt, fCtrl, fShift);
 				break;
-
 			case ',':
-				// Flugente: alternate for people without mousewheel to aim auto-only weapons
-				if ( gGameExternalOptions.bAimedBurstEnabled && gCurrentUIMode == CONFIRM_ACTION_MODE )
-				{
-					SOLDIERTYPE *		pSoldier;
-
-					if ( GetSoldier( &pSoldier, gusSelectedSoldier ) )
-					{
-						HandleRightClickAdjustCursor( pSoldier, usMapPos );
-					}
-				}
+				GKIWhenDQEOnKD::On_Comma(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
-			// added by Flugente
 			case '.':
-				if ( fCtrl && fAlt ) //jikuja: Create item by reusing old entered number
- 				{
-					if ( CHEATER_CHEAT_LEVEL( ) ) 
-					{
-						CheatCreateItem( );
-					}
-				}
-				else if ( fCtrl )
-				{
-					if ( gusSelectedSoldier != NOBODY )
-					{
-						HandleTacticalFunctionSelection(MercPtrs[ gusSelectedSoldier ],  usMapPos );
-					}
-				}
-				else if ( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
- 					{
-						if ( gusSelectedSoldier != NOBODY )
-						{
-							DoMessageBox( MSG_BOX_BASIC_SMALL_BUTTONS, L"Enter ItemID", GAME_SCREEN, MSG_BOX_FLAG_INPUTBOX, ItemCreationCallBack, NULL );
-						}
-					}
-				}
-				else
-				{
-					SetScopeMode( usMapPos );
-				}
-
+				GKIWhenDQEOnKD::On_Dot(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '/':
-				// Center to guy....
-				if ( gusSelectedSoldier != NOBODY )
-				{
-					LocateSoldier( gusSelectedSoldier, 10 );
-				}
+				GKIWhenDQEOnKD::On_Slash(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '\\':
-				if (gusSelectedSoldier != NOBODY)
-				{
-					SOLDIERTYPE *pSoldier;
-					if (GetSoldier(&pSoldier, gusSelectedSoldier))
-					{
-						if (pSoldier->CanBreakWindow())
-						{
-							if (EnoughPoints(pSoldier, GetAPsToBreakWindow(pSoldier, TRUE), BP_USE_CROWBAR, TRUE))
-								pSoldier->BreakWindow();
-						}
-						else if (pSoldier->CanStartDrag())
-						{
-							INT32 sNewGridNo = NewGridNo(pSoldier->sGridNo, DirectionInc(pSoldier->ubDirection));
-
-							if (!TileIsOutOfBounds(sNewGridNo) && sNewGridNo != pSoldier->sGridNo)
-							{
-								if (EnoughPoints(pSoldier, GetAPsToStartDrag(pSoldier, sNewGridNo), 0, TRUE))
-									pSoldier->StartDrag();
-							}
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_BackSlash(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
-
 			case '`':
-
-				if( fAlt )
-				{
-					HandleTacticalStoreInvItem( );
-				}
-				else if(!AreInMeanwhile())
-				// Switch panels...
-				{
-					ToggleTacticalPanels();
-				}
+				GKIWhenDQEOnKD::On_BackQuote(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '1':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						//ChangeSoldiersBodyType( TANK_NW, TRUE );
-						// MercPtrs[ gusSelectedSoldier ]->flags.uiStatusFlags |= SOLDIER_CREATURE;
-						//EVENT_InitNewSoldierAnim( MercPtrs[ gusSelectedSoldier ], CRIPPLE_BEG, 0 , TRUE );
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem1 );
-				}
-				else
-					ChangeCurrentSquad( 0 );
+				GKIWhenDQEOnKD::On_One(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '2':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						ChangeSoldiersBodyType(INFANT_MONSTER, TRUE);
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem2 );
-				}
-				else if( fCtrl ) //toggle between the different npc debug modes
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						ToggleQuestDebugModes( QD_NPC_MSG );
-					}
-				}
-				else
-					ChangeCurrentSquad( 1 );
+				GKIWhenDQEOnKD::On_Two(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '3':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						MercPtrs[gusSelectedSoldier]->EVENT_InitNewSoldierAnim(KID_SKIPPING, 0, TRUE);
-
-						//ChangeSoldiersBodyType( LARVAE_MONSTER, TRUE );
-						//MercPtrs[ gusSelectedSoldier ]->usAttackingWeapon = TANK_CANNON;
-						//LocateSoldier( gusSelectedSoldier, FALSE );
-						//EVENT_FireSoldierWeapon( MercPtrs[ gusSelectedSoldier ], sMapPos );
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem3 );
-				}
-				else if( fCtrl ) //toggle between the different npc debug modes
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						CreateBloodCat();
-					}
-				}
-				else
-					ChangeCurrentSquad( 2 );
-
+				GKIWhenDQEOnKD::On_Three(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '4':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						ChangeSoldiersBodyType(CRIPPLECIV, TRUE);
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem4 );
-				}
-				else
-					ChangeCurrentSquad( 3 );
-
-				//ChangeSoldiersBodyType( BLOODCAT, FALSE );
+				GKIWhenDQEOnKD::On_Four(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '5':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						ChangeSoldiersBodyType(YAM_MONSTER, TRUE);
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem5 );
-				}
-				else
-				{
-					ChangeCurrentSquad( 4 );
-					
-					if (is_networked)
-						grid_display();//hayden
-				}
+				GKIWhenDQEOnKD::On_Five(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '6':
-				if (fCtrl && fAlt)
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						ChangeSoldiersBodyType(BLOODCAT, TRUE);
-					}
-				}
-				else if( fAlt )
-				{
-					HandleTacticalTakeInvItem(gGameExternalOptions.iQuickItem6);
-				}
-				else
-				{
-					ChangeCurrentSquad( 5 );
-				}
+				GKIWhenDQEOnKD::On_Six(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '7':
-				if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem7 );
-				}
-				else
-				{
-					ChangeCurrentSquad( 6 );
-				}
+				GKIWhenDQEOnKD::On_Seven(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '8':
-				if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem8 );
-				}
-				else
-				{
-					ChangeCurrentSquad( 7 );
-				}
+				GKIWhenDQEOnKD::On_Eight(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '9':
-				if( fAlt )
-				{
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem9 );
-				}
-				else
-				{
-					ChangeCurrentSquad( 8 );
-				}
+				GKIWhenDQEOnKD::On_Nine(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '0':
-				if( fAlt )
-				{
-					// used for calculating item chance to get through in cheat mode
-					HandleTacticalTakeInvItem( gGameExternalOptions.iQuickItem0 );
-				}
-				else
-				{
-					ChangeCurrentSquad( 9 );
-				}
+				GKIWhenDQEOnKD::On_Zero(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '!':
+				GKIWhenDQEOnKD::On_Exclamation(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '@':
+				GKIWhenDQEOnKD::On_AtSign(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '#':
+				GKIWhenDQEOnKD::On_Hash(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '$':
-				if(fCtrl && gGameExternalOptions.fEnableInventoryPoolQ)//dnl ch75 021113
-					DisplaySectorItemsInfo();
-				else
-				{
-					HandleTBSkillsMenu();
-				}
+				GKIWhenDQEOnKD::On_DollarSign(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '%':
+				GKIWhenDQEOnKD::On_Percent(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '^':
+				GKIWhenDQEOnKD::On_Caret(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '&':
+				GKIWhenDQEOnKD::On_Ampersand(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '*':
-				if ( fCtrl )
-				{
-					if ( gTacticalStatus.uiFlags & RED_ITEM_GLOW_ON	)
-					{
-						gTacticalStatus.uiFlags &= (~RED_ITEM_GLOW_ON );
-					}
-					else
-					{
-						gTacticalStatus.uiFlags |= RED_ITEM_GLOW_ON;
-					}
-				}
+				GKIWhenDQEOnKD::On_Asterix(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case '(':
+				GKIWhenDQEOnKD::On_OpenParenthesis(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case ')':
+				GKIWhenDQEOnKD::On_CloseParenthesis(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'a':
-
-				if ( fCtrl && fAlt )
-				{
-					// Flugente: fortification
-					// set details on how to place fortification nodes
-					// loop over all structure constructs, and select those entries that are possible in this map
-					std::vector<std::pair<INT16, STR16> > dropdownvector_1 = GetCurrentSectorAllowedFortificationTileSetVector( giCurrentTilesetID );
-
-					DropDownTemplate<DROPDOWNNR_MSGBOX_1>::getInstance( ).SetEntries( dropdownvector_1 );
-
-					if ( !dropdownvector_1.empty() )
-					{
-						BOOLEAN found = FALSE;
-						for ( std::vector<std::pair<INT16, STR16> >::iterator it = dropdownvector_1.begin( ); it != dropdownvector_1.end(); ++it )
-						{
-							if ( (*it).first == gCurrentFortificationStructure )
-							{
-								found = TRUE;
-								break;
-							}
-						}
-
-						if ( !found )
-							gCurrentFortificationStructure = dropdownvector_1[0].first;
-					}
-
-					DropDownTemplate<DROPDOWNNR_MSGBOX_1>::getInstance( ).SetSelectedEntryKey( gCurrentFortificationStructure );
-
-					std::vector<std::pair<INT16, STR16> > dropdownvector_2 = GetTileSetIndexVector( gCurrentFortificationStructure );
-
-					DropDownTemplate<DROPDOWNNR_MSGBOX_2>::getInstance( ).SetEntries( dropdownvector_2 );
-
-					if ( !dropdownvector_2.empty( ) )
-					{
-						BOOLEAN found = FALSE;
-						for ( std::vector<std::pair<INT16, STR16> >::iterator it = dropdownvector_2.begin( ); it != dropdownvector_2.end( ); ++it )
-						{
-							if ( (*it).first == guiMessageBoxImageIndex )
-							{
-								found = TRUE;
-								break;
-							}
-						}
-
-						if ( !found )
-							guiMessageBoxImageIndex = dropdownvector_2[0].first;
-					}
-
-					DropDownTemplate<DROPDOWNNR_MSGBOX_2>::getInstance( ).SetSelectedEntryKey( guiMessageBoxImageIndex );
-
-					if ( dropdownvector_1.empty( ) || dropdownvector_2.empty() )
-					{
-						CHAR16 text[100];
-						swprintf( text, szFortificationText[4], giCurrentTilesetID, gTilesets[giCurrentTilesetID].zName );
-
-						DoMessageBox( MSG_BOX_BASIC_STYLE, text, GAME_SCREEN, MSG_BOX_FLAG_OK, NULL, NULL );
-					}
-					else
-					{
-						CHAR16 text[100];
-						swprintf( text, szFortificationText[5], giCurrentTilesetID, gTilesets[giCurrentTilesetID].zName );
-
-						VOBJECT_DESC VObjectDesc;
-						VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMFILE;
-
-						sprintf( VObjectDesc.ImageFile, "TILESETS\\%d\\%s", giCurrentTilesetID, gStructureConstruct[gCurrentFortificationStructure].szTileSetName );
-						
-						// even if AddVideoObject fails, we still set MSG_BOX_FLAG_IMAGE, as we might 'repair' it while the box is open
-						if ( !AddVideoObject( &VObjectDesc, &guiMessageBoxImage ) )
-						{
-							sprintf( VObjectDesc.ImageFile, "TILESETS\\0\\%s", gStructureConstruct[gCurrentFortificationStructure].szTileSetName );
-
-							AddVideoObject( &VObjectDesc, &guiMessageBoxImage );
-						}
-
-						DoMessageBox( MSG_BOX_BASIC_STYLE, text, GAME_SCREEN, (MSG_BOX_FLAG_OK | MSG_BOX_FLAG_DROPDOWN_1 | MSG_BOX_FLAG_DROPDOWN_2 | MSG_BOX_FLAG_IMAGE), FortificationSettingCallBack, NULL );
-					}
-				}
-				else if ( fCtrl )
-				{
-					// Flugente: fortification
-					INT32 sGridNo;
-
-					//Get the gridno the cursor is at
-					GetMouseMapPos( &sGridNo );
-
-					// a node to add a structure
-					AddFortificationPlanNode( sGridNo, (INT8)gsInterfaceLevel, gCurrentFortificationStructure, gCurrentFortificationTileLibraryIndex, TRUE );
-				}
-				else if ( fAlt )
-				{
-#ifdef JA2TESTVERSION
-					//	ToggleMercsNeverQuit();
-					static UINT8 ubAmbientSound = 0;
-
-					ubAmbientSound++;
-
-					if ( ubAmbientSound >= NUM_STEADY_STATE_AMBIENCES )
-					{
-						ubAmbientSound = 1;
-					}
-
-					SetSteadyStateAmbience( ubAmbientSound );
-
-#else
-					//shadooow: trying to use autobandage during conversation will mess up game
-					// sevenfm: don't try to activate autobandage in hostile sector
-					if (CheckAutoBandage())
-					{
-						BeginAutoBandage();
-					}
-#endif
-				}
-				else
-				{
-					HandleTBSkillsMenu();
-				}
+				GKIWhenDQEOnKD::On_a(puiNewEvent, fAlt, fCtrl, fShift, usMapPos, &gCurrentFortificationStructure, &gCurrentFortificationTileLibraryIndex);
 				break;
-
 			case 'A':
-				//CHRISL: Ammo Crate
-				//MM: Ammo Box
-				if (fCtrl)
-					HandleTacticalAmmoCrates( AMMO_CRATE );
-				else
-					HandleTacticalAmmoCrates( AMMO_BOX );
+				GKIWhenDQEOnKD::On_A(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'b':
-
-				if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						*puiNewEvent = I_NEW_BADMERC;
-					}
-				}
-				else if( fCtrl )
-				{
-					// Flugente: fortification
-					INT32 sGridNo;
-
-					//Get the gridno the cursor is at
-					GetMouseMapPos( &sGridNo );
-
-					// a node to delete a structure
-					AddFortificationPlanNode( sGridNo, (INT8)gsInterfaceLevel, gCurrentFortificationStructure, gCurrentFortificationTileLibraryIndex, FALSE );
-				}
-				else
-				{
-					// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-					if ( ( gpItemPointer == NULL ) &&
-						( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ BURSTMODE_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-					{
-						SetBurstMode();
-					}
-				}
+				GKIWhenDQEOnKD::On_b(puiNewEvent, fAlt, fCtrl, fShift, usMapPos, &gCurrentFortificationStructure, &gCurrentFortificationTileLibraryIndex);
 				break;
-
 			case 'B':
-				//Drop/Pick up backpack for all mercs on current map
-				HandleTBBackpacks();
+				GKIWhenDQEOnKD::On_B(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
 			case 'c':
-
-				if ( fAlt && fCtrl )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						ToggleCliffDebug( );
-					}
-				}
-				else if ( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						CreateNextCivType();
-					}
-				}
-				else if( fCtrl )
-				{
-					HandleTacticalCoverMenu();
-				}
-				else
-				{
-					HandleStanceChangeFromUIKeys( ANIM_CROUCH );
-				}
+				GKIWhenDQEOnKD::On_c(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'C':
-
-				if ( fAlt )
-					ToggleHostileTrapsView();	// added by Flugente
-				else
-					ToggleEnemyView();
-
+				GKIWhenDQEOnKD::On_C(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'd':
-				if( gTacticalStatus.uiFlags & TURNBASED && gTacticalStatus.uiFlags & INCOMBAT )
-				{
-					if( gTacticalStatus.ubCurrentTeam == gbPlayerNum )
-					{
-						// nothing in hand and the Done button for whichever panel we're in must be enabled
-						if ( ( gpItemPointer == NULL ) && !gfDisableTacticalPanelButtons &&
-							( ( ( gsCurInterfacePanel == SM_PANEL	) && ( ButtonList[ iSMPanelButtons[ SM_DONE_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) ||
-							( ( gsCurInterfacePanel == TEAM_PANEL ) && ( ButtonList[ iTEAMPanelButtons[ TEAM_DONE_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) ) )
-						{
-							if( fAlt )
-							{
-								INT32 cnt;
-								SOLDIERTYPE *pSoldier;
-
-								if ( CHEATER_CHEAT_LEVEL( ) )
-								{
-									for ( pSoldier = MercPtrs[ gbPlayerNum ], cnt = 0; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++,pSoldier++)
-									{
-										if ( pSoldier->bActive && pSoldier->stats.bLife > 0 )
-										{
-											// Get APs back...
-											pSoldier->CalcNewActionPoints( );
-
-											fInterfacePanelDirty = DIRTYLEVEL2;
-										}
-									}
-								}
-							} 
-							else
-							{
-								//End turn only if in combat and it is the player's turn
-								if ( fCtrl )
-									gTacticalStatus.ubDisablePlayerInterrupts = TRUE;								
-								
-								*puiNewEvent = I_ENDTURN;
-							}
-						}
-					}
-				}
-
-#ifdef JA2TESTVERSION
-				else if( fCtrl )
-				{
-					AdvanceToNextDay();
-				}
-#endif
-				// sevenfm: press 'd' in realtime to start turnbased
-				else	
-				{
-					if ( (gTacticalStatus.uiFlags & INCOMBAT) || (NumEnemyInSector() != 0) )
-					{
-						EnterCombatMode( OUR_TEAM );
-					}
-				}
+				GKIWhenDQEOnKD::On_d(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'D':
-				// SANDRO - changed from drop all to enable soldier tooltips
-				if ( gGameSettings.fOptions[ TOPTION_ALLOW_SOLDIER_TOOLTIPS ] )
-				{
-					gGameSettings.fOptions[ TOPTION_ALLOW_SOLDIER_TOOLTIPS ] = FALSE;
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SOLDIER_TOOLTIPS_OFF ] );
-				}
-				else
-				{
-					gGameSettings.fOptions[ TOPTION_ALLOW_SOLDIER_TOOLTIPS ] = TRUE;
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SOLDIER_TOOLTIPS_ON ] );
-				}
-			//	if ( gGameSettings.fOptions[TOPTION_DROP_ALL] )
-			//	{
-			//		gGameSettings.fOptions[TOPTION_DROP_ALL] = FALSE;
-			//		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_DROP_ALL_OFF ] );
-			//	}
-			//	else
-			//	{
-			//		gGameSettings.fOptions[TOPTION_DROP_ALL] = TRUE;
-			//		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_DROP_ALL_ON ] );
-			//	}
+				GKIWhenDQEOnKD::On_D(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'e':
-
-				if( fAlt )
-				{
-					// used for override player's turn in network game
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						ToggleViewAllMercs();
-						ToggleViewAllItems();
-					}
-				}
-#ifdef JA2BETAVERSION
-				else if( fCtrl )
-				{
-					ToggleMapEdgepoints();
-				}
-#endif
-				else
-				{
-					SOLDIERTYPE *pSoldier;
-
-					if ( gusSelectedSoldier != NOBODY )
-					{
-						pSoldier = MercPtrs[ gusSelectedSoldier ];
-
-						if ( pSoldier->aiData.bOppCnt > 0 )
-						{
-							// Cycle....
-							CycleVisibleEnemies( pSoldier );
-						}
-						else
-						{
-							ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_ENEMIES_IN_SIGHT_STR ] );
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_e(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'E':
-				//CHRISL: drop all items
-				if ( gusSelectedSoldier != NOBODY && !(gTacticalStatus.fEnemyInSector) )
-				{
-					SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-					for(int i = BODYPOSFINAL; i<NUM_INV_SLOTS; i++)
-					{
-						if(pSoldier->inv[i].exists() == true)
-						{
-							AddItemToPool(pSoldier->sGridNo, &pSoldier->inv[i], 1, pSoldier->pathing.bLevel, 0, -1);
-							//pSoldier->inv[i].initialize();
-							DeleteObj(&pSoldier->inv[i]);
-						}
-					}
-					fCharacterInfoPanelDirty = TRUE;
-					fInterfacePanelDirty = DIRTYLEVEL2;
-				}
+				GKIWhenDQEOnKD::On_E(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'f':
-				if( fCtrl )
-				{
-					if ( INFORMATION_CHEAT_LEVEL( ) )
-					{
-						//Toggle Frame Rate Display
-						gbFPSDisplay = !gbFPSDisplay;
-						DisableFPSOverlay( (BOOLEAN)!gbFPSDisplay );
-						if( !gbFPSDisplay )
-							SetRenderFlags( RENDER_FLAG_FULL );
-					}
-				}
-				else if( fAlt )
-				{
-					if ( gGameSettings.fOptions[ TOPTION_TRACKING_MODE ] )
-					{
-						gGameSettings.fOptions[ TOPTION_TRACKING_MODE ] = FALSE;
-
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_TRACKING_MODE_OFF ] );
-					}
-					else
-					{
-						gGameSettings.fOptions[ TOPTION_TRACKING_MODE ] = TRUE;
-
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_TRACKING_MODE_ON ] );
-					}
-				}
-				else
-				{
-					INT32 usGridNo;
-
-					//Get the gridno the cursor is at
-					GetMouseMapPos( &usGridNo );
-
-					// if the cursor location is valid					
-					if ( !TileIsOutOfBounds(usGridNo) )
-					{
-						// sevenfm: code to check ubAdjacentSoldierCnt
-						/*MAP_ELEMENT *pMapElement;
-						pMapElement = &(gpWorldLevelData[usGridNo]);
-						ScreenMsg(FONT_ORANGE, MSG_INTERFACE, L"adjacent soldiers %d", pMapElement->ubAdjacentSoldierCnt);*/
-
-						// if there is a selected soldier
-						if ( gusSelectedSoldier != NOBODY )
-						{
-							//if the cursor is over someone
-							if ( gfUIFullTargetFound )
-							{
-								//Display the range to the target
-								DisplayRangeToTarget( MercPtrs[gusSelectedSoldier], MercPtrs[gusUIFullTargetID]->sGridNo );
-							}
-							else
-							{
-								//Display the range to the target
-								DisplayRangeToTarget( MercPtrs[gusSelectedSoldier], usGridNo );
-							}
-						}
-
-						CHAR16	zOutputString[512];
-						swprintf( zOutputString, L"%s: %d", pUpdateMapInfoText[19], usGridNo);
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, zOutputString );
-
-						// Flugente: print out structure tileset
-						if ( gGameExternalOptions.fPrintStructureTileset )
-						{
-							STRUCTURE * pStruct = FindStructure( usGridNo, ( STRUCTURE_TYPE_DEFINED ) );
-							if ( pStruct )
-							{
-								// if this is a multi-tile structure, be sure to use the base gridno
-								if ( !(pStruct->fFlags & STRUCTURE_BASE_TILE) )
-								{
-									pStruct = FindBaseStructure( pStruct );
-								}
-
-								if ( pStruct )
-								{
-									LEVELNODE* pNode = FindLevelNodeBasedOnStructure( pStruct->sGridNo, pStruct );
-
-									if ( pNode )
-									{
-										UINT32 uiTileType = 0;
-										if ( GetTileType( pNode->usIndex, &uiTileType ) )
-										{
-											std::string tilesestr = GetNameToTileSet( uiTileType );
-
-											CHAR16 whcarthing[100];
-
-											int nChars = MultiByteToWideChar( CP_ACP, 0, tilesestr.c_str(), -1, NULL, 0 );
-											MultiByteToWideChar( CP_UTF8, 0, tilesestr.c_str( ), -1, whcarthing, nChars );
-
-											swprintf( zOutputString, L"Tileset %d: Tilesetname: %s tileindex: %d", giCurrentTilesetID, whcarthing, pStruct->pDBStructureRef->pDBStructure->usStructureNumber );
-											ScreenMsg( FONT_MCOLOR_LTGREEN, MSG_INTERFACE, zOutputString );
-										}
-									}
-								}
-							}
-						}
-
-						extern BOOLEAN InARoom( INT32 sGridNo, UINT16 *pusRoomNo );
-
-						UINT16 usRoom;
-						if ( InARoom( usGridNo, &usRoom ) )
-						{
-							swprintf( zOutputString, L"Room number: %d", usRoom );
-							ScreenMsg( FONT_MCOLOR_LTGREEN, MSG_INTERFACE, zOutputString );
-						}
-
-						// display height
-						swprintf( zOutputString, L"Floor height: %d", gpWorldLevelData[usGridNo].sHeight );
-						ScreenMsg( FONT_MCOLOR_LTGREEN, MSG_INTERFACE, zOutputString );
-					}
-				}
+				GKIWhenDQEOnKD::On_f(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'F':
-				if( fCtrl && UsingNewInventorySystem() == true )
-				{
-					HandleTBPickUpBackpacks();
-				}
-				SeperateItems();
-				if( fCtrl )
-					StackAndSort( TRUE );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11] );
+				GKIWhenDQEOnKD::On_F(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'G':
-				if( fCtrl )
-				{	
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						if (gTacticalStatus.uiFlags & GODMODE)
-						{
-							//ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, L"God mode deactivated.");
-							gTacticalStatus.uiFlags &= (~GODMODE);
-						}
-						else
-						{
-							//ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, L"God mode activated.");
-							gTacticalStatus.uiFlags |= GODMODE;
-						}
-					}
-				}
-				else if ( gGameSettings.fOptions[TOPTION_GL_BURST_CURSOR] )
-				{
-					gGameSettings.fOptions[TOPTION_GL_BURST_CURSOR] = FALSE;
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_GL_BURST_CURSOR_OFF ] );
-				}
-				else
-				{
-					gGameSettings.fOptions[TOPTION_GL_BURST_CURSOR] = TRUE;
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_GL_BURST_CURSOR_ON ] );
-				}
+				GKIWhenDQEOnKD::On_G(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
 			case 'g':
-				if( fCtrl && fAlt )
-				{
-					HandleTBToggleFormation();
-				}
-				else if( fCtrl )
-				{
-					// Flugente: ask player whether he wants to activate cheats or not, but not in multiplayer
-					if ( !is_networked )
-					{
-						if ( CHEATER_CHEAT_LEVEL() )
-						{
-							DoScreenIndependantMessageBox( pMessageStrings[MSG_PROMPT_CHEATS_DEACTIVATE], MSG_BOX_FLAG_YESNO, ActivateCheatsMessageBoxCallBack );
-						}
-						else
-						{
-							DoScreenIndependantMessageBox( pMessageStrings[MSG_PROMPT_CHEATS_ACTIVATE], MSG_BOX_FLAG_YESNO, ActivateCheatsMessageBoxCallBack );
-						}
-					}
-				}
-				else if ( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						//*puiNewEvent = I_NEW_MERC;
-						if (GetMouseMapPos(&mappos))
-						{
-							DoMessageBox(MSG_BOX_BASIC_SMALL_BUTTONS, L"Enter ProfileID", GAME_SCREEN, MSG_BOX_FLAG_INPUTBOX, MercCreationCallBack, NULL);
-						}
-					}
-				}
-				else
-				{
-					HandlePlayerTogglingLightEffects(TRUE);
-				}
+				GKIWhenDQEOnKD::On_g(puiNewEvent, fAlt, fCtrl, fShift, usMapPos, &mappos);
 				break;
-
 			case 'H':
-				HandleTBSwapHands();
+				GKIWhenDQEOnKD::On_H(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'h':
-				if ( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						if ( gfReportHitChances )
-						{
-							gfReportHitChances = FALSE;
-						}
-						else
-						{
-							gfReportHitChances = TRUE;
-						}
-					}
-				}
-				else if( fCtrl )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						*puiNewEvent = I_TESTHIT;
-					}
-				}
-				else
-				{
-					ShouldTheHelpScreenComeUp( HELP_SCREEN_TACTICAL, TRUE );
-				}
+				GKIWhenDQEOnKD::On_h(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
 			case 'I':
-				//CHRISL: This will create a large number of objects for checking overloading //dnl ch75 251013
-				if(fAlt && fCtrl)
-				{
-					if(CHEATER_CHEAT_LEVEL())
-					{
-						for ( UINT16 i = FIRST_WEAPON; i<gMAXITEMS_READ; ++i )
-						{
-							if(i == 1580 || Item[i].ubWeight == 0 && !(i == 257 || i == 1006 || i == 1026 || i == 1183))//dnl!!! items 257, 1006, 1026, 1183 had weight 0 which need to be changed in xml
-								continue;
-
-							CreateItem(i, 100, &gTempObject);
-							AddItemToPool(usMapPos, &gTempObject, VISIBLE , 0, WORLD_ITEM_REACHABLE, 0);
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_I(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'i':
-				if ( fCtrl && fAlt )
-				{
-					if ( gGameSettings.fOptions[ TOPTION_GLOW_ITEMS ] )
-					{
-						gGameSettings.fOptions[ TOPTION_GLOW_ITEMS ] = FALSE;
-						ToggleItemGlow( FALSE );
-					}
-					else
-					{
-						gGameSettings.fOptions[ TOPTION_GLOW_ITEMS ] = TRUE;
-						ToggleItemGlow( TRUE );
-					}
-				}
-				else if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						CreateRandomItem();
-					}
-				}
-				else if( fCtrl )
-				{
-					// free to use
-				}
-				else
-				{
-					// freed, use this only for a frequently-used new function
-				}
+				GKIWhenDQEOnKD::On_i(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'j':
-				if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						gfNextFireJam	= TRUE;
-					}
-				}
-				else if ( fCtrl )
-				{
-#ifdef JA2BETAVERSION
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						ToggleNPCRecordDisplay();
-					}
-#endif
-				}
-				else
-				{
-					SOLDIERTYPE *pjSoldier;
-					if ( GetSoldier( &pjSoldier, gusSelectedSoldier ) )
-					{
-						// Flugente: robots do not climb
-						if ( AM_A_ROBOT( pjSoldier ) )
-							break;
-
-						INT16							sAPCost;
-						INT16							sBPCost;
-						BOOLEAN	fNearHeigherLevel;
-						BOOLEAN	fNearLowerLevel;
-						INT8	bDirection;
-
-						// Make sure the merc is not collapsed!
-						if (!IsValidStance(pjSoldier, ANIM_CROUCH) )
-						{
-							if ( pjSoldier->bCollapsed && pjSoldier->bBreath < OKBREATH )
-							{
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, gzLateLocalizedString[ 4 ], pjSoldier->GetName() );
-							}
-
-							break;
-						}
-
-						// Climb on roof
-						GetMercClimbDirection( pjSoldier->ubID, &fNearLowerLevel, &fNearHeigherLevel );
-
-						if ( fNearLowerLevel )
-						{
-							// No climbing when wearing a backpack!
-							if (!pjSoldier->CanClimbWithCurrentBackpack())
-							{
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_NO_CLIMB] );
-								return;
-							}
-
-							if ( EnoughPoints( pjSoldier, GetAPsToClimbRoof( pjSoldier, TRUE ), GetBPsToClimbRoof( pjSoldier, TRUE ), FALSE )	)
-							{
-								pjSoldier->BeginSoldierClimbDownRoof( );
-								return;
-							}
-						}
-
-						if ( fNearHeigherLevel )
-						{
-							// No climbing when wearing a backpack!
-							if (!pjSoldier->CanClimbWithCurrentBackpack())
-							{
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_NO_CLIMB] );
-								return;
-							}
-
-							if ( EnoughPoints( pjSoldier, GetAPsToClimbRoof( pjSoldier, FALSE ), GetBPsToClimbRoof( pjSoldier, FALSE ), FALSE )	)
-							{
-								pjSoldier->BeginSoldierClimbUpRoof(	);
-								return;
-							}
-						}
-
-						// Jump over fence
-						if ( FindFenceJumpDirection( pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection ) )
-						{
-							if (!pjSoldier->CanClimbWithCurrentBackpack())
-							{
-								//Moa: no jumping whith backpack
-								//sAPCost = GetAPsToJumpFence( pjSoldier, TRUE );
-								//sBPCost = GetBPsToJumpFence( pjSoldier, TRUE );
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_NO_CLIMB] );
-								break;
-							}
-							else
-							{
-								sAPCost = GetAPsToJumpFence( pjSoldier, FALSE );
-								sBPCost = GetBPsToJumpFence( pjSoldier, FALSE );
-							}
-
-							if ( EnoughPoints( pjSoldier, sAPCost, sBPCost, FALSE )	)
-							{
-								pjSoldier->BeginSoldierClimbFence(	);
-								return;
-							}	
-						}
-						
-						// Climb on walls
-						if (gGameExternalOptions.fCanClimbOnWalls == TRUE)
-						{ 
-							// No climbing when wearing a backpack!
-							if (!pjSoldier->CanClimbWithCurrentBackpack())
-							{
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_NO_CLIMB] );
-								return;
-							}
-
-							if ( FindWallJumpDirection( pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection ) )
-							{
-								if ( EnoughPoints( pjSoldier, GetAPsToJumpWall( pjSoldier, FALSE ), GetBPsToJumpWall( pjSoldier, FALSE ), FALSE )	)
-								{
-									pjSoldier->BeginSoldierClimbWall(  );
-									return;
-								}
-							}
-						}
-					}
-				}
+				if (GKIWhenDQEOnKD::On_j(puiNewEvent, fAlt, fCtrl, fShift, usMapPos, &gfNextFireJam))
+					return;
 				break;
-
 			case 'J':
-				// WANNE: Jump through window?
-				if (gGameExternalOptions.fCanJumpThroughWindows == TRUE )
-				{
-					INT16		sAPCost;
-					INT16		sBPCost;
-					INT8	bDirection;
-			       	SOLDIERTYPE *lSoldier;
-
-                    if ( GetSoldier( &lSoldier, gusSelectedSoldier ) )
-					{
-						// Flugente: robots do not climb
-						if ( AM_A_ROBOT( lSoldier ) )
-							break;
-
-			 			if ( FindWindowJumpDirection( lSoldier, lSoldier->sGridNo, lSoldier->ubDirection, &bDirection ) )
-						{
-							if (!lSoldier->CanClimbWithCurrentBackpack())
-							{
-								//Moa: no jumping with backpack
-								//sAPCost = GetAPsToJumpThroughWindows( lSoldier, TRUE );
-								//sBPCost = GetBPsToJumpThroughWindows( lSoldier, TRUE );
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_NO_CLIMB] );
-								break;
-							}
-							else
-							{
-								sAPCost = GetAPsToJumpFence( lSoldier, FALSE );
-								sBPCost = GetBPsToJumpFence( lSoldier, FALSE );
-							}
-							
-							if (EnoughPoints(lSoldier, sAPCost, sBPCost, FALSE))
-							{
-								lSoldier->BeginSoldierClimbWindow(	);
-							}
-   	                    }
-					}
-				}
+				GKIWhenDQEOnKD::On_J(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'k':
-				if( fAlt )
-				{
-					if ( fCtrl )
-					{
-						if ( CHEATER_CHEAT_LEVEL( ) )
-						{
-							// next shot by anybody is auto kill
-							if (gfNextShotKills)
-							{
-								gfNextShotKills = FALSE;
-							}
-							else
-							{
-								gfNextShotKills = TRUE;
-							}
-						}
-					}
-					else
-					{
-						// used for kicking player out in networked game
-						if ( CHEATER_CHEAT_LEVEL( ) )
-						{
-						}
-					}
-				}
-				else if( fCtrl )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-					}
-				}
-				else
-				{
-					BeginKeyPanelFromKeyShortcut( );
-				}
+				GKIWhenDQEOnKD::On_k(puiNewEvent, fAlt, fCtrl, fShift, usMapPos, &gusItemExplosion);
 				break;
-
 			case 'K':
-				// Flugente: reworked this
-				//CHRISL: Swap gunsling
-				if ( gusSelectedSoldier != NOBODY )
-				{
-					SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-
-					if ( fAlt )
-						// switch to knife, or from knife to gun
-						pSoldier->SwitchWeapons( TRUE );
-					else if ( fCtrl )
-						// switch to sidearm, or from sidearm to non-sidearm gun
-						pSoldier->SwitchWeapons( FALSE, TRUE );
-					else
-						// switch to and from gunsling
-						pSoldier->SwitchWeapons( );
-				}
+				GKIWhenDQEOnKD::On_K(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'l':
-				if(fCtrl && fAlt)
-				{
-#ifdef JA2BETAVERSION
-				gfDisplayStrategicAILogs ^= TRUE;
-				if (gfDisplayStrategicAILogs)
-				{
-					ScreenMsg(FONT_LTKHAKI, MSG_INTERFACE, L"Strategic AI Log visually enabled.");
-				}
-				else
-				{
-					ScreenMsg(FONT_LTKHAKI, MSG_INTERFACE, L"Strategic AI Log visually disabled.");
-				}
+				GKIWhenDQEOnKD::On_l(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-#endif
-				}
-				else if (fAlt )
-				{
-					// used for quickloading
-				}
-				else if (fCtrl)
-				{
-					// used for loading game
-				}
-				else
-				{
-					// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-					if ( ( gpItemPointer == NULL ) &&
-						( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ LOOK_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-					{
-						*puiNewEvent = LC_CHANGE_TO_LOOK;
-					}
-				}
-				break;
-
 			case 'L':
-				HandleTacticalTransformFlashlight();
+				GKIWhenDQEOnKD::On_L(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'm':
-				if( fAlt )
-				{
-					if ( INFORMATION_CHEAT_LEVEL( ) )
-					{
-						*puiNewEvent = I_LEVELNODEDEBUG;
-						CountLevelNodes();
-					}
-				}
-				else if( fCtrl )
-				{
-					if ( INFORMATION_CHEAT_LEVEL( ) )
-					{
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Memory Used: %d + %d = %d vs: %d", guiMemTotal, giMemUsedInSurfaces, ( guiMemTotal + giMemUsedInSurfaces), ( giStartingMemValue - MemGetFree() ) );
-					}
-				}
-				else
-				{
-					// nothing in hand and the Map Screen button for whichever panel we're in must be enabled
-					if ( ( gpItemPointer == NULL ) && !gfDisableTacticalPanelButtons &&
-						( ( ( gsCurInterfacePanel == SM_PANEL	) && ( ButtonList[ iSMPanelButtons[ SM_MAP_SCREEN_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) ||
-						( ( gsCurInterfacePanel == TEAM_PANEL ) && ( ButtonList[ iTEAMPanelButtons[ TEAM_MAP_SCREEN_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) ) )
-					{
-						// go to Map screen
-						if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) )
-						{
-							GoToMapScreenFromTactical();
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_m(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'M':
-				if( fAlt )
-				{
-
-				}
-				else if( fCtrl )
-				{
-					// Merge all items
-					StackAndSort( FALSE );
-				}
-				else
-				{
-					HandleTacticalMoveItems();
-				}
+				GKIWhenDQEOnKD::On_M(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
-				// swap sungoggles and nightgoggles / put on gas masks
 			case 'N':
-				SOLDIERTYPE	*pTeamSoldier;
-				INT8		bLoop;
-
-				// emergency command: everybody in this sector puts on gasmasks
-				if ( fAlt )
-				{
-					for ( bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++ )
-					{
-						if ( !AM_A_ROBOT( pTeamSoldier ) && pTeamSoldier->stats.bLife >= OKLIFE && (pTeamSoldier->sSectorX == gWorldSectorX) && (pTeamSoldier->sSectorY == gWorldSectorY) && (pTeamSoldier->bSectorZ == gbWorldSectorZ) )
-						{
-							WearGasMaskIfAvailable( pTeamSoldier );
-						}
-					}
-
-					// redraw panels
-					fCharacterInfoPanelDirty = TRUE;
-					fTeamPanelDirty = TRUE;
-					fInterfacePanelDirty = DIRTYLEVEL2;
-				}
-				// HEADROCK HAM B2.8: Added call for CTRL-SHIFT-N to switch all soldiers to day/night.
-				else if ( fCtrl )
-				{
-					BOOLEAN fToNightVision;
-
-					for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
-					{
-						if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
-						{
-							if ( pTeamSoldier->inv[HEAD1POS].exists() || pTeamSoldier->inv[HEAD2POS].exists() )
-							{
-								fToNightVision = ( Item[pTeamSoldier->inv[HEAD1POS].usItem].brightlightvisionrangebonus > 0 || Item[pTeamSoldier->inv[HEAD2POS].usItem].brightlightvisionrangebonus > 0 );
-								break;
-							}
-							if ( bLoop == gTacticalStatus.Team[gbPlayerNum].bLastID )
-							{
-								// Default to night or day based on game hour
-								fToNightVision = NightTime();
-							}
-						}
-					}
-					for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
-					{
-						// HEADROCK HAM 3.5: When this INI setting is enabled, ALL mercs in the current sector will do a goggle swap.
-						if (gGameExternalOptions.fGoggleSwapAffectsAllMercsInSector)
-						{
-							if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->sSectorX == gWorldSectorX && pTeamSoldier->sSectorY == gWorldSectorY && pTeamSoldier->bSectorZ == gbWorldSectorZ && !AM_A_ROBOT( pTeamSoldier ) )
-							{
-								SwapGogglesUniformly(pTeamSoldier, fToNightVision);
-							}
-						}
-						else
-						{
-							if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
-							{
-								SwapGogglesUniformly(pTeamSoldier, fToNightVision);
-							}
-						}
-					}
-				}
-				else // Shift-N
-				{
-					HandleTBSwapGoogles();
-				}
+				GKIWhenDQEOnKD::On_N(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'n':
-				if ( !AreInMeanwhile() )
-				{
-					if ( fAlt )
-					{
-						static UINT16 gQuoteNum = 0;
-
-						if ( INFORMATION_CHEAT_LEVEL() )
-						{
-							if ( gfUIFullTargetFound )
-							{
-								TacticalCharacterDialogue( MercPtrs[gusUIFullTargetID], gQuoteNum );
-								gQuoteNum++;
-							}
-						}
-					}
-					else if ( fCtrl )
-					{
-					}
-					else
-					{
-						if ( !CycleSoldierFindStack( usMapPos ) )// Are we over a merc stack?
-							CycleIntTileFindStack( usMapPos ); // If not, now check if we are over a struct stack
-					}
-				}
+				GKIWhenDQEOnKD::On_n(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'o':
-
-				if ( !AreInMeanwhile() )
-				{
-					if ( fAlt )
-					{
-						if ( CHEATER_CHEAT_LEVEL() )
-						{
-							gStrategicStatus.usPlayerKills += NumEnemiesInAnySector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
-							ObliterateSector();
-						}
-					}
-					else if ( fCtrl )
-					{
-						if ( CHEATER_CHEAT_LEVEL() )
-						{
-							CreatePlayerControlledMonster();
-						}
-					}
-					else
-					{
-						// nothing in hand and the Options Screen button for whichever panel we're in must be enabled
-						if ( ( gpItemPointer == NULL ) && !gfDisableTacticalPanelButtons &&
-							( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[iSMPanelButtons[OPTIONS_BUTTON]]->uiFlags & BUTTON_ENABLED ) ) )
-						{
-							if ( !fDisableMapInterfaceDueToBattle )
-							{
-								// go to Options screen
-								SetOptionsPreviousScreen(GAME_SCREEN);
-								LeaveTacticalScreen( OPTIONS_SCREEN );
-							}
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_o(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'O':
-				HandleTacticalTransformScope();
+				GKIWhenDQEOnKD::On_O(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'p':
-
-#ifdef JA2BETAVERSION
-				if( fAlt )
-					ToggleRealTimeConfirm();
-				else
-#endif
-
-#ifdef JA2TESTVERSION
-					if( fCtrl )
-					{
-						// CTRL-P: Display player's highest progress percentage
-						DumpSectorDifficultyInfo();
-					}
-					else
-#endif
-						HandleStanceChangeFromUIKeys( ANIM_PRONE );
+				GKIWhenDQEOnKD::On_p(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'P':
-
-				HandleTacticalTransformStock();
-
+				GKIWhenDQEOnKD::On_P(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'q':
-				if( fCtrl )
-				{
-					if (gGameSettings.fOptions[TOPTION_GL_HIGH_ANGLE])
-					{
-						gGameSettings.fOptions[TOPTION_GL_HIGH_ANGLE] = FALSE;
-						ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_GL_LOW_ANGLE]);
-					}
-					else
-					{
-						gGameSettings.fOptions[TOPTION_GL_HIGH_ANGLE] = TRUE;
-						ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_GL_HIGH_ANGLE]);
-					}
-
-					//HandleTBSwapHands( );
-				}
-				else if ( fAlt )
-				{
-					HandleTBSwapGunsling( );
-				}
-				else
-				{
-					SetScopeMode(usMapPos);
-				}
+				GKIWhenDQEOnKD::On_q(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-			
 			case 'Q':
-				HandleTacticalDropItem( HANDPOS );
+				GKIWhenDQEOnKD::On_Q(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
-				// Make auto reload with magazines from sector inventory
 			case 'R':
-				HandleTBReloadAll();
-
+				GKIWhenDQEOnKD::On_R(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
 			case 'r':
-				if( gusSelectedSoldier != NOBODY )
-				{
-					if( fAlt ) //reload selected merc's weapon
-					{
-						if ( CHEATER_CHEAT_LEVEL( ) )
-						{
-							ReloadWeapon( MercPtrs[ gusSelectedSoldier ], MercPtrs[ gusSelectedSoldier ]->ubAttackingHand );
-						}
-						else
-							HandleTBReload();
-					}
-					else if( fCtrl )
-					{
-						if ( INFORMATION_CHEAT_LEVEL( ) )
-						{
-						}
-					}
-					else
-					{
-						HandleTBSoldierRun();
-					}
-				}
+				GKIWhenDQEOnKD::On_r(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'S':
-				StackAndSort( TRUE );
-				ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11] );
+				GKIWhenDQEOnKD::On_S(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 's':
-
-				if ( !AreInMeanwhile() )
-				{
-					if ( fCtrl )
-					{
-						if ( fAlt )
-						{
-							RemoveCharacterFromSquads( MercPtrs[gusSelectedSoldier] );
-						}
-						else if ( !fDisableMapInterfaceDueToBattle && !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) && !is_networked )
-						{
-							// WANNE: Do not allow saving via the save screen when it is not our turn,
-							// because there is an explit when you close the save window without saving, you can move your merc even it is not your turn
-							// IF UI HAS LOCKED, ONLY ALLOW EXIT!
-							if ( gfDisableRegionActive || gfUserTurnRegionActive )
-							{
-								continue;
-							}
-
-							//if the game CAN be saved
-							if ( CanGameBeSaved() )
-							{
-								gfSaveGame = TRUE;
-								gfCameDirectlyFromGame = TRUE;
-
-								SetOptionsPreviousScreen(GAME_SCREEN);
-								LeaveTacticalScreen( SAVE_LOAD_SCREEN );
-							}
-							else
-							{
-								//Display a message saying the player cant save now
-								switch ( gGameOptions.ubIronManMode )
-								{
-								case 2:
-									DoMapMessageBox( MSG_BOX_BASIC_STYLE, zNewTacticalMessages[TCTL_MSG__SOFT_IRON_MAN_CANT_SAVE_NOW], GAME_SCREEN, (UINT8)MSG_BOX_FLAG_OK, NULL );
-									break;
-								case 3:
-									CHAR16 zTemp[320];
-									swprintf( zTemp, zNewTacticalMessages[TCTL_MSG__EXTREME_IRON_MAN_CANT_SAVE_NOW], gGameExternalOptions.ubExtremeIronManSavingHour );
-									DoMapMessageBox( MSG_BOX_BASIC_STYLE, zTemp, GAME_SCREEN, (UINT8)MSG_BOX_FLAG_OK, NULL );
-									break;
-								default:
-									DoMessageBox( MSG_BOX_BASIC_STYLE, zNewTacticalMessages[TCTL_MSG__IRON_MAN_CANT_SAVE_NOW], GAME_SCREEN, (UINT8)MSG_BOX_FLAG_OK, NULL, NULL );
-									break;
-								}
-							}
-						}
-					}
-					else
-					{
-						if ( fAlt )
-						{
-							if ( !fDisableMapInterfaceDueToBattle && !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV ) && !is_networked )
-							{
-								//if the game CAN be saved
-								if ( CanGameBeSaved() )
-								{
-									SetOptionsPreviousScreen(GAME_SCREEN);
-									//guiPreviousOptionScreen = guiCurrentScreen;
-									DoQuickSave();
-								}
-								else
-								{
-									//Display a message saying the player cant save now
-									switch ( gGameOptions.ubIronManMode )
-									{
-									case 2:
-										DoMapMessageBox( MSG_BOX_BASIC_STYLE, zNewTacticalMessages[TCTL_MSG__SOFT_IRON_MAN_CANT_SAVE_NOW], GAME_SCREEN, MSG_BOX_FLAG_OK, NULL );
-										break;
-									case 3:
-										CHAR16 zTemp[320];
-										swprintf( zTemp, zNewTacticalMessages[TCTL_MSG__EXTREME_IRON_MAN_CANT_SAVE_NOW], gGameExternalOptions.ubExtremeIronManSavingHour );
-										DoMapMessageBox( MSG_BOX_BASIC_STYLE, zTemp, GAME_SCREEN, MSG_BOX_FLAG_OK, NULL );
-										break;
-									default:
-										DoMessageBox( MSG_BOX_BASIC_STYLE, zNewTacticalMessages[TCTL_MSG__IRON_MAN_CANT_SAVE_NOW], GAME_SCREEN, MSG_BOX_FLAG_OK, NULL, NULL );
-										break;
-									}
-								}
-							}
-						}
-						else if ( gusSelectedSoldier != NOBODY )
-						{
-							gfPlotNewMovement = TRUE;
-							HandleStanceChangeFromUIKeys( ANIM_STAND );
-						}
-					}
-				}
+				if (GKIWhenDQEOnKD::On_s(puiNewEvent, fAlt, fCtrl, fShift, usMapPos))
+					continue; // see the content of the function GKIWhenDQEOnKD::On_s(...), why they put continue in it? we just adopt it anyway
 				break;
-
 			case 't':
-
-				if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						TeleportSelectedSoldier();
-					}
-				}
-				else if( fCtrl && !is_networked)// ary-05/05/2009 : add forced turn mode
-				{
-					ToggleTurnMode();
-				}
-				else
-					ToggleTreeTops();
+				GKIWhenDQEOnKD::On_t(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
-			case 'T':	
-				if ( fCtrl && fShift && fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						// Test Capturing Mercs as POW
-						AttemptToCapturePlayerSoldiers();
-					}
-				}
-				else if ( fCtrl && fShift )
-				{
-					if (CHEATER_CHEAT_LEVEL())
-					{
-						swprintf(zString, L"%s cheat", pMessageStrings[MSG_SAVE_AUTOSAVE_TEXT]);
-						DoAutoSave(SAVE__TIMED_AUTOSAVE_SLOT1, zString);
-					}
-				}
-				else if ( fAlt && fShift )
-				{	
-					//resort Team by ubID
-					SortSquadByID(MercPtrs[gusSelectedSoldier]->bTeam);
-				}
-				else
-				{	
-					HandleTacticalTransformItem();
-				}
+			case 'T':
+				GKIWhenDQEOnKD::On_T(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'u':
-
-				if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						RefreshSoldier();
-					}
-				}
-				else if( fCtrl )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) && gusSelectedSoldier != NOBODY )
-					{
-						INT32 cnt;
-						SOLDIERTYPE *pSoldier;
-
-						for ( pSoldier = MercPtrs[ gbPlayerNum ], cnt = 0; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++,pSoldier++)
-						{
-							if ( pSoldier->bActive && pSoldier->stats.bLife > 0 )
-							{
-								if (pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE)
-								{
-									// Get breath back
-									pSoldier->bBreath = 100;
-									pSoldier->sBreathRed = 10000;
-								}
-								else
-								{
-									// Get breath back
-									pSoldier->bBreath = pSoldier->bBreathMax;
-									pSoldier->sBreathRed = 0;
-								}
-								// Get life back
-								pSoldier->stats.bLife = pSoldier->stats.bLifeMax;
-								pSoldier->bBleeding	= 0;
-
-								// SANDRO - erase insta-healable injury 
-								pSoldier->iHealableInjury = 0; 
-
-								fInterfacePanelDirty = DIRTYLEVEL2;
-							}
-						}
-					}
-				}
-
-				else if ( gusSelectedSoldier != NOBODY )
-					*puiNewEvent = M_CHANGE_TO_ACTION;
+				GKIWhenDQEOnKD::On_u(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'U':
+				GKIWhenDQEOnKD::On_U(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'v':
-				if( fAlt )
-				{
-#ifdef JA2TESTVERSION
-					if( gfDoVideoScroll ^= TRUE )
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Video Scroll ON"	);
-					else
-						ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Video Scroll OFF"	);
-#endif
-				}
-				else if( fCtrl )
-				{
-#ifdef SGP_VIDEO_DEBUGGING
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"VObjects:	%d", guiVObjectSize );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"VSurfaces:	%d", guiVSurfaceSize );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"SGPVideoDump.txt updated..." );
-					PerformVideoInfoDumpIntoFile( "SGPVideoDump.txt", TRUE );
-#else
-					HandleTacticalInventoryMenu();
-#endif
-				}
-				else
-					DisplayGameSettings( );
-
+				GKIWhenDQEOnKD::On_v(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'V':
-				if( fAlt )
-					ToggleTrapNetworkView();	// added by Flugente
-				else
-					ToggleMercView();
-
+				GKIWhenDQEOnKD::On_V(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'w':
-				if ( fCtrl && fAlt )
-				{
-					ToggleWireFrame();
-				}
-				else if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						// cycle item forward in primary hand
-						if ( InItemDescriptionBox( ) )
-						{
-							// Swap item in description panel...
-							CycleItemDescriptionItem( ITEMDESC_START_X, ITEMDESC_START_Y);
-
-						}
-						else
-						{
-							CycleSelectedMercsItem();
-						}
-					}
-				}
-				else if( fCtrl )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						if ( gusSelectedSoldier != NOBODY )
-						{
-							CreateItem( FLAMETHROWER, 100, &( MercPtrs[ gusSelectedSoldier ]->inv[ HANDPOS ]) );
-						}
-					}
-				}
-				else
-				{
-					// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-					if ( ( gpItemPointer == NULL ) &&
-						( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ LOOK_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-					{
-						*puiNewEvent = LC_CHANGE_TO_LOOK;
-					}
-				}
+				GKIWhenDQEOnKD::On_w(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'W':
-				if( fAlt )
-				{
-					if ( CHEATER_CHEAT_LEVEL( ) )
-					{
-						// cycle item backward in primary hand
-						if ( InItemDescriptionBox( ) )
-						{
-							// Swap item in description panel...
-							CycleItemDescriptionItem( ITEMDESC_START_X, ITEMDESC_START_Y);
-
-						}
-						else
-						{
-							CycleSelectedMercsItem();
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_W(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'x':
-
-				if ( !fCtrl && !fAlt )
-				{
-					// Exchange places...
-					SOLDIERTYPE *pSoldier1, *pSoldier2;
-
-					//Check if we have a good selected guy
-					if ( gusSelectedSoldier != NOBODY )
-					{
-						pSoldier1 = MercPtrs[ gusSelectedSoldier ];
-
-						BOOLEAN fFoundGoodTarget = FALSE;
-						if ( gfUIFullTargetFound )
-						{
-							// Get soldier...
-							pSoldier2 = MercPtrs[ gusUIFullTargetID ];
-
-							// Check if both OK....
-							if ( pSoldier1->stats.bLife >= OKLIFE && pSoldier2->ubID != gusSelectedSoldier )
-							{
-								if ( pSoldier2->stats.bLife >= OKLIFE )
-								{
-									if (CanSoldierReachGridNoInGivenTileLimit( pSoldier1, pSoldier2->sGridNo, 1, (INT8)gsInterfaceLevel ) )
-									{
-										// Exclude enemies....
-										if ( !pSoldier2->aiData.bNeutral && (pSoldier2->bSide != gbPlayerNum ) )
-										{
-
-										}
-										else
-										{
-											if ( CanExchangePlaces( pSoldier1, pSoldier2, TRUE ) )
-											{
-												// All's good!
-												SwapMercPositions( pSoldier1, pSoldier2 );
-
-												DeductPoints( pSoldier1, APBPConstants[AP_EXCHANGE_PLACES], 0 );
-												DeductPoints( pSoldier2, APBPConstants[AP_EXCHANGE_PLACES], 0 );
-											}
-										}
-										fFoundGoodTarget = TRUE;
-									}
-								}
-							}
-						}
-						if( !fFoundGoodTarget )
-						{
-							HandleStanceChangeFromUIKeys( ANIM_PRONE );
-						}
-					}
-				}
-				else if ( fCtrl )	// The_Bob - real time sneaking, 01-06-09
-				{	
-					HandleTBEnterTurnbased();					
-				}
-				else if ( fAlt )
-				{
-					// used for exit game
-				}
+				GKIWhenDQEOnKD::On_x(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-						// The_Bob - real time sneaking, 01-06-09
-			case 'X':	// shift-ctrl-x: toggle real time sneaking
-				if ( fCtrl )
-				{
-					HandleTBToggleSneak();
-				}
+			case 'X':
+				// The_Bob - real time sneaking, 01-06-09
+				// shift-ctrl-x: toggle real time sneaking
+				GKIWhenDQEOnKD::On_X(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'y':
-				if ( !AreInMeanwhile() )
-				{
-					if ( fAlt )
-					{
-						OBJECTTYPE		Object;
-						SOLDIERTYPE *pSoldier;
-
-						if ( CHEATER_CHEAT_LEVEL() )
-						{
-							QuickCreateProfileMerc( CIV_TEAM, MARIA ); //Ira
-
-							// Recruit!
-							RecruitEPC( MARIA );
-
-							//Heinz: 28.02.09 BUGFIX: giving G41 to Maria only in cheat mode
-							// Create object and set
-							CreateItem( G41, 100, &Object );
-
-							pSoldier = FindSoldierByProfileID( MARIA, FALSE );
-
-							AutoPlaceObject( pSoldier, &Object, FALSE );
-						}
-					}
-					else
-					{
-						// used for opening chatbox in networked game
-						if ( INFORMATION_CHEAT_LEVEL() )
-						{
-							*puiNewEvent = I_LOSDEBUG;
-						}
-					}
-				}
+				GKIWhenDQEOnKD::On_y(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'Y':
-				HandleTacticalTransformLaser();
+				GKIWhenDQEOnKD::On_Y(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'z':
-				if( fCtrl && fAlt )
-				{
-					if ( INFORMATION_CHEAT_LEVEL( ) )
-					{
-						ToggleZBuffer();
-					}
-				}
-				else if ( fAlt )
-				{
-					HandleTBToggleStealthAll();
-				}
-				else if ( fCtrl )
-				{
-					// used for "lock" / "unlock" the mouse cursor in windowed mode
-				}
-				else
-				{
-					HandleTBToggleStealth();
-				}
+				GKIWhenDQEOnKD::On_z(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
-
 			case 'Z':
+				GKIWhenDQEOnKD::On_Z(puiNewEvent, fAlt, fCtrl, fShift, usMapPos);
 				break;
 
 			}
@@ -4771,20 +2576,20 @@ void GetKeyboardInput( UINT32 *puiNewEvent )
 }
 
 
-void HandleTalkingMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
+void HandleTalkingMenuKeys(InputAtom* pInputEvent, UINT32* puiNewEvent)
 {
 	// CHECK ESC KEYS HERE....
-	if ( pInputEvent->usEvent == KEY_UP )
+	if (pInputEvent->usEvent == KEY_UP)
 	{
-		if ( pInputEvent->usParam == ESC )
+		if (pInputEvent->usParam == ESC)
 		{
 			//Handle esc in talking menu
-			if ( HandleTalkingMenuEscape( TRUE, TRUE ) )
+			if (HandleTalkingMenuEscape(TRUE, TRUE))
 			{
 				*puiNewEvent = A_CHANGE_TO_MOVE;
 			}
 		}
-		else if ( pInputEvent->usParam == BACKSPACE )
+		else if (pInputEvent->usParam == BACKSPACE)
 		{
 			HandleTalkingMenuBackspace();
 		}
@@ -4792,68 +2597,66 @@ void HandleTalkingMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
 	}
 }
 
-void HandleSectorExitMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
+void HandleSectorExitMenuKeys(InputAtom* pInputEvent, UINT32* puiNewEvent)
 {
 	// CHECK ESC KEYS HERE....
-	if ( ( pInputEvent->usEvent == KEY_UP )&& ( pInputEvent->usParam == ESC ))
+	if ((pInputEvent->usEvent == KEY_UP) && (pInputEvent->usParam == ESC))
 	{
 		//Handle esc in talking menu
-		RemoveSectorExitMenu( FALSE );
+		RemoveSectorExitMenu(FALSE);
 
 		*puiNewEvent = A_CHANGE_TO_MOVE;
 	}
 }
 
-
-void HandleOpenDoorMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
+void HandleOpenDoorMenuKeys(InputAtom* pInputEvent, UINT32* puiNewEvent)
 {
 	// CHECK ESC KEYS HERE....
-	if ( ( pInputEvent->usEvent == KEY_UP )&& ( pInputEvent->usParam == ESC ))
+	if ((pInputEvent->usEvent == KEY_UP) && (pInputEvent->usParam == ESC))
 	{
 		//Handle esc in talking menu
-		CancelOpenDoorMenu( );
-		HandleOpenDoorMenu( );
+		CancelOpenDoorMenu();
+		HandleOpenDoorMenu();
 		*puiNewEvent = A_CHANGE_TO_MOVE;
 	}
 }
 
-
-void HandleMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
+void HandleMenuKeys(InputAtom* pInputEvent, UINT32* puiNewEvent)
 {
 	// CHECK ESC KEYS HERE....
-	if ( ( pInputEvent->usEvent == KEY_UP )&& ( pInputEvent->usParam == ESC ))
+	if ((pInputEvent->usEvent == KEY_UP) && (pInputEvent->usParam == ESC))
 	{
 		//Handle esc in talking menu
-		CancelMovementMenu( );
+		CancelMovementMenu();
 
 		*puiNewEvent = A_CHANGE_TO_MOVE;
 	}
 }
 
-void HandleItemMenuKeys( InputAtom *pInputEvent, UINT32 *puiNewEvent )
+void HandleItemMenuKeys(InputAtom* pInputEvent, UINT32* puiNewEvent)
 {
 	// CHECK ESC KEYS HERE....
-	if ( ( pInputEvent->usEvent == KEY_UP )&& ( pInputEvent->usParam == ESC ))
+	if ((pInputEvent->usEvent == KEY_UP) && (pInputEvent->usParam == ESC))
 	{
 		//Handle esc in talking menu
-		RemoveItemPickupMenu( );
+		RemoveItemPickupMenu();
 		*puiNewEvent = A_CHANGE_TO_MOVE;
 	}
 }
 
-BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
+BOOLEAN HandleCheckForExitArrowsInput(BOOLEAN fAdjustConfirm)
 {
 	INT32 usMapPos;
 
 	// If not in move mode, return!
-	if ( gCurrentUIMode != MOVE_MODE )
+	if (gCurrentUIMode != MOVE_MODE)
 	{
-		return( FALSE );
+		return(FALSE);
 	}
 
-	if ( gusSelectedSoldier == NOBODY )
+	if (gusSelectedSoldier == NOBODY)
 	{
-		return( FALSE );
+		return(FALSE);
 	}
 
 	// ATE: Remove confirm for exit arrows...
@@ -4862,98 +2665,98 @@ BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
 
 
 	//Return right away, saying that we are in this mode, don't do any normal stuff!
-	if ( guiCurrentUICursor == NOEXIT_EAST_UICURSOR || guiCurrentUICursor == NOEXIT_WEST_UICURSOR
+	if (guiCurrentUICursor == NOEXIT_EAST_UICURSOR || guiCurrentUICursor == NOEXIT_WEST_UICURSOR
 		|| guiCurrentUICursor == NOEXIT_NORTH_UICURSOR || guiCurrentUICursor == NOEXIT_SOUTH_UICURSOR ||
-		guiCurrentUICursor == NOEXIT_GRID_UICURSOR )
+		guiCurrentUICursor == NOEXIT_GRID_UICURSOR)
 	{
 		// Yeah, but add a message....
-		if( gfInvalidTraversal )
+		if (gfInvalidTraversal)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ CANNOT_LEAVE_SECTOR_FROM_SIDE_STR ] );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[CANNOT_LEAVE_SECTOR_FROM_SIDE_STR]);
 			gfInvalidTraversal = FALSE;
 		}
-		else if( gfRobotWithoutControllerAttemptingTraversal )
+		else if (gfRobotWithoutControllerAttemptingTraversal)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, gzLateLocalizedString[ 1 ] );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, gzLateLocalizedString[1]);
 			gfRobotWithoutControllerAttemptingTraversal = FALSE;
 		}
-		else if( gfLoneEPCAttemptingTraversal )
+		else if (gfLoneEPCAttemptingTraversal)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, pExitingSectorHelpText[ EXIT_GUI_ESCORTED_CHARACTERS_CANT_LEAVE_SECTOR_ALONE_STR ], MercPtrs[ gusSelectedSoldier ]->GetName() );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, pExitingSectorHelpText[EXIT_GUI_ESCORTED_CHARACTERS_CANT_LEAVE_SECTOR_ALONE_STR], MercPtrs[gusSelectedSoldier]->GetName());
 			gfLoneEPCAttemptingTraversal = FALSE;
 		}
-		else if( gubLoneMercAttemptingToAbandonEPCs )
+		else if (gubLoneMercAttemptingToAbandonEPCs)
 		{
 			CHAR16 str[256];
-			if( gubLoneMercAttemptingToAbandonEPCs == 1 )
+			if (gubLoneMercAttemptingToAbandonEPCs == 1)
 			{ //Use the singular version of the string
-				if( gMercProfiles[ MercPtrs[ gusSelectedSoldier ]->ubProfile ].bSex == MALE )
+				if (gMercProfiles[MercPtrs[gusSelectedSoldier]->ubProfile].bSex == MALE)
 				{ //male singular
-					swprintf( str, pExitingSectorHelpText[ EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_MALE_SINGULAR ], MercPtrs[ gusSelectedSoldier ]->GetName(),
-						MercPtrs[ gbPotentiallyAbandonedEPCSlotID ]->GetName() );
+					swprintf(str, pExitingSectorHelpText[EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_MALE_SINGULAR], MercPtrs[gusSelectedSoldier]->GetName(),
+						MercPtrs[gbPotentiallyAbandonedEPCSlotID]->GetName());
 				}
 				else
 				{ //female singular
-					swprintf( str, pExitingSectorHelpText[ EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_FEMALE_SINGULAR ], MercPtrs[ gusSelectedSoldier ]->GetName(),
-						MercPtrs[ gbPotentiallyAbandonedEPCSlotID ]->GetName() );
+					swprintf(str, pExitingSectorHelpText[EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_FEMALE_SINGULAR], MercPtrs[gusSelectedSoldier]->GetName(),
+						MercPtrs[gbPotentiallyAbandonedEPCSlotID]->GetName());
 				}
 			}
 			else
 			{ //Use the plural version of the string
-				if( gMercProfiles[ MercPtrs[ gusSelectedSoldier ]->ubProfile ].bSex == MALE )
+				if (gMercProfiles[MercPtrs[gusSelectedSoldier]->ubProfile].bSex == MALE)
 				{ //male plural
-					swprintf( str, pExitingSectorHelpText[ EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_MALE_PLURAL ], MercPtrs[ gusSelectedSoldier ]->GetName() );
+					swprintf(str, pExitingSectorHelpText[EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_MALE_PLURAL], MercPtrs[gusSelectedSoldier]->GetName());
 				}
 				else
 				{ //female plural
-					swprintf( str, pExitingSectorHelpText[ EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_FEMALE_PLURAL ], MercPtrs[ gusSelectedSoldier ]->GetName() );
+					swprintf(str, pExitingSectorHelpText[EXIT_GUI_MERC_CANT_ISOLATE_EPC_HELPTEXT_FEMALE_PLURAL], MercPtrs[gusSelectedSoldier]->GetName());
 				}
 			}
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, str );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, str);
 			gubLoneMercAttemptingToAbandonEPCs = FALSE;
 		}
-		else if( !gGameExternalOptions.fGridExitInTurnBased && ( gTacticalStatus.uiFlags & TURNBASED ) && ( gTacticalStatus.uiFlags & INCOMBAT ) )
+		else if (!gGameExternalOptions.fGridExitInTurnBased && (gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT))
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ CANNOT_LEAVE_IN_TURN_MODE_STR ] );
-		}			
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[CANNOT_LEAVE_IN_TURN_MODE_STR]);
+		}
 		else
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ MERC_IS_TOO_FAR_AWAY_STR ], MercPtrs[ gusSelectedSoldier ]->GetName() );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[MERC_IS_TOO_FAR_AWAY_STR], MercPtrs[gusSelectedSoldier]->GetName());
 		}
 
-		return( TRUE );
+		return(TRUE);
 	}
 
 	// Check if we want to exit!
-	if ( guiCurrentUICursor == EXIT_GRID_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_GRID_UICURSOR	)
+	if (guiCurrentUICursor == EXIT_GRID_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_GRID_UICURSOR)
 	{
-		if ( fAdjustConfirm )
+		if (fAdjustConfirm)
 		{
-			if ( !gfUIConfirmExitArrows )
+			if (!gfUIConfirmExitArrows)
 			{
 				gfUIConfirmExitArrows = TRUE;
 			}
 			else
 			{
-				if ( !GetMouseMapPos( &usMapPos ) )
+				if (!GetMouseMapPos(&usMapPos))
 				{
-					return( FALSE );
+					return(FALSE);
 				}
 
 				// Goto next sector
 				//SimulateMouseMovement( gusMouseXPos - 5, gusMouseYPos );
-				InitSectorExitMenu( DIRECTION_EXITGRID, usMapPos );
+				InitSectorExitMenu(DIRECTION_EXITGRID, usMapPos);
 			}
 		}
-		return( TRUE );
+		return(TRUE);
 	}
 
 	// Check if we want to exit!
-	if ( guiCurrentUICursor == EXIT_EAST_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_EAST_UICURSOR	)
+	if (guiCurrentUICursor == EXIT_EAST_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_EAST_UICURSOR)
 	{
-		if ( fAdjustConfirm )
+		if (fAdjustConfirm)
 		{
-			if ( !gfUIConfirmExitArrows )
+			if (!gfUIConfirmExitArrows)
 			{
 				gfUIConfirmExitArrows = TRUE;
 			}
@@ -4961,16 +2764,16 @@ BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
 			{
 				// Goto next sector
 				//SimulateMouseMovement( gusMouseXPos - 5, gusMouseYPos );
-				InitSectorExitMenu( EAST, 0 );
+				InitSectorExitMenu(EAST, 0);
 			}
 		}
-		return( TRUE );
+		return(TRUE);
 	}
-	if ( guiCurrentUICursor == EXIT_WEST_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_WEST_UICURSOR	)
+	if (guiCurrentUICursor == EXIT_WEST_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_WEST_UICURSOR)
 	{
-		if ( fAdjustConfirm )
+		if (fAdjustConfirm)
 		{
-			if ( !gfUIConfirmExitArrows )
+			if (!gfUIConfirmExitArrows)
 			{
 				gfUIConfirmExitArrows = TRUE;
 			}
@@ -4978,16 +2781,16 @@ BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
 			{
 				// Goto next sector
 				//SimulateMouseMovement( gusMouseXPos + 5, gusMouseYPos );
-				InitSectorExitMenu( WEST, 0);
+				InitSectorExitMenu(WEST, 0);
 			}
 		}
-		return( TRUE );
+		return(TRUE);
 	}
-	if ( guiCurrentUICursor == EXIT_NORTH_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_NORTH_UICURSOR )
+	if (guiCurrentUICursor == EXIT_NORTH_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_NORTH_UICURSOR)
 	{
-		if ( fAdjustConfirm )
+		if (fAdjustConfirm)
 		{
-			if ( !gfUIConfirmExitArrows )
+			if (!gfUIConfirmExitArrows)
 			{
 				gfUIConfirmExitArrows = TRUE;
 			}
@@ -4995,16 +2798,16 @@ BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
 			{
 				// Goto next sector
 				//SimulateMouseMovement( gusMouseXPos, gusMouseYPos + 5 );
-				InitSectorExitMenu( NORTH , 0);
+				InitSectorExitMenu(NORTH, 0);
 			}
 		}
-		return( TRUE );
+		return(TRUE);
 	}
-	if ( guiCurrentUICursor == EXIT_SOUTH_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_SOUTH_UICURSOR )
+	if (guiCurrentUICursor == EXIT_SOUTH_UICURSOR || guiCurrentUICursor == CONFIRM_EXIT_SOUTH_UICURSOR)
 	{
-		if ( fAdjustConfirm )
+		if (fAdjustConfirm)
 		{
-			if ( !gfUIConfirmExitArrows )
+			if (!gfUIConfirmExitArrows)
 			{
 				gfUIConfirmExitArrows = TRUE;
 			}
@@ -5012,43 +2815,42 @@ BOOLEAN HandleCheckForExitArrowsInput( BOOLEAN fAdjustConfirm )
 			{
 				// Goto next sector
 				//SimulateMouseMovement( gusMouseXPos, gusMouseYPos - 5);
-				InitSectorExitMenu( SOUTH, 0 );
+				InitSectorExitMenu(SOUTH, 0);
 			}
 		}
-		return( TRUE );
+		return(TRUE);
 	}
-	return( FALSE );
+	return(FALSE);
 }
-
 
 //Simple function implementations called by keyboard input
 
 void CreateRandomItem()
 {
 	INT32 usMapPos;
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
-		CreateItem( (UINT16) (Random( 35 ) + 1), 100, &gTempObject );
-		AddItemToPool( usMapPos, &gTempObject, -1 , 0, 0, 0 );
+		CreateItem((UINT16)(Random(35) + 1), 100, &gTempObject);
+		AddItemToPool(usMapPos, &gTempObject, -1, 0, 0, 0);
 	}
 }
 
 void MakeSelectedSoldierTired()
 {
 	// Key to make guy get tired!
-	SOLDIERTYPE				*pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
-		CreateItem( TNT, 100, &gTempObject );
-		AddItemToPool( usMapPos, &gTempObject, -1, 0, 0, 0 );
+		CreateItem(TNT, 100, &gTempObject);
+		AddItemToPool(usMapPos, &gTempObject, -1, 0, 0, 0);
 	}
 
 	// CHECK IF WE'RE ON A GUY ( EITHER SELECTED, OURS, OR THEIRS
-	if ( gfUIFullTargetFound )
+	if (gfUIFullTargetFound)
 	{
 		// Get Soldier
-		GetSoldier( &pSoldier, gusUIFullTargetID );
+		GetSoldier(&pSoldier, gusUIFullTargetID);
 
 		//FatigueCharacter( pSoldier );
 
@@ -5056,25 +2858,25 @@ void MakeSelectedSoldierTired()
 	}
 }
 
-void ToggleRealTime( UINT32 *puiNewEvent )
+void ToggleRealTime(UINT32* puiNewEvent)
 {
-	if ( gTacticalStatus.uiFlags & TURNBASED )
+	if (gTacticalStatus.uiFlags & TURNBASED)
 	{
 		// Change to real-time
 		gTacticalStatus.uiFlags &= (~TURNBASED);
 		gTacticalStatus.uiFlags |= REALTIME;
 
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Switching to Realtime." );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Switching to Realtime.");
 	}
-	else if ( gTacticalStatus.uiFlags & REALTIME )
+	else if (gTacticalStatus.uiFlags & REALTIME)
 	{
 		// Change to turn-based
 		gTacticalStatus.uiFlags |= TURNBASED;
-		gTacticalStatus.uiFlags &=( ~REALTIME );
+		gTacticalStatus.uiFlags &= (~REALTIME);
 
 		*puiNewEvent = M_ON_TERRAIN;
 
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Switching to Turnbased." );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Switching to Turnbased.");
 	}
 
 	// Plot new path!
@@ -5084,13 +2886,13 @@ void ToggleRealTime( UINT32 *puiNewEvent )
 void ToggleViewAllMercs()
 {
 	// Set option to show all mercs
-	if ( gTacticalStatus.uiFlags&SHOW_ALL_MERCS )
+	if (gTacticalStatus.uiFlags & SHOW_ALL_MERCS)
 	{
-		gTacticalStatus.uiFlags&= (~SHOW_ALL_MERCS );
+		gTacticalStatus.uiFlags &= (~SHOW_ALL_MERCS);
 	}
 	else
 	{
-		gTacticalStatus.uiFlags|= SHOW_ALL_MERCS;
+		gTacticalStatus.uiFlags |= SHOW_ALL_MERCS;
 	}
 
 	// RE-RENDER
@@ -5100,128 +2902,279 @@ void ToggleViewAllMercs()
 void ToggleViewAllItems()
 {
 	// Set option to show all mercs
-	if( gTacticalStatus.uiFlags & SHOW_ALL_ITEMS )
+	if (gTacticalStatus.uiFlags & SHOW_ALL_ITEMS)
 	{
-		gTacticalStatus.uiFlags &= ~SHOW_ALL_ITEMS ;
+		gTacticalStatus.uiFlags &= ~SHOW_ALL_ITEMS;
 	}
 	else
 	{
 		gTacticalStatus.uiFlags |= SHOW_ALL_ITEMS;
 	}
 
-	if ( gGameSettings.fOptions[ TOPTION_GLOW_ITEMS ] )
+	if (gGameSettings.fOptions[TOPTION_GLOW_ITEMS])
 	{
-		ToggleItemGlow( TRUE );
+		ToggleItemGlow(TRUE);
 	}
 	else
 	{
-		ToggleItemGlow( FALSE );
+		ToggleItemGlow(FALSE);
 	}
 
 	// RE-RENDER
 	SetRenderFlags(RENDER_FLAG_FULL);
 }
 
+// Adding Cheat Select Explosion
+void CheatSelectExplosion()
+{
+	if (GetMouseMapPos(&gusMapPos))
+	{
+		/*
+		STUN_GRENADE		= 131,
+		TEARGAS_GRENADE,
+		MUSTARD_GRENADE,
+		MINI_GRENADE,
+		HAND_GRENADE,
+		RDX,
+		TNT,
+		HMX,
+		C1,
+		MORTAR_SHELL,
+		MINE,
+		C4,
+		TRIP_FLARE,
+		TRIP_KLAXON,
+		SHAPED_CHARGE,
+		BREAK_LIGHT,
+		GL_HE_GRENADE,
+		GL_TEARGAS_GRENADE,
+		GL_STUN_GRENADE,
+		GL_SMOKE_GRENADE,
+		SMOKE_GRENADE,
+		TANK_SHELL,
+		STRUCTURE_IGNITE,
+		CREATURE_COCKTAIL,
+		STRUCTURE_EXPLOSION,
+		GREAT_BIG_EXPLOSION,
+		BIG_TEAR_GAS,
+		SMALL_CREATURE_GAS,
+		LARGE_CREATURE_GAS,
+		VERY_SMALL_CREATURE_GAS=270, // Renumbered because the original 160 was lost
+		SMALL_SMOKE=1702,			//	sevenfm - item for small smoke effect after explosion
+		MOLOTOV_EXPLOSION=979,				//	molotov - small fire explosion
+		GAS_EXPLOSION=1703,				//	molotov - small fire explosion
+		FRAG_EXPLOSION=1704,				//	molotov - small fire explosion
+		*/
+
+		STR16 info = L"STUN(131), TEARGAS(132), MUSTARD(133), MINI_G(134), HAND_G(135), RDX(136), TNT(137), HMX(138), C1(139), MORTAR_SHELL(140),\n";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+		info = L"MINE(141), C4(142), TRIP_FLARE(143), TRIP_KLAXON(144), SHPD_CHRGE(145), BRK_LGT(146), GL_HE_G(147), GL_TEARGAS_G(148),\n";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+		info = L"GL_STUN_G(149), GL_SMOKE_G(150), SMOKE_G(151), TANK_SHELL(152), STRUCTURE_IGNITE(153), CREATURE_COCKTAIL(154),\n";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+		info = L"STRUCTURE_EXPLOSION(155), GREAT_BIG_EXPLOSION(156), BIG_TEAR_GAS(157), SMALL_CREATURE_GAS(158), \n";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+		info = L"LARGE_CREATURE_GAS(159), VERY_SMALL_CREATURE_GAS(270), SMALL_SMOKE(1702), MOLOTOV_EXPLOSION(979), GAS_EXPLOSION(1703), \n";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+		info = L"FRAG_EXPLOSION(1704)";
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, info);
+
+		//// JADOL -- TESTING append STR16 char
+		//wchar_t* zzz = new wchar_t[512]();
+		//wcsncat(zzz, info, wcslen(info));
+		//wcsncat(zzz, L" tambahan", sizeof(L" tambahan"));
+		//ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, zzz);
+		//delete[] zzz;
+
+		//std::wstring* test = new std::wstring(L"ini adalah testing aja");
+		//test->append(L" ini tambahan aja yaak!");
+		//test->append(L" eh ini ditambahin lagi |d|o|n|g|");
+		//ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, (STR16) test->c_str());
+		//delete test;
+
+
+		if (GetMouseMapPos(&gusMapPos))
+			DoMessageBox(MSG_BOX_BASIC_SMALL_BUTTONS, L"Pick Explosion Type Number from [131 to 159, 270, 979, 1702, 1703, or 1704]", GAME_SCREEN, MSG_BOX_FLAG_INPUTBOX, CheatSelectExplosionCallBack, NULL);
+
+	}
+}
+
+void CheatSelectCreateMonster()
+{
+	if (GetMouseMapPos(&gusMapPos))
+	{
+		/*
+		enum SoldierBodyTypes
+		{
+			ADULTFEMALEMONSTER,		4
+			AM_MONSTER,				5
+			YAF_MONSTER,			6
+			YAM_MONSTER,			7
+			LARVAE_MONSTER,			8
+			INFANT_MONSTER,			9
+			QUEENMONSTER,			10
+		} ;
+		*/
+
+		wcscpy(gzUserDefinedButton[0], L"Adult Female");
+		wcscpy(gzUserDefinedButton[1], L"Adult Male");
+		wcscpy(gzUserDefinedButton[2], L"Kid Female");
+		wcscpy(gzUserDefinedButton[3], L"Kid Male");
+		wcscpy(gzUserDefinedButton[4], L"Larvae Monster");
+		wcscpy(gzUserDefinedButton[5], L"Infant Monster");
+		wcscpy(gzUserDefinedButton[6], L"Queen (Not Moving)");
+		wcscpy(gzUserDefinedButton[7], L"-Unused-");
+
+		DoMessageBox(MSG_BOX_BASIC_MEDIUM_BUTTONS, L"Select Type of Monster", GAME_SCREEN,
+			MSG_BOX_FLAG_GENERIC_EIGHT_BUTTONS, SelectCreateMonsterCallback, NULL);
+	}
+}
+
+void SelectCreateMonsterCallback(UINT8 ubExitValue)
+{
+	if (ubExitValue != NULL)
+	{
+		if (ubExitValue > 0 && ubExitValue < 8) {
+			/*
+			enum SoldierBodyTypes
+			{
+				ADULTFEMALEMONSTER,		4
+				AM_MONSTER,				5
+				YAF_MONSTER,			6
+				YAM_MONSTER,			7
+				LARVAE_MONSTER,			8
+				INFANT_MONSTER,			9
+				QUEENMONSTER,			10
+			} ;
+			*/
+			gCreatedMonsterType = ubExitValue + 3;
+			CreatePlayerControlledMonster();
+		}
+	}
+}
+
+
+void CreateExplosion(UINT16 usItemExplosion, INT32 gridNo)
+{
+	INT32 sBombGridNo = gridNo;
+	if (gridNo == NULL) {
+		if (GetMouseMapPos(&sBombGridNo))
+		{
+			INT16		sBombX, sBombY;
+			ConvertGridNoToCenterCellXY(sBombGridNo, &sBombX, &sBombY);
+			InternalIgniteExplosion(NOBODY, sBombX, sBombY, 0, sBombGridNo, usItemExplosion, FALSE, (UINT8)IsRoofPresentAtGridNo(sBombGridNo));
+			gusItemExplosion = usItemExplosion;
+		}
+	}
+	else
+	{
+		INT16		sBombX, sBombY;
+		ConvertGridNoToCenterCellXY(sBombGridNo, &sBombX, &sBombY);
+		InternalIgniteExplosion(NOBODY, sBombX, sBombY, 0, sBombGridNo, usItemExplosion, FALSE, (UINT8)IsRoofPresentAtGridNo(sBombGridNo));
+		gusItemExplosion = usItemExplosion;
+	}
+}
+
 void TestExplosion()
 {
 	INT32 usMapPos;
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
-		EXPLOSION_PARAMS	ExpParams ;
-		ExpParams.uiFlags			= 0;
-		ExpParams.ubOwner			= NOBODY;
-		ExpParams.ubTypeID		= STUN_BLAST;
-		ExpParams.sGridNo			= usMapPos;
+		EXPLOSION_PARAMS	ExpParams;
+		ExpParams.uiFlags = 0;
+		ExpParams.ubOwner = NOBODY;
+		ExpParams.ubTypeID = STUN_BLAST;
+		ExpParams.sGridNo = usMapPos;
 
-		GenerateExplosion( &ExpParams );
+		GenerateExplosion(&ExpParams);
 
-		PlayJA2Sample( EXPLOSION_1, RATE_11025, MIDVOLUME, 1, MIDDLEPAN );
+		PlayJA2Sample(EXPLOSION_1, RATE_11025, MIDVOLUME, 1, MIDDLEPAN);
 	}
 }
 
 void CycleSelectedMercsItem()
 {
-	DebugMsg(TOPIC_JA2,DBG_LEVEL_3,String("CycleSelectedMercsItem"));
+	DebugMsg(TOPIC_JA2, DBG_LEVEL_3, String("CycleSelectedMercsItem"));
 	INT16 usOldItem;
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	// Cycle selected guy's item...
-	if( gusSelectedSoldier != NOBODY )
+	if (gusSelectedSoldier != NOBODY)
 	{
 		// Get soldier...
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+		pSoldier = MercPtrs[gusSelectedSoldier];
 
 		UINT16 usOldHandItem = pSoldier->inv[HANDPOS].usItem;
 
 		// Cycle item....
-		usOldItem = CycleItems(pSoldier->inv[ HANDPOS ].usItem);
+		usOldItem = CycleItems(pSoldier->inv[HANDPOS].usItem);
 
-		CreateItem( (UINT16)usOldItem, 100, &( pSoldier->inv[ HANDPOS ]) );
+		CreateItem((UINT16)usOldItem, 100, &(pSoldier->inv[HANDPOS]));
 
-		pSoldier->ReLoadSoldierAnimationDueToHandItemChange( usOldHandItem, pSoldier->inv[HANDPOS].usItem );
+		pSoldier->ReLoadSoldierAnimationDueToHandItemChange(usOldHandItem, pSoldier->inv[HANDPOS].usItem);
 
-		DirtyMercPanelInterface( pSoldier, DIRTYLEVEL2 );
+		DirtyMercPanelInterface(pSoldier, DIRTYLEVEL2);
 	}
 }
 
 void ToggleWireFrame()
 {
-	if ( gGameSettings.fOptions[ TOPTION_TOGGLE_WIREFRAME ] )
+	if (gGameSettings.fOptions[TOPTION_TOGGLE_WIREFRAME])
 	{
-		gGameSettings.fOptions[ TOPTION_TOGGLE_WIREFRAME ] = FALSE;
+		gGameSettings.fOptions[TOPTION_TOGGLE_WIREFRAME] = FALSE;
 
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_WIREFRAMES_REMOVED ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WIREFRAMES_REMOVED]);
 	}
 	else
 	{
-		gGameSettings.fOptions[ TOPTION_TOGGLE_WIREFRAME ] = TRUE;
+		gGameSettings.fOptions[TOPTION_TOGGLE_WIREFRAME] = TRUE;
 
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_WIREFRAMES_ADDED ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_WIREFRAMES_ADDED]);
 	}
 
-	SetRenderFlags(RENDER_FLAG_FULL );
+	SetRenderFlags(RENDER_FLAG_FULL);
 }
 
 void RefreshSoldier()
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
 	// CHECK IF WE'RE ON A GUY ( EITHER SELECTED, OURS, OR THEIRS
-	if ( gfUIFullTargetFound )
+	if (gfUIFullTargetFound)
 	{
 		// Get Soldier
-		GetSoldier( &pSoldier, gusUIFullTargetID );
+		GetSoldier(&pSoldier, gusUIFullTargetID);
 
-		pSoldier->ReviveSoldier( );
+		pSoldier->ReviveSoldier();
 
 	}
 
-	if ( GetMouseMapPos( &usMapPos ) )
-		sprintf( gDebugStr, "%d %d %d %d %d %d %d %d",
-		gubWorldMovementCosts[ usMapPos ][ 0 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 1 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 2 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 3 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 4 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 5 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 6 ][gsInterfaceLevel],
-		gubWorldMovementCosts[ usMapPos ][ 7 ][gsInterfaceLevel] );
+	if (GetMouseMapPos(&usMapPos))
+		sprintf(gDebugStr, "%d %d %d %d %d %d %d %d",
+			gubWorldMovementCosts[usMapPos][0][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][1][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][2][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][3][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][4][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][5][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][6][gsInterfaceLevel],
+			gubWorldMovementCosts[usMapPos][7][gsInterfaceLevel]);
 }
 
-void ChangeSoldiersBodyType( UINT8 ubBodyType, BOOLEAN fCreateNewPalette )
+void ChangeSoldiersBodyType(UINT8 ubBodyType, BOOLEAN fCreateNewPalette)
 {
-	SOLDIERTYPE *pSoldier;
-	if( gusSelectedSoldier != NOBODY )
+	SOLDIERTYPE* pSoldier;
+	if (gusSelectedSoldier != NOBODY)
 	{
-		if( GetSoldier( &pSoldier, gusSelectedSoldier ) )
+		if (GetSoldier(&pSoldier, gusSelectedSoldier))
 		{
 			pSoldier->ubBodyType = ubBodyType;
-			pSoldier->EVENT_InitNewSoldierAnim( STANDING, 0 , TRUE );
+			pSoldier->EVENT_InitNewSoldierAnim(STANDING, 0, TRUE);
 			//SetSoldierAnimationSurface( pSoldier, pSoldier->usAnimState );
-			if( fCreateNewPalette )
+			if (fCreateNewPalette)
 			{
-				pSoldier->CreateSoldierPalettes( );
+				pSoldier->CreateSoldierPalettes();
 
-				switch( ubBodyType )
+				switch (ubBodyType)
 				{
 				case ADULTFEMALEMONSTER:
 				case AM_MONSTER:
@@ -5232,8 +3185,8 @@ void ChangeSoldiersBodyType( UINT8 ubBodyType, BOOLEAN fCreateNewPalette )
 				case QUEENMONSTER:
 
 					pSoldier->flags.uiStatusFlags |= SOLDIER_MONSTER;
-					AssignCreatureInventory( pSoldier );
-					CreateItem( CREATURE_YOUNG_MALE_SPIT,		100, &(pSoldier->inv[HANDPOS]) );
+					AssignCreatureInventory(pSoldier);
+					CreateItem(CREATURE_YOUNG_MALE_SPIT, 100, &(pSoldier->inv[HANDPOS]));
 
 					break;
 
@@ -5244,8 +3197,8 @@ void ChangeSoldiersBodyType( UINT8 ubBodyType, BOOLEAN fCreateNewPalette )
 					pSoldier->flags.uiStatusFlags |= SOLDIER_VEHICLE;
 					//pSoldier->inv[ HANDPOS ].usItem = TANK_CANNON;
 
-					pSoldier->inv[ HANDPOS ].usItem = MINIMI;
-					pSoldier->bVehicleID = (INT8)AddVehicleToList( pSoldier->sSectorX, pSoldier->sSectorY, pSoldier->bSectorZ, HUMMER );
+					pSoldier->inv[HANDPOS].usItem = MINIMI;
+					pSoldier->bVehicleID = (INT8)AddVehicleToList(pSoldier->sSectorX, pSoldier->sSectorY, pSoldier->bSectorZ, HUMMER);
 
 					break;
 				}
@@ -5257,29 +3210,29 @@ void ChangeSoldiersBodyType( UINT8 ubBodyType, BOOLEAN fCreateNewPalette )
 
 void TeleportSelectedSoldier()
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
 	// CHECK IF WE'RE ON A GUY ( EITHER SELECTED, OURS, OR THEIRS
-	if( GetSoldier( &pSoldier, gusSelectedSoldier ) )
+	if (GetSoldier(&pSoldier, gusSelectedSoldier))
 	{
-		if ( GetMouseMapPos( &usMapPos ) )
+		if (GetMouseMapPos(&usMapPos))
 		{
 			// Check level first....
-			if ( gsInterfaceLevel == 0 )
+			if (gsInterfaceLevel == 0)
 			{
-				pSoldier->SetSoldierHeight( 0 );
-				TeleportSoldier( pSoldier, usMapPos, FALSE );
-				pSoldier->EVENT_StopMerc( pSoldier->sGridNo, pSoldier->ubDirection );
+				pSoldier->SetSoldierHeight(0);
+				TeleportSoldier(pSoldier, usMapPos, FALSE);
+				pSoldier->EVENT_StopMerc(pSoldier->sGridNo, pSoldier->ubDirection);
 			}
 			else
 			{
 				// Is there a roof?
-				if ( FindStructure( usMapPos, STRUCTURE_ROOF ) != NULL )
+				if (FindStructure(usMapPos, STRUCTURE_ROOF) != NULL)
 				{
-					pSoldier->SetSoldierHeight( 50.0 );
+					pSoldier->SetSoldierHeight(50.0);
 
-					TeleportSoldier( pSoldier, usMapPos, TRUE );
-					pSoldier->EVENT_StopMerc( pSoldier->sGridNo, pSoldier->ubDirection );
+					TeleportSoldier(pSoldier, usMapPos, TRUE);
+					pSoldier->EVENT_StopMerc(pSoldier->sGridNo, pSoldier->ubDirection);
 				}
 			}
 		}
@@ -5288,84 +3241,84 @@ void TeleportSelectedSoldier()
 
 void ToggleTurnMode()// ary-05/05/2009 : add forced turn mode
 {
-	if ( !gGameSettings.fOptions[ TOPTION_TOGGLE_TURN_MODE ] )
+	if (!gGameSettings.fOptions[TOPTION_TOGGLE_TURN_MODE])
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_FORCED_TURN_MODE ] );
-		gGameSettings.fOptions[ TOPTION_TOGGLE_TURN_MODE ] = TRUE;
-		EnterCombatMode( OUR_TEAM ); // ary-05/05/2009 : randomize ? i'm leaving this for now due to "player makes the call, player gets dibs"
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_FORCED_TURN_MODE]);
+		gGameSettings.fOptions[TOPTION_TOGGLE_TURN_MODE] = TRUE;
+		EnterCombatMode(OUR_TEAM); // ary-05/05/2009 : randomize ? i'm leaving this for now due to "player makes the call, player gets dibs"
 	}
 	else
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_NORMAL_TURN_MODE ] );
-		gGameSettings.fOptions[ TOPTION_TOGGLE_TURN_MODE ] = FALSE;
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_NORMAL_TURN_MODE]);
+		gGameSettings.fOptions[TOPTION_TOGGLE_TURN_MODE] = FALSE;
 	}
 }
 
 void ToggleTreeTops()
 {
-	if ( gGameSettings.fOptions[ TOPTION_TOGGLE_TREE_TOPS ] )
+	if (gGameSettings.fOptions[TOPTION_TOGGLE_TREE_TOPS])
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ REMOVING_TREETOPS_STR ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[REMOVING_TREETOPS_STR]);
 		gGameSettings.fOptions[TOPTION_TOGGLE_TREE_TOPS] = FALSE;
-		WorldHideTrees( );
+		WorldHideTrees();
 		gTacticalStatus.uiFlags |= NOHIDE_REDUNDENCY;
 	}
 	else
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ SHOWING_TREETOPS_STR ]);
-		WorldShowTrees( );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[SHOWING_TREETOPS_STR]);
+		WorldShowTrees();
 		gGameSettings.fOptions[TOPTION_TOGGLE_TREE_TOPS] = TRUE;
 		gTacticalStatus.uiFlags &= (~NOHIDE_REDUNDENCY);
 	}
 
 	// FOR THE NEXT RENDER LOOP, RE-EVALUATE REDUNDENT TILES
-	InvalidateWorldRedundency( );
+	InvalidateWorldRedundency();
 }
 
 void ToggleZBuffer()
 {
 	// Set option to show all mercs
-	if ( gTacticalStatus.uiFlags&SHOW_Z_BUFFER )
+	if (gTacticalStatus.uiFlags & SHOW_Z_BUFFER)
 	{
-		gTacticalStatus.uiFlags&= (~SHOW_Z_BUFFER );
+		gTacticalStatus.uiFlags &= (~SHOW_Z_BUFFER);
 		SetRenderFlags(SHOW_Z_BUFFER);
 	}
 	else
 	{
-		gTacticalStatus.uiFlags|= SHOW_Z_BUFFER;
+		gTacticalStatus.uiFlags |= SHOW_Z_BUFFER;
 	}
 }
 
 void TogglePlanningMode()
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32 usMapPos;
 	// DO ONLY IN TURNED BASED!
-	if ( gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT) )
+	if (gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT))
 	{
 		// CANCEL FROM PLANNING MODE!
-		if ( InUIPlanMode( ) )
+		if (InUIPlanMode())
 		{
-			EndUIPlan( );
+			EndUIPlan();
 		}
-		else if ( GetMouseMapPos( &usMapPos ) )
+		else if (GetMouseMapPos(&usMapPos))
 		{
-			switch( gCurrentUIMode )
+			switch (gCurrentUIMode)
 			{
 			case MOVE_MODE:
-				if ( gusSelectedSoldier != NOBODY )
+				if (gusSelectedSoldier != NOBODY)
 				{
-					GetSoldier( &pSoldier, gusSelectedSoldier );
-					BeginUIPlan( pSoldier );
-					AddUIPlan( usMapPos, UIPLAN_ACTION_MOVETO );
+					GetSoldier(&pSoldier, gusSelectedSoldier);
+					BeginUIPlan(pSoldier);
+					AddUIPlan(usMapPos, UIPLAN_ACTION_MOVETO);
 				}
 				break;
 			case ACTION_MODE:
-				if ( gusSelectedSoldier != NOBODY )
+				if (gusSelectedSoldier != NOBODY)
 				{
-					GetSoldier( &pSoldier, gusSelectedSoldier );
-					BeginUIPlan( pSoldier );
-					AddUIPlan( usMapPos, UIPLAN_ACTION_FIRE );
+					GetSoldier(&pSoldier, gusSelectedSoldier);
+					BeginUIPlan(pSoldier);
+					AddUIPlan(usMapPos, UIPLAN_ACTION_FIRE);
 				}
 				break;
 			}
@@ -5375,41 +3328,41 @@ void TogglePlanningMode()
 
 void SetBurstMode()
 {
-	if ( gusSelectedSoldier != NOBODY )
+	if (gusSelectedSoldier != NOBODY)
 	{
-		ChangeWeaponMode( MercPtrs[ gusSelectedSoldier ] );
+		ChangeWeaponMode(MercPtrs[gusSelectedSoldier]);
 	}
 }
 
-void SetScopeMode( INT32 usMapPos )
+void SetScopeMode(INT32 usMapPos)
 {
-	if ( gusSelectedSoldier != NOBODY )
+	if (gusSelectedSoldier != NOBODY)
 	{
-		if ( GetMouseMapPos( &usMapPos ))
-			ChangeScopeMode( MercPtrs[ gusSelectedSoldier ], usMapPos );
+		if (GetMouseMapPos(&usMapPos))
+			ChangeScopeMode(MercPtrs[gusSelectedSoldier], usMapPos);
 		else
-			ChangeScopeMode( MercPtrs[ gusSelectedSoldier ], NOWHERE );
+			ChangeScopeMode(MercPtrs[gusSelectedSoldier], NOWHERE);
 
 		// reevaluate sight
-		ManLooksForOtherTeams( MercPtrs[ gusSelectedSoldier ] );
+		ManLooksForOtherTeams(MercPtrs[gusSelectedSoldier]);
 	}
 }
 
 void ObliterateSector()
 {
 	INT32 cnt;
-	SOLDIERTYPE *pTSoldier;
+	SOLDIERTYPE* pTSoldier;
 
 	// Kill everybody!
-	cnt = gTacticalStatus.Team[ gbPlayerNum ].bLastID + 1;
+	cnt = gTacticalStatus.Team[gbPlayerNum].bLastID + 1;
 
 #ifdef JA2BETAVERSION
-	ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Obliterating Sector!" );
+	ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Obliterating Sector!");
 #endif
 
-	for ( pTSoldier = MercPtrs[ cnt ]; cnt < MAX_NUM_SOLDIERS; pTSoldier++, cnt++ )
+	for (pTSoldier = MercPtrs[cnt]; cnt < MAX_NUM_SOLDIERS; pTSoldier++, cnt++)
 	{
-		if ( pTSoldier->bActive && !pTSoldier->aiData.bNeutral && (pTSoldier->bSide != gbPlayerNum ) )
+		if (pTSoldier->bActive && !pTSoldier->aiData.bNeutral && (pTSoldier->bSide != gbPlayerNum))
 		{
 			//	ANITILE_PARAMS	AniParams;
 			//		memset( &AniParams, 0, sizeof( ANITILE_PARAMS ) );
@@ -5424,79 +3377,40 @@ void ObliterateSector()
 			//	CreateAnimationTile( &AniParams );
 			//PlayJA2Sample( EXPLOSION_1, RATE_11025, MIDVOLUME, 1, MIDDLEPAN );
 
-			pTSoldier->EVENT_SoldierGotHit( 1, 400, 0, pTSoldier->ubDirection, 320, NOBODY , FIRE_WEAPON_NO_SPECIAL, pTSoldier->bAimShotLocation, 0, NOWHERE );
+			pTSoldier->EVENT_SoldierGotHit(1, 400, 0, pTSoldier->ubDirection, 320, NOBODY, FIRE_WEAPON_NO_SPECIAL, pTSoldier->bAimShotLocation, 0, NOWHERE);
 		}
 	}
 }
 
 void RandomizeMercProfile()
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	// Get selected soldier
-	if	( GetSoldier( &pSoldier, gusSelectedSoldier ) )
+	if (GetSoldier(&pSoldier, gusSelectedSoldier))
 	{
 		// Change guy!
-		ForceSoldierProfileID( pSoldier, (UINT8)Random( 30 ) );
+		ForceSoldierProfileID(pSoldier, (UINT8)Random(30));
 
 		// Dirty interface
-		DirtyMercPanelInterface( pSoldier, DIRTYLEVEL2 );
-	}
-}
-
-void CreateNextCivType()
-{
-	SOLDIERCREATE_STRUCT		MercCreateStruct;
-	INT32 usMapPos;
-	static						INT8 ubBodyType = FATCIV;
-
-	// Get Grid Corrdinates of mouse
-	if ( GetMouseMapPos( &usMapPos ) )
-	{
-		INT8							iNewIndex;
-
-		MercCreateStruct.ubProfile		= NO_PROFILE;
-		MercCreateStruct.sSectorX		= gWorldSectorX;
-		MercCreateStruct.sSectorY		= gWorldSectorY;
-		MercCreateStruct.bSectorZ		= gbWorldSectorZ;
-		MercCreateStruct.ubBodyType		= ubBodyType;
-		MercCreateStruct.ubDirection	= SOUTH;
-
-		++ubBodyType;
-
-		if ( ubBodyType > KIDCIV )
-		{
-			ubBodyType = FATCIV;
-		}
-
-		MercCreateStruct.bTeam					= CIV_TEAM;
-		MercCreateStruct.sInsertionGridNo		= usMapPos;
-		RandomizeNewSoldierStats( &MercCreateStruct );
-
-		if ( TacticalCreateSoldier( &MercCreateStruct, (UINT8 *)&iNewIndex ) )
-		{
-			AddSoldierToSector( iNewIndex );
-
-			// So we can see them!
-			AllTeamsLookForAll(NO_INTERRUPTS);
-		}
+		DirtyMercPanelInterface(pSoldier, DIRTYLEVEL2);
 	}
 }
 
 void ToggleCliffDebug()
 {
 	// Set option to show all mercs
-	if ( gTacticalStatus.uiFlags&DEBUGCLIFFS )
+	if (gTacticalStatus.uiFlags & DEBUGCLIFFS)
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Cliff debug OFF." );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Cliff debug OFF.");
 
-		gTacticalStatus.uiFlags&= (~DEBUGCLIFFS );
+		gTacticalStatus.uiFlags &= (~DEBUGCLIFFS);
 		SetRenderFlags(RENDER_FLAG_FULL);
 	}
 	else
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Cliff debug ON." );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_TESTVERSION, L"Cliff debug ON.");
 
-		gTacticalStatus.uiFlags|= DEBUGCLIFFS;
+		gTacticalStatus.uiFlags |= DEBUGCLIFFS;
 	}
 }
 
@@ -5506,23 +3420,23 @@ void CreateCow()
 	INT32 usMapPos;
 
 	// Get Grid Corrdinates of mouse
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
 		INT8							iNewIndex;
 
-		MercCreateStruct.ubProfile		= NO_PROFILE;
-		MercCreateStruct.sSectorX		= gWorldSectorX;
-		MercCreateStruct.sSectorY		= gWorldSectorY;
-		MercCreateStruct.bSectorZ		= gbWorldSectorZ;
-		MercCreateStruct.ubBodyType		= COW;
+		MercCreateStruct.ubProfile = NO_PROFILE;
+		MercCreateStruct.sSectorX = gWorldSectorX;
+		MercCreateStruct.sSectorY = gWorldSectorY;
+		MercCreateStruct.bSectorZ = gbWorldSectorZ;
+		MercCreateStruct.ubBodyType = COW;
 		//MercCreateStruct.bTeam				= SOLDIER_CREATE_AUTO_TEAM;
-		MercCreateStruct.bTeam			= CIV_TEAM;
-		MercCreateStruct.sInsertionGridNo		= usMapPos;
-		RandomizeNewSoldierStats( &MercCreateStruct );
+		MercCreateStruct.bTeam = CIV_TEAM;
+		MercCreateStruct.sInsertionGridNo = usMapPos;
+		RandomizeNewSoldierStats(&MercCreateStruct);
 
-		if ( TacticalCreateSoldier( &MercCreateStruct, (UINT8 *)&iNewIndex ) )
+		if (TacticalCreateSoldier(&MercCreateStruct, (UINT8*)&iNewIndex))
 		{
-			AddSoldierToSector( iNewIndex );
+			AddSoldierToSector(iNewIndex);
 
 			// So we can see them!
 			AllTeamsLookForAll(NO_INTERRUPTS);
@@ -5536,23 +3450,23 @@ void CreateBloodCat()
 	INT32 usMapPos;
 
 	// Get Grid Corrdinates of mouse
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
 		INT8							iNewIndex;
 
-		MercCreateStruct.ubProfile		= NO_PROFILE;
-		MercCreateStruct.sSectorX		= gWorldSectorX;
-		MercCreateStruct.sSectorY		= gWorldSectorY;
-		MercCreateStruct.bSectorZ		= gbWorldSectorZ;
-		MercCreateStruct.ubBodyType		= BLOODCAT;
+		MercCreateStruct.ubProfile = NO_PROFILE;
+		MercCreateStruct.sSectorX = gWorldSectorX;
+		MercCreateStruct.sSectorY = gWorldSectorY;
+		MercCreateStruct.bSectorZ = gbWorldSectorZ;
+		MercCreateStruct.ubBodyType = BLOODCAT;
 		//MercCreateStruct.bTeam				= SOLDIER_CREATE_AUTO_TEAM;
-		MercCreateStruct.bTeam			= CREATURE_TEAM;
-		MercCreateStruct.sInsertionGridNo		= usMapPos;
-		RandomizeNewSoldierStats( &MercCreateStruct );
+		MercCreateStruct.bTeam = CREATURE_TEAM;
+		MercCreateStruct.sInsertionGridNo = usMapPos;
+		RandomizeNewSoldierStats(&MercCreateStruct);
 
-		if ( TacticalCreateSoldier( &MercCreateStruct, (UINT8 *)&iNewIndex ) )
+		if (TacticalCreateSoldier(&MercCreateStruct, (UINT8*)&iNewIndex))
 		{
-			AddSoldierToSector( iNewIndex );
+			AddSoldierToSector(iNewIndex);
 
 			// So we can see them!
 			AllTeamsLookForAll(NO_INTERRUPTS);
@@ -5566,24 +3480,24 @@ void CreatePlayerControlledCow()
 	INT32 usMapPos;
 
 	// Get Grid Corrdinates of mouse
-	if ( GetMouseMapPos( &usMapPos ) )
+	if (GetMouseMapPos(&usMapPos))
 	{
 		INT8							iNewIndex;
 
-		MercCreateStruct.ubProfile		= 12;
-		MercCreateStruct.sSectorX		= gWorldSectorX;
-		MercCreateStruct.sSectorY		= gWorldSectorY;
-		MercCreateStruct.bSectorZ		= gbWorldSectorZ;
-		MercCreateStruct.ubBodyType		= COW;
-		MercCreateStruct.sInsertionGridNo		= usMapPos;
-		MercCreateStruct.bTeam			= SOLDIER_CREATE_AUTO_TEAM;
-		MercCreateStruct.fPlayerMerc	= TRUE;
+		MercCreateStruct.ubProfile = 12;
+		MercCreateStruct.sSectorX = gWorldSectorX;
+		MercCreateStruct.sSectorY = gWorldSectorY;
+		MercCreateStruct.bSectorZ = gbWorldSectorZ;
+		MercCreateStruct.ubBodyType = COW;
+		MercCreateStruct.sInsertionGridNo = usMapPos;
+		MercCreateStruct.bTeam = SOLDIER_CREATE_AUTO_TEAM;
+		MercCreateStruct.fPlayerMerc = TRUE;
 
-		RandomizeNewSoldierStats( &MercCreateStruct );
+		RandomizeNewSoldierStats(&MercCreateStruct);
 
-		if ( TacticalCreateSoldier( &MercCreateStruct, (UINT8 *)&iNewIndex ) )
+		if (TacticalCreateSoldier(&MercCreateStruct, (UINT8*)&iNewIndex))
 		{
-			AddSoldierToSector( iNewIndex );
+			AddSoldierToSector(iNewIndex);
 
 			// So we can see them!
 			AllTeamsLookForAll(NO_INTERRUPTS);
@@ -5641,101 +3555,99 @@ void GrenadeTest3()
 */
 void CreatePlayerControlledMonster()
 {
-	INT32 usMapPos;
-	if ( GetMouseMapPos( &usMapPos ) )
+	SOLDIERCREATE_STRUCT		MercCreateStruct;
+	INT8							iNewIndex;
+
+	MercCreateStruct.ubProfile = NO_PROFILE;
+	MercCreateStruct.sSectorX = gWorldSectorX;
+	MercCreateStruct.sSectorY = gWorldSectorY;
+	MercCreateStruct.bSectorZ = gbWorldSectorZ;
+
+	////Note:	only gets called if Alt and/or Ctrl isn't pressed!
+	//if (_KeyDown(INSERT))
+	//	MercCreateStruct.ubBodyType = QUEENMONSTER;
+	////MercCreateStruct.ubBodyType		= LARVAE_MONSTER;
+	//else
+	//	MercCreateStruct.ubBodyType = ADULTFEMALEMONSTER;
+
+	MercCreateStruct.ubBodyType = gCreatedMonsterType;
+	MercCreateStruct.bTeam = SOLDIER_CREATE_AUTO_TEAM;
+	MercCreateStruct.sInsertionGridNo = gusMapPos;
+	RandomizeNewSoldierStats(&MercCreateStruct);
+
+	if (TacticalCreateSoldier(&MercCreateStruct, (UINT8*)&iNewIndex))
 	{
-		SOLDIERCREATE_STRUCT		MercCreateStruct;
-		INT8							iNewIndex;
-
-		MercCreateStruct.ubProfile		= NO_PROFILE;
-		MercCreateStruct.sSectorX			= gWorldSectorX;
-		MercCreateStruct.sSectorY			= gWorldSectorY;
-		MercCreateStruct.bSectorZ			= gbWorldSectorZ;
-
-		//Note:	only gets called if Alt and/or Ctrl isn't pressed!
-		if ( _KeyDown( INSERT ) )
-			MercCreateStruct.ubBodyType		= QUEENMONSTER;
-		//MercCreateStruct.ubBodyType		= LARVAE_MONSTER;
-		else
-			MercCreateStruct.ubBodyType		= ADULTFEMALEMONSTER;
-		MercCreateStruct.bTeam				= SOLDIER_CREATE_AUTO_TEAM;
-		MercCreateStruct.sInsertionGridNo		= usMapPos;
-		RandomizeNewSoldierStats( &MercCreateStruct );
-
-		if ( TacticalCreateSoldier( &MercCreateStruct, (UINT8 *)&iNewIndex ) )
-		{
-			AddSoldierToSector( iNewIndex );
-		}
+		AddSoldierToSector(iNewIndex);
 	}
 }
 
 
-INT8 CheckForAndHandleHandleVehicleInteractiveClick( SOLDIERTYPE *pSoldier, UINT16 usMapPos, BOOLEAN fMovementMode, UINT8 ubSeatIndex )
+INT8 CheckForAndHandleHandleVehicleInteractiveClick(SOLDIERTYPE* pSoldier, UINT16 usMapPos, BOOLEAN fMovementMode, UINT8 ubSeatIndex)
 {
 	// Look for an item pool
 	INT32 sActionGridNo;
 	UINT8							ubDirection;
-	SOLDIERTYPE		*pTSoldier;
+	SOLDIERTYPE* pTSoldier;
 	INT16							sAPCost = 0;
 
-	if ( gfUIFullTargetFound	)
+	if (gfUIFullTargetFound)
 	{
-		pTSoldier = MercPtrs[ gusUIFullTargetID ];
+		pTSoldier = MercPtrs[gusUIFullTargetID];
 
 		// anv: added condition - make sure we won't put vehicle in another vehicle
-		if ( OK_ENTERABLE_VEHICLE( pTSoldier ) && pTSoldier->bVisible != -1 && OKUseVehicle( pTSoldier->ubProfile ) && !( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER | SOLDIER_PASSENGER | SOLDIER_VEHICLE ) ) )
-		//if ( OK_ENTERABLE_VEHICLE( pTSoldier ) && pTSoldier->bVisible != -1 && OKUseVehicle( pTSoldier->ubProfile ) )
+		if (OK_ENTERABLE_VEHICLE(pTSoldier) && pTSoldier->bVisible != -1 && OKUseVehicle(pTSoldier->ubProfile) && !(pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER | SOLDIER_PASSENGER | SOLDIER_VEHICLE)))
+			//if ( OK_ENTERABLE_VEHICLE( pTSoldier ) && pTSoldier->bVisible != -1 && OKUseVehicle( pTSoldier->ubProfile ) )
 		{
-			if ( ( GetNumberInVehicle( pTSoldier->bVehicleID ) == 0 ) || !fMovementMode )
+			if ((GetNumberInVehicle(pTSoldier->bVehicleID) == 0) || !fMovementMode)
 			{
 				// Find a gridno closest to sweetspot...
-				sActionGridNo = FindGridNoFromSweetSpotWithStructDataFromSoldier( pSoldier, pSoldier->usUIMovementMode, 5, &ubDirection, 0, pTSoldier, TRUE );
-				
+				sActionGridNo = FindGridNoFromSweetSpotWithStructDataFromSoldier(pSoldier, pSoldier->usUIMovementMode, 5, &ubDirection, 0, pTSoldier, TRUE);
+
 				if (!TileIsOutOfBounds(sActionGridNo))
 				{
 					// Calculate AP costs...
 					//sAPCost = GetAPsToBeginFirstAid( pSoldier );
-					sAPCost += PlotPath( pSoldier, sActionGridNo, NO_COPYROUTE, FALSE, TEMPORARY, (UINT16)pSoldier->usUIMovementMode, NOT_STEALTH, FORWARD, pSoldier->bActionPoints);
+					sAPCost += PlotPath(pSoldier, sActionGridNo, NO_COPYROUTE, FALSE, TEMPORARY, (UINT16)pSoldier->usUIMovementMode, NOT_STEALTH, FORWARD, pSoldier->bActionPoints);
 
-					if ( EnoughPoints( pSoldier, sAPCost, 0, TRUE ) )
+					if (EnoughPoints(pSoldier, sAPCost, 0, TRUE))
 					{
-						pSoldier->DoMercBattleSound( BATTLE_SOUND_OK1 );
+						pSoldier->DoMercBattleSound(BATTLE_SOUND_OK);
 
 						// CHECK IF WE ARE AT THIS GRIDNO NOW
-						if ( pSoldier->sGridNo != sActionGridNo )
+						if (pSoldier->sGridNo != sActionGridNo)
 						{
 							// SEND PENDING ACTION
 							pSoldier->aiData.ubPendingAction = MERC_ENTER_VEHICLE;
-							pSoldier->aiData.sPendingActionData2	= pTSoldier->sGridNo;
-							pSoldier->aiData.bPendingActionData3	= ubDirection;
-							pSoldier->aiData.uiPendingActionData4	= ubSeatIndex;
+							pSoldier->aiData.sPendingActionData2 = pTSoldier->sGridNo;
+							pSoldier->aiData.bPendingActionData3 = ubDirection;
+							pSoldier->aiData.uiPendingActionData4 = ubSeatIndex;
 							pSoldier->aiData.ubPendingActionAnimCount = 0;
 
 							// WALK UP TO DEST FIRST
-							pSoldier->EVENT_InternalGetNewSoldierPath( sActionGridNo, pSoldier->usUIMovementMode, 3 , pSoldier->flags.fNoAPToFinishMove );
+							pSoldier->EVENT_InternalGetNewSoldierPath(sActionGridNo, pSoldier->usUIMovementMode, 3, pSoldier->flags.fNoAPToFinishMove);
 						}
 						else
 						{
-							pSoldier->EVENT_SoldierEnterVehicle( pTSoldier->sGridNo, ubDirection, ubSeatIndex );
+							pSoldier->EVENT_SoldierEnterVehicle(pTSoldier->sGridNo, ubDirection, ubSeatIndex);
 						}
 
 						// OK, set UI
-						SetUIBusy( pSoldier->ubID );
+						SetUIBusy(pSoldier->ubID);
 						//guiPendingOverrideEvent = A_CHANGE_TO_MOVE;
 
-						return( -1 );
+						return(-1);
 					}
 				}
 			}
 		}
 	}
 
-	return( 0 );
+	return(0);
 }
 
-void HandleRadioCursorClick(INT32 usMapPos, UINT32 *puiNewEvent)
+void HandleRadioCursorClick(INT32 usMapPos, UINT32* puiNewEvent)
 {
-	SOLDIERTYPE * pSoldier = NULL;
+	SOLDIERTYPE* pSoldier = NULL;
 	GetSoldier(&pSoldier, gusSelectedSoldier);
 
 	if (pSoldier &&
@@ -5781,7 +3693,7 @@ void HandleRadioCursorClick(INT32 usMapPos, UINT32 *puiNewEvent)
 		}
 		else
 		{
-			pTMilitiaSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE1);
+			pTMilitiaSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);
 		}
 	}
 
@@ -5790,55 +3702,55 @@ void HandleRadioCursorClick(INT32 usMapPos, UINT32 *puiNewEvent)
 	return;
 }
 
-void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
+void HandleHandCursorClick(INT32 usMapPos, UINT32* puiNewEvent)
 {
-	SOLDIERTYPE *pSoldier;
-	LEVELNODE					*pIntTile;
+	SOLDIERTYPE* pSoldier;
+	LEVELNODE* pIntTile;
 	INT32 sIntTileGridNo;
 	INT32 sActionGridNo;
 	UINT8							ubDirection;
 	INT16							sAPCost;
 	INT32 sAdjustedGridNo;
-	STRUCTURE					*pStructure = NULL;
-	ITEM_POOL					*pItemPool;
+	STRUCTURE* pStructure = NULL;
+	ITEM_POOL* pItemPool;
 	BOOLEAN						fIgnoreItems = FALSE;
-	
-	if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+
+	if (GetSoldier(&pSoldier, gusSelectedSoldier))
 	{
 		// If we are out of breath, no cursor...
-		if ( pSoldier->bBreath < OKBREATH && pSoldier->bCollapsed )
+		if (pSoldier->bBreath < OKBREATH && pSoldier->bCollapsed)
 		{
 			return;
 		}
 
-		if ( CheckForAndHandleHandleVehicleInteractiveClick( pSoldier, usMapPos, FALSE, 0 ) == -1 )
+		if (CheckForAndHandleHandleVehicleInteractiveClick(pSoldier, usMapPos, FALSE, 0) == -1)
 		{
 			return;
 		}
 
-		if ( pSoldier->flags.uiStatusFlags & ( SOLDIER_VEHICLE | SOLDIER_DRIVER | SOLDIER_PASSENGER ) )
+		if (pSoldier->flags.uiStatusFlags & (SOLDIER_VEHICLE | SOLDIER_DRIVER | SOLDIER_PASSENGER))
 		{
 			return;
 		}
 
 		// Check if we are on a merc... if so.. steal!
-		if ( gfUIFullTargetFound )
+		if (gfUIFullTargetFound)
 		{
 			// Flugente: allow stealing if the other guy is an enemy, OR if we are on the same team
-			if ( (( guiUIFullTargetFlags & ENEMY_MERC ) && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC )) || (AllowedToStealFromTeamMate(pSoldier->ubID, (UINT8)gusUIFullTargetID) && guiUIFullTargetFlags & OWNED_MERC) )
+			//if ( (( guiUIFullTargetFlags & ENEMY_MERC ) && !( guiUIFullTargetFlags & UNCONSCIOUS_MERC )) || (AllowedToStealFromTeamMate(pSoldier->ubID, (UINT8)gusUIFullTargetID) && guiUIFullTargetFlags & OWNED_MERC) )
 			{
-				sActionGridNo =	FindAdjacentGridEx( pSoldier, MercPtrs[ gusUIFullTargetID ]->sGridNo, &ubDirection, &sAdjustedGridNo, TRUE, FALSE );
-				if ( sActionGridNo == -1 )
+				sActionGridNo = FindAdjacentGridEx(pSoldier, MercPtrs[gusUIFullTargetID]->sGridNo, &ubDirection, &sAdjustedGridNo, TRUE, FALSE);
+				if (sActionGridNo == -1)
 				{
 					sActionGridNo = sAdjustedGridNo;
 				}
 
 				// Steal!
-				sAPCost = GetAPsToStealItem( pSoldier, MercPtrs[ gusUIFullTargetID ], sActionGridNo ); // SANDRO - added target variable
+				sAPCost = GetAPsToStealItem(pSoldier, MercPtrs[gusUIFullTargetID], sActionGridNo); // SANDRO - added target variable
 
-				if ( EnoughPoints( pSoldier, sAPCost, 0, TRUE ) )
+				if (EnoughPoints(pSoldier, sAPCost, 0, TRUE))
 				{
-					MercStealFromMerc( pSoldier, MercPtrs[ gusUIFullTargetID ] );
+					MercStealFromMerc(pSoldier, MercPtrs[gusUIFullTargetID]);
 
 					*puiNewEvent = A_CHANGE_TO_MOVE;
 
@@ -5855,18 +3767,18 @@ void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
 		sActionGridNo = usMapPos;
 
 		// If we are over an interactive struct, adjust gridno to this....
-		pIntTile = ConditionalGetCurInteractiveTileGridNoAndStructure( &sIntTileGridNo , &pStructure, FALSE );
-		if ( pIntTile != NULL )
+		pIntTile = ConditionalGetCurInteractiveTileGridNoAndStructure(&sIntTileGridNo, &pStructure, FALSE);
+		if (pIntTile != NULL)
 		{
 			sActionGridNo = sIntTileGridNo;
 
 			//if ( pStructure->fFlags & ( STRUCTURE_SWITCH | STRUCTURE_ANYDOOR ) )
-			if ( pStructure->fFlags & ( STRUCTURE_SWITCH ) )
+			if (pStructure->fFlags & (STRUCTURE_SWITCH))
 			{
 				fIgnoreItems = TRUE;
 			}
 
-			if ( pStructure->fFlags & ( STRUCTURE_ANYDOOR ) && sActionGridNo != usMapPos )
+			if (pStructure->fFlags & (STRUCTURE_ANYDOOR) && sActionGridNo != usMapPos)
 			{
 				fIgnoreItems = TRUE;
 			}
@@ -5874,19 +3786,19 @@ void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
 
 		// Check if we are over an item pool
 		// ATE: Ignore items will be set if over a switch interactive tile...
-		if ( GetItemPool( sActionGridNo, &pItemPool, pSoldier->pathing.bLevel ) && ITEMPOOL_VISIBLE( pItemPool ) && !fIgnoreItems )
+		if (GetItemPool(sActionGridNo, &pItemPool, pSoldier->pathing.bLevel) && ITEMPOOL_VISIBLE(pItemPool) && !fIgnoreItems)
 		{
-			if ( AM_AN_EPC( pSoldier ) )
+			if (AM_AN_EPC(pSoldier))
 			{
 				// Display message
 				// ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
-				ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ EPC_CANNOT_DO_THAT ] );
+				ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[EPC_CANNOT_DO_THAT]);
 			}
-			else if ( UIOkForItemPickup( pSoldier, sActionGridNo ) )
+			else if (UIOkForItemPickup(pSoldier, sActionGridNo))
 			{
-				INT8 bZLevel = GetLargestZLevelOfItemPool( pItemPool );
+				INT8 bZLevel = GetLargestZLevelOfItemPool(pItemPool);
 
-				SoldierPickupItem( pSoldier, pItemPool->iItemIndex, sActionGridNo, bZLevel );
+				SoldierPickupItem(pSoldier, pItemPool->iItemIndex, sActionGridNo, bZLevel);
 
 				*puiNewEvent = A_CHANGE_TO_MOVE;
 
@@ -5894,22 +3806,22 @@ void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
 		}
 		else
 		{
-			if ( pIntTile != NULL && !( pStructure->fFlags & STRUCTURE_HASITEMONTOP ) )
+			if (pIntTile != NULL && !(pStructure->fFlags & STRUCTURE_HASITEMONTOP))
 			{
-				sActionGridNo =	FindAdjacentGridEx( pSoldier, sIntTileGridNo, &ubDirection, NULL, FALSE, TRUE );
-				if ( sActionGridNo == -1 )
+				sActionGridNo = FindAdjacentGridEx(pSoldier, sIntTileGridNo, &ubDirection, NULL, FALSE, TRUE);
+				if (sActionGridNo == -1)
 				{
 					sActionGridNo = sIntTileGridNo;
 				}
 
 				// If this is not the same tile as ours, check if we can get to dest!
-				if ( sActionGridNo != pSoldier->sGridNo && gsCurrentActionPoints == 0 )
+				if (sActionGridNo != pSoldier->sGridNo && gsCurrentActionPoints == 0)
 				{
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 				}
 				else
 				{
-					if ( SelectedMercCanAffordMove(	)	)
+					if (SelectedMercCanAffordMove())
 					{
 						*puiNewEvent = C_MOVE_MERC;
 					}
@@ -5919,28 +3831,28 @@ void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
 			{
 				// ATE: Here, the poor player wants to search something that does not exist...
 				// Why should we not let them make fools of themselves....?
-				if ( AM_AN_EPC( pSoldier ) )
+				if (AM_AN_EPC(pSoldier))
 				{
 					// Display message
 					// ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ EPC_CANNOT_DO_THAT ] );
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[EPC_CANNOT_DO_THAT]);
 				}
 				else
 				{
 					// Check morale, if < threashold, refuse...
-					if ( pSoldier->aiData.bMorale < 30 )
+					if (pSoldier->aiData.bMorale < 30)
 					{
-						TacticalCharacterDialogue( pSoldier, QUOTE_REFUSING_ORDER );
+						TacticalCharacterDialogue(pSoldier, QUOTE_REFUSING_ORDER);
 					}
 					else
 					{
-						if ( gsCurrentActionPoints == 0 )
+						if (gsCurrentActionPoints == 0)
 						{
-							ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+							ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 						}
 						else
 						{
-							SoldierPickupItem( pSoldier, NOTHING, sActionGridNo, 0 );
+							SoldierPickupItem(pSoldier, NOTHING, sActionGridNo, 0);
 							*puiNewEvent = A_CHANGE_TO_MOVE;
 						}
 					}
@@ -5950,28 +3862,28 @@ void HandleHandCursorClick( INT32 usMapPos, UINT32 *puiNewEvent )
 	}
 }
 
-void HandleHandCursorRightClick( INT32 usMapPos, UINT32 *puiNewEvent )
+void HandleHandCursorRightClick(INT32 usMapPos, UINT32* puiNewEvent)
 {
-	SOLDIERTYPE *pSoldier;
-	SOLDIERTYPE *pTSoldier;
+	SOLDIERTYPE* pSoldier;
+	SOLDIERTYPE* pTSoldier;
 
-	if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+	if (GetSoldier(&pSoldier, gusSelectedSoldier))
 	{
 		// If we are out of breath, no cursor...
-		if( pSoldier->bBreath < OKBREATH && pSoldier->bCollapsed )
+		if (pSoldier->bBreath < OKBREATH && pSoldier->bCollapsed)
 		{
 			return;
 		}
 
-		if( gfUIFullTargetFound )
+		if (gfUIFullTargetFound)
 		{
-			pTSoldier = MercPtrs[ gusUIFullTargetID ];
-			if( OK_ENTERABLE_VEHICLE( pTSoldier ) && pTSoldier->bVisible != -1 && OKUseVehicle( pTSoldier->ubProfile ) )
+			pTSoldier = MercPtrs[gusUIFullTargetID];
+			if (OK_ENTERABLE_VEHICLE(pTSoldier) && pTSoldier->bVisible != -1 && OKUseVehicle(pTSoldier->ubProfile))
 			{
 				// anv: if we are passengers, only show menu when clicking on vehicle we're in
-				if( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER | SOLDIER_PASSENGER ) )
+				if (pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER | SOLDIER_PASSENGER))
 				{
-					if( pSoldier->iVehicleId == pTSoldier->bVehicleID )
+					if (pSoldier->iVehicleId == pTSoldier->bVehicleID)
 					{
 						VehicleMenu(usMapPos, pSoldier, pTSoldier);
 					}
@@ -5986,33 +3898,30 @@ void HandleHandCursorRightClick( INT32 usMapPos, UINT32 *puiNewEvent )
 	}
 }
 
-extern BOOLEAN AnyItemsVisibleOnLevel( ITEM_POOL *pItemPool, INT8 bZLevel );
-
-
-void ExchangeMessageBoxCallBack( UINT8 bExitValue )
+void ExchangeMessageBoxCallBack(UINT8 bExitValue)
 {
-	if ( bExitValue == MSG_BOX_RETURN_YES )
+	if (bExitValue == MSG_BOX_RETURN_YES)
 	{
-		SwapMercPositions( gpExchangeSoldier1, gpExchangeSoldier2 );
+		SwapMercPositions(gpExchangeSoldier1, gpExchangeSoldier2);
 	}
 }
 
 
-INT8 HandleMoveModeInteractiveClick( INT32 usMapPos, UINT32 *puiNewEvent )
+INT8 HandleMoveModeInteractiveClick(INT32 usMapPos, UINT32* puiNewEvent)
 {
 	// Look for an item pool
-	ITEM_POOL					*pItemPool;
+	ITEM_POOL* pItemPool;
 	BOOLEAN						fContinue = TRUE;
-	SOLDIERTYPE				*pSoldier;
-	LEVELNODE					*pIntTile;
+	SOLDIERTYPE* pSoldier;
+	LEVELNODE* pIntTile;
 	INT32 sIntTileGridNo;
 	INT32 sActionGridNo;
 	UINT8							ubDirection;
 	INT8							bReturnCode = 0;
 	INT8							bZLevel;
-	STRUCTURE					*pStructure = NULL;
+	STRUCTURE* pStructure = NULL;
 
-	if(	GetSoldier( &pSoldier, gusSelectedSoldier ) )
+	if (GetSoldier(&pSoldier, gusSelectedSoldier))
 	{
 		// If we are out of breath, no cursor...
 		// if ( pSoldier->bBreath < OKBREATH )
@@ -6021,113 +3930,113 @@ INT8 HandleMoveModeInteractiveClick( INT32 usMapPos, UINT32 *puiNewEvent )
 		//}
 
 		// ATE: If we are a vehicle, no moving!
-		if ( !gGameExternalOptions.fAllowDrivingVehiclesInTactical && pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE )
+		if (!gGameExternalOptions.fAllowDrivingVehiclesInTactical && pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ VEHICLE_CANT_MOVE_IN_TACTICAL ] );
-			return( -3 );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[VEHICLE_CANT_MOVE_IN_TACTICAL]);
+			return(-3);
 		}
 
 		//if ( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER | SOLDIER_PASSENGER ) )
-		if ( pSoldier->flags.uiStatusFlags & ( SOLDIER_PASSENGER ) )
+		if (pSoldier->flags.uiStatusFlags & (SOLDIER_PASSENGER))
 		{
 			// anv: there's some weird bug with moving invisible passengers after loading game, that should solve it
 			//ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ VEHICLE_CANT_MOVE_IN_TACTICAL ] );
 			// actually, you know what, let's switch to vehicle using the occasion
-			HandleLocateSelectMerc( GetDriver(MercPtrs[ pSoldier->ubID ]->iVehicleId)->ubID, 0 );
-			return( -3 );
+			HandleLocateSelectMerc(GetDriver(MercPtrs[pSoldier->ubID]->iVehicleId)->ubID, 0);
+			return(-3);
 		}
 
-		if ( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER ) )
+		if (pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER))
 		{
-			pSoldier = GetSoldierStructureForVehicle( MercPtrs[ pSoldier->ubID ]->iVehicleId );
+			pSoldier = GetSoldierStructureForVehicle(MercPtrs[pSoldier->ubID]->iVehicleId);
 		}
 
 		// OK, check for height differences.....
-		if ( gpWorldLevelData[ usMapPos ].sHeight != gpWorldLevelData[ pSoldier->sGridNo ].sHeight )
+		if (gpWorldLevelData[usMapPos].sHeight != gpWorldLevelData[pSoldier->sGridNo].sHeight)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ CANT_GET_THERE ] );
-			return( -1 );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[CANT_GET_THERE]);
+			return(-1);
 		}
 
 		// See if we are over a vehicle, and walk up to it and enter....
-		if ( CheckForAndHandleHandleVehicleInteractiveClick( pSoldier, usMapPos, TRUE, 0 ) == -1 )
+		if (CheckForAndHandleHandleVehicleInteractiveClick(pSoldier, usMapPos, TRUE, 0) == -1)
 		{
-			return( -1 );
+			return(-1);
 		}
 
 		// Check if we are over a civillian....
-		if ( gfUIFullTargetFound )
+		if (gfUIFullTargetFound)
 		{
-			if ( ValidQuickExchangePosition( ) )
+			if (ValidQuickExchangePosition())
 			{
 				// Check if we can...
-				if ( CanExchangePlaces( pSoldier, MercPtrs[ gusUIFullTargetID ], TRUE ) )
+				if (CanExchangePlaces(pSoldier, MercPtrs[gusUIFullTargetID], TRUE))
 				{
 					gpExchangeSoldier1 = pSoldier;
-					gpExchangeSoldier2 = MercPtrs[ gusUIFullTargetID ];
+					gpExchangeSoldier2 = MercPtrs[gusUIFullTargetID];
 
 					// Do message box...
 					//DoMessageBox( MSG_BOX_BASIC_STYLE, TacticalStr[ EXCHANGE_PLACES_REQUESTER ], GAME_SCREEN, ( UINT8 )MSG_BOX_FLAG_YESNO, ExchangeMessageBoxCallBack, NULL );
-					SwapMercPositions( gpExchangeSoldier1, gpExchangeSoldier2 );
+					SwapMercPositions(gpExchangeSoldier1, gpExchangeSoldier2);
 				}
 			}
-			return( -3 );
+			return(-3);
 		}
 
-		pIntTile = GetCurInteractiveTileGridNoAndStructure( &sIntTileGridNo, &pStructure );
+		pIntTile = GetCurInteractiveTileGridNoAndStructure(&sIntTileGridNo, &pStructure);
 
-		if ( pIntTile != NULL )
+		if (pIntTile != NULL)
 		{
 			bReturnCode = -3;
 
 			// Check if we are over an item pool, take precedence over that.....
 			// EXCEPT FOR SWITCHES!
-			if ((pStructure->fFlags & STRUCTURE_OPEN || !(pStructure->fFlags & STRUCTURE_OPENABLE)) && !(pStructure->fFlags & (STRUCTURE_SWITCH|STRUCTURE_ANYDOOR)) && GetItemPool(sIntTileGridNo, &pItemPool, pSoldier->pathing.bLevel))
+			if ((pStructure->fFlags & STRUCTURE_OPEN || !(pStructure->fFlags & STRUCTURE_OPENABLE)) && !(pStructure->fFlags & (STRUCTURE_SWITCH | STRUCTURE_ANYDOOR)) && GetItemPool(sIntTileGridNo, &pItemPool, pSoldier->pathing.bLevel))
 			{
-				if ( AM_AN_EPC( pSoldier ) )
+				if (AM_AN_EPC(pSoldier))
 				{
 					// Display message
 					// ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ EPC_CANNOT_DO_THAT ] );
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[EPC_CANNOT_DO_THAT]);
 					bReturnCode = -1;
 				}
-				else if ( UIOkForItemPickup( pSoldier, sIntTileGridNo ) )
+				else if (UIOkForItemPickup(pSoldier, sIntTileGridNo))
 				{
-					bZLevel = GetLargestZLevelOfItemPool( pItemPool );
+					bZLevel = GetLargestZLevelOfItemPool(pItemPool);
 
-					if ( AnyItemsVisibleOnLevel( pItemPool, bZLevel ) )
+					if (AnyItemsVisibleOnLevel(pItemPool, bZLevel))
 					{
 						fContinue = FALSE;
 
-						SetUIBusy( pSoldier->ubID );
+						SetUIBusy(pSoldier->ubID);
 
-						if ( ( gTacticalStatus.uiFlags & INCOMBAT ) && ( gTacticalStatus.uiFlags & TURNBASED ) )
+						if ((gTacticalStatus.uiFlags & INCOMBAT) && (gTacticalStatus.uiFlags & TURNBASED))
 						{
 							//puiNewEvent = C_WAIT_FOR_CONFIRM;
-							SoldierPickupItem( pSoldier, pItemPool->iItemIndex, sIntTileGridNo, bZLevel );
+							SoldierPickupItem(pSoldier, pItemPool->iItemIndex, sIntTileGridNo, bZLevel);
 						}
 						else
 						{
-							BeginDisplayTimedCursor( OKHANDCURSOR_UICURSOR, 300 );
+							BeginDisplayTimedCursor(OKHANDCURSOR_UICURSOR, 300);
 
-							SoldierPickupItem( pSoldier, pItemPool->iItemIndex, sIntTileGridNo, bZLevel );
+							SoldierPickupItem(pSoldier, pItemPool->iItemIndex, sIntTileGridNo, bZLevel);
 						}
 					}
 				}
 			}
 
-			if ( fContinue )
+			if (fContinue)
 			{
-				sActionGridNo =	FindAdjacentGridEx( MercPtrs[ gusSelectedSoldier ], sIntTileGridNo, &ubDirection, NULL, FALSE, TRUE );
-				if ( sActionGridNo == -1 )
+				sActionGridNo = FindAdjacentGridEx(MercPtrs[gusSelectedSoldier], sIntTileGridNo, &ubDirection, NULL, FALSE, TRUE);
+				if (sActionGridNo == -1)
 				{
 					sActionGridNo = sIntTileGridNo;
 				}
 
 				// If this is not the same tile as ours, check if we can get to dest!
-				if ( sActionGridNo != MercPtrs[ gusSelectedSoldier ]->sGridNo && gsCurrentActionPoints == 0 )
+				if (sActionGridNo != MercPtrs[gusSelectedSoldier]->sGridNo && gsCurrentActionPoints == 0)
 				{
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_PATH ] );
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_PATH]);
 					bReturnCode = -1;
 				}
 				else
@@ -6138,26 +4047,26 @@ INT8 HandleMoveModeInteractiveClick( INT32 usMapPos, UINT32 *puiNewEvent )
 		}
 	}
 
-	return( bReturnCode );
+	return(bReturnCode);
 }
 
 
-BOOLEAN HandleUIReloading( SOLDIERTYPE *pSoldier )
+BOOLEAN HandleUIReloading(SOLDIERTYPE* pSoldier)
 {
 	INT16 bAPs = 0;
 
 	// CHECK OUR CURRENT CURSOR...
 
 	// Do we have the ammo to reload?
-	if ( guiCurrentUICursor == GOOD_RELOAD_UICURSOR )
+	if (guiCurrentUICursor == GOOD_RELOAD_UICURSOR)
 	{
 		// Check APs to reload...
-		bAPs = GetAPsToAutoReload( pSoldier, false );
+		bAPs = GetAPsToAutoReload(pSoldier, false);
 
-		if ( EnoughPoints( pSoldier, bAPs, 0,TRUE ) )
+		if (EnoughPoints(pSoldier, bAPs, 0, TRUE))
 		{
 			// OK, we have some ammo we can reload.... reload now!
-			if ( !AutoReload( pSoldier, false ) )
+			if (!AutoReload(pSoldier, false))
 			{
 				// Do we say we could not reload gun...?
 			}
@@ -6165,25 +4074,25 @@ BOOLEAN HandleUIReloading( SOLDIERTYPE *pSoldier )
 			// ATE: Re-examine cursor info!
 			gfUIForceReExamineCursorData = TRUE;
 		}
-		return( TRUE );
+		return(TRUE);
 	}
 
-	if ( guiCurrentUICursor == BAD_RELOAD_UICURSOR )
+	if (guiCurrentUICursor == BAD_RELOAD_UICURSOR)
 	{
 		// OK, we have been told to reload but have no ammo...
 		//ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, L"No ammo to reload." );
-		if ( Random( 3 ) == 0 )
+		if (Random(3) == 0)
 		{
-			TacticalCharacterDialogue( pSoldier, QUOTE_OUT_OF_AMMO );
+			TacticalCharacterDialogue(pSoldier, QUOTE_OUT_OF_AMMO);
 		}
-		return( TRUE );
+		return(TRUE);
 	}
 
-	return( FALSE );
+	return(FALSE);
 }
 
 
-BOOLEAN ConfirmActionCancel( INT32 usMapPos, INT32 usOldMapPos )
+BOOLEAN ConfirmActionCancel(INT32 usMapPos, INT32 usOldMapPos)
 {
 	// OK, most times we want to leave confirm mode if our
 	// gridno is different... but if we are in the grenade throw
@@ -6199,83 +4108,83 @@ BOOLEAN ConfirmActionCancel( INT32 usMapPos, INT32 usOldMapPos )
 	//
 	//else
 	{
-		if ( usMapPos != usOldMapPos )
+		if (usMapPos != usOldMapPos)
 		{
-			return( TRUE );
+			return(TRUE);
 		}
 	}
 
-	return( FALSE );
+	return(FALSE);
 }
 
-void ChangeCurrentSquad( INT32 iSquad )
+void ChangeCurrentSquad(INT32 iSquad)
 {
 	// only allow if nothing in hand and the Change Squad button for whichever panel we're in must be enabled
-	if ( ( gpItemPointer == NULL ) && !gfDisableTacticalPanelButtons &&
-		( ( gsCurInterfacePanel != TEAM_PANEL ) || ( ButtonList[ iTEAMPanelButtons[ CHANGE_SQUAD_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
+	if ((gpItemPointer == NULL) && !gfDisableTacticalPanelButtons &&
+		((gsCurInterfacePanel != TEAM_PANEL) || (ButtonList[iTEAMPanelButtons[CHANGE_SQUAD_BUTTON]]->uiFlags & BUTTON_ENABLED)))
 	{
 		INT32 cnt, cnt2, iCurrentSquad;
 		INT32 cnt3 = -1;
 
 		// Buggler: dynamic tactical squad hotkey assignments only take into account squads present in sector
 		//find the actual squad ID present in tactical map
-		for( cnt = 0 ; cnt < NUMBER_OF_SQUADS; cnt++ )
+		for (cnt = 0; cnt < NUMBER_OF_SQUADS; cnt++)
 		{
-			for( cnt2 = 0; cnt2 < NUMBER_OF_SOLDIERS_PER_SQUAD; cnt2++ )
+			for (cnt2 = 0; cnt2 < NUMBER_OF_SOLDIERS_PER_SQUAD; cnt2++)
 			{
-				if ( Squad[ cnt ][ cnt2 ] != NULL && Squad[ cnt ][ cnt2 ]->bInSector && OK_INTERRUPT_MERC( Squad[ cnt ][ cnt2 ] ) && OK_CONTROLLABLE_MERC( Squad[ cnt ][ cnt2 ] ) )
+				if (Squad[cnt][cnt2] != NULL && Squad[cnt][cnt2]->bInSector && OK_INTERRUPT_MERC(Squad[cnt][cnt2]) && OK_CONTROLLABLE_MERC(Squad[cnt][cnt2]))
 				{
 					cnt3++;
 					break;
 				}
 			}
 
-			if ( iSquad == cnt3 )
+			if (iSquad == cnt3)
 				break;
 		}
-		
-		if ( IsSquadOnCurrentTacticalMap( cnt ) )
+
+		if (IsSquadOnCurrentTacticalMap(cnt))
 		{
 			//resort the squad in case the order has, for any reason, changed
-			SortSquadByID( (INT8)cnt );
+			SortSquadByID((INT8)cnt);
 
-			iCurrentSquad = CurrentSquad( );
-			
-			if ( cnt != iCurrentSquad )
-			{		
+			iCurrentSquad = CurrentSquad();
+
+			if (cnt != iCurrentSquad)
+			{
 				//set active squad
-				SetCurrentSquad( cnt, FALSE );
+				SetCurrentSquad(cnt, FALSE);
 
-				if ( gGameExternalOptions.fUseXMLSquadNames && cnt < min(ON_DUTY, gSquadNameVector.size()) )
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ACTIVE_STRING ], gSquadNameVector[cnt].c_str() );
+				if (gGameExternalOptions.fUseXMLSquadNames && cnt < min(ON_DUTY, gSquadNameVector.size()))
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_SQUAD_ACTIVE_STRING], gSquadNameVector[cnt].c_str());
 				else
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ACTIVE ], ( cnt + 1 ) );
-				
-				ErasePath( TRUE );
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_SQUAD_ACTIVE], (cnt + 1));
+
+				ErasePath(TRUE);
 				gfPlotNewMovement = TRUE;
 			}
 		}
 	}
 }
 
-void HandleSelectMercSlot( UINT8 ubPanelSlot, INT8 bCode )
+void HandleSelectMercSlot(UINT8 ubPanelSlot, INT8 bCode)
 {
 	UINT8 ubID;
 
-	if ( GetPlayerIDFromInterfaceTeamSlot( ubPanelSlot, &ubID ) )
+	if (GetPlayerIDFromInterfaceTeamSlot(ubPanelSlot, &ubID))
 	{
-		HandleLocateSelectMerc( ubID, bCode );
+		HandleLocateSelectMerc(ubID, bCode);
 
-		ErasePath( TRUE );
+		ErasePath(TRUE);
 		gfPlotNewMovement = TRUE;
 	}
 }
 
-void TestMeanWhile( INT32 iID )
+void TestMeanWhile(INT32 iID)
 {
 	MEANWHILE_DEFINITION MeanwhileDef;
 	INT32	cnt;
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 
 	MeanwhileDef.sSectorX = gModSettings.ubMeanwhilePalaceSectorX; //3
 	MeanwhileDef.sSectorY = gModSettings.ubMeanwhilePalaceSectorY; //16
@@ -6283,7 +4192,7 @@ void TestMeanWhile( INT32 iID )
 	MeanwhileDef.usTriggerEvent = 0;
 	MeanwhileDef.ubMeanwhileID = (UINT8)iID;
 
-	if ( iID == INTERROGATION )
+	if (iID == INTERROGATION)
 	{
 		UINT8 numPrisoners = 0;
 		MeanwhileDef.sSectorX = gModSettings.ubMeanwhileInterrogatePOWSectorX; //7
@@ -6291,15 +4200,15 @@ void TestMeanWhile( INT32 iID )
 
 		// Loop through our mercs and set gridnos once some found.....
 		// look for all mercs on the same team,
-		cnt = gTacticalStatus.Team[ gbPlayerNum ].bFirstID;
+		cnt = gTacticalStatus.Team[gbPlayerNum].bFirstID;
 
-		for ( pSoldier = MercPtrs[ cnt ]; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++,pSoldier++)
+		for (pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
 		{
 			// Are we a POW in this sector?
-			if ( pSoldier->bActive && pSoldier->bInSector )
+			if (pSoldier->bActive && pSoldier->bInSector)
 			{
 
-				ChangeSoldiersAssignment( pSoldier, ASSIGNMENT_POW );
+				ChangeSoldiersAssignment(pSoldier, ASSIGNMENT_POW);
 
 				pSoldier->sSectorX = gModSettings.ubMeanwhileInterrogatePOWSectorX; //7
 				pSoldier->sSectorY = gModSettings.ubMeanwhileInterrogatePOWSectorY; //14
@@ -6308,21 +4217,21 @@ void TestMeanWhile( INT32 iID )
 		}
 	}
 
-	ScheduleMeanwhileEvent( &MeanwhileDef, 10 );
+	ScheduleMeanwhileEvent(&MeanwhileDef, 10);
 }
 
-void EscapeUILock( )
+void EscapeUILock()
 {
 	//UNLOCK UI
-	UnSetUIBusy( (UINT8)gusSelectedSoldier );
+	UnSetUIBusy((UINT8)gusSelectedSoldier);
 
 	// Decrease global busy	counter...
 	gTacticalStatus.ubAttackBusyCount = 0;
 #ifdef DEBUG_ATTACKBUSY
-	OutputDebugString( "Resetting attack busy due to escape of UI lock.\n");
+	OutputDebugString("Resetting attack busy due to escape of UI lock.\n");
 #endif
 	guiPendingOverrideEvent = LU_ENDUILOCK;
-	UIHandleLUIEndLock( NULL );
+	UIHandleLUIEndLock(NULL);
 }
 
 #ifdef JA2BETAVERSION
@@ -6331,7 +4240,7 @@ void ToggleMapEdgepoints()
 {
 #ifdef JA2EDITOR
 	static BOOLEAN fToggleEdgepointDisplay = FALSE;
-	if( fToggleEdgepointDisplay ^= TRUE )
+	if (fToggleEdgepointDisplay ^= TRUE)
 	{ //Show edgepoints
 		ShowMapEdgepoints();
 	}
@@ -6339,7 +4248,7 @@ void ToggleMapEdgepoints()
 	{ //Hide edgepoints
 		HideMapEdgepoints();
 	}
-	SetRenderFlags( RENDER_FLAG_FULL );
+	SetRenderFlags(RENDER_FLAG_FULL);
 #endif
 }
 #endif
@@ -6348,45 +4257,45 @@ void ToggleMapEdgepoints()
 BOOLEAN gfMercsNeverQuit = FALSE;
 void ToggleMercsNeverQuit()
 {
-	if( gfMercsNeverQuit )
+	if (gfMercsNeverQuit)
 	{
 		gfMercsNeverQuit = FALSE;
-		ScreenMsg( FONT_RED, MSG_BETAVERSION, L"Merc contract expiring enabled." );
+		ScreenMsg(FONT_RED, MSG_BETAVERSION, L"Merc contract expiring enabled.");
 	}
 	else
 	{
 		gfMercsNeverQuit ^= TRUE;
-		ScreenMsg( FONT_RED, MSG_BETAVERSION, L"Merc contract expiring disabled." );
+		ScreenMsg(FONT_RED, MSG_BETAVERSION, L"Merc contract expiring disabled.");
 	}
 }
 #endif
 
 // silversurfer: This function handles switching between prone, crouching and standing stance. Running is handled in function HandleTBSoldierRun().
-void HandleStanceChangeFromUIKeys( UINT8 ubAnimHeight )
+void HandleStanceChangeFromUIKeys(UINT8 ubAnimHeight)
 {
 	// If we have multiple guys selected, make all change stance!
-	SOLDIERTYPE *		pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32						cnt;
 
-	if ( gTacticalStatus.fAtLeastOneGuyOnMultiSelect && !( gTacticalStatus.uiFlags & INCOMBAT ) )
+	if (gTacticalStatus.fAtLeastOneGuyOnMultiSelect && !(gTacticalStatus.uiFlags & INCOMBAT))
 	{
 		// OK, loop through all guys who are 'multi-selected' and
 		// check if our currently selected guy is amoung the
 		// lucky few.. if not, change to a guy who is...
-		cnt = gTacticalStatus.Team[ gbPlayerNum ].bFirstID;
-		for ( pSoldier = MercPtrs[ cnt ]; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++, pSoldier++ )
+		cnt = gTacticalStatus.Team[gbPlayerNum].bFirstID;
+		for (pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
 		{
-			if ( pSoldier->bActive && pSoldier->bInSector )
+			if (pSoldier->bActive && pSoldier->bInSector)
 			{
-				if ( pSoldier->flags.uiStatusFlags & SOLDIER_MULTI_SELECTED )
+				if (pSoldier->flags.uiStatusFlags & SOLDIER_MULTI_SELECTED)
 				{
 					// silversurfer: If we decide to stand up or press "s" again while we are standing we should reset movement to walk mode.
 					// If we want to run we have to press "r" which is handled elsewhere.
-					if ( ubAnimHeight == ANIM_STAND )
+					if (ubAnimHeight == ANIM_STAND)
 					{
-						if ( pSoldier->usUIMovementMode != WALKING && pSoldier->usUIMovementMode != RUNNING && pSoldier->usUIMovementMode != WALKING_WEAPON_RDY && pSoldier->usUIMovementMode != WALKING_DUAL_RDY && pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY )
+						if (pSoldier->usUIMovementMode != WALKING && pSoldier->usUIMovementMode != RUNNING && pSoldier->usUIMovementMode != WALKING_WEAPON_RDY && pSoldier->usUIMovementMode != WALKING_DUAL_RDY && pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY)
 						{
-							UIHandleSoldierStanceChange( pSoldier->ubID, ANIM_STAND );
+							UIHandleSoldierStanceChange(pSoldier->ubID, ANIM_STAND);
 							pSoldier->flags.fUIMovementFast = 0;
 						}
 						else
@@ -6397,23 +4306,23 @@ void HandleStanceChangeFromUIKeys( UINT8 ubAnimHeight )
 						}
 					}
 					else
-						UIHandleSoldierStanceChange( pSoldier->ubID, ubAnimHeight );
+						UIHandleSoldierStanceChange(pSoldier->ubID, ubAnimHeight);
 				}
 			}
 		}
 	}
 	else
 	{
-		if( gusSelectedSoldier != NOBODY )
+		if (gusSelectedSoldier != NOBODY)
 		{
-			pSoldier = MercPtrs[ (UINT8)gusSelectedSoldier ];
+			pSoldier = MercPtrs[(UINT8)gusSelectedSoldier];
 			// silversurfer: If we decide to stand up or press "s" again while we are standing we should reset movement to walk mode.
 			// If we want to run we have to press "r" which is handled elsewhere.
-			if ( ubAnimHeight == ANIM_STAND )
+			if (ubAnimHeight == ANIM_STAND)
 			{
-				if ( pSoldier->usUIMovementMode != WALKING && pSoldier->usUIMovementMode != RUNNING && pSoldier->usUIMovementMode != WALKING_WEAPON_RDY && pSoldier->usUIMovementMode != WALKING_DUAL_RDY && pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY )
+				if (pSoldier->usUIMovementMode != WALKING && pSoldier->usUIMovementMode != RUNNING && pSoldier->usUIMovementMode != WALKING_WEAPON_RDY && pSoldier->usUIMovementMode != WALKING_DUAL_RDY && pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY)
 				{
-					UIHandleSoldierStanceChange( pSoldier->ubID, ANIM_STAND );
+					UIHandleSoldierStanceChange(pSoldier->ubID, ANIM_STAND);
 					pSoldier->flags.fUIMovementFast = 0;
 				}
 				else
@@ -6446,109 +4355,109 @@ void HandleStanceChangeFromUIKeys( UINT8 ubAnimHeight )
 				else
 				{
 					UIHandleSoldierStanceChange(pSoldier->ubID, ubAnimHeight);
-				}				
+				}
 			}
 		}
 	}
 }
 
-void ToggleStealthMode( SOLDIERTYPE *pSoldier )
+void ToggleStealthMode(SOLDIERTYPE* pSoldier)
 {
 	// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-	if ( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ giSMStealthButton ]->uiFlags & BUTTON_ENABLED ) )
-	{	
-		if( pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE )
+	if ((gsCurInterfacePanel != SM_PANEL) || (ButtonList[giSMStealthButton]->uiFlags & BUTTON_ENABLED))
+	{
+		if (pSoldier->flags.uiStatusFlags & SOLDIER_VEHICLE)
 		{
 			return;
 		}
 
 		// ATE: Toggle stealth
-		if ( gpSMCurrentMerc != NULL && pSoldier->ubID == gpSMCurrentMerc->ubID )
+		if (gpSMCurrentMerc != NULL && pSoldier->ubID == gpSMCurrentMerc->ubID)
 		{
 			gfUIStanceDifferent = TRUE;
 		}
 
-		pSoldier->bStealthMode = ! pSoldier->bStealthMode;
-		gfPlotNewMovement	= TRUE;
+		pSoldier->bStealthMode = !pSoldier->bStealthMode;
+		gfPlotNewMovement = TRUE;
 		fInterfacePanelDirty = DIRTYLEVEL2;
 
-		if ( pSoldier->bStealthMode )
+		if (pSoldier->bStealthMode)
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_MERC_ON_STEALTHMODE ], pSoldier->GetName() );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_MERC_ON_STEALTHMODE], pSoldier->GetName());
 		}
 		else
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_MERC_OFF_STEALTHMODE ], pSoldier->GetName() );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_MERC_OFF_STEALTHMODE], pSoldier->GetName());
 		}
 	}
 }
 
 
-void HandleStealthChangeFromUIKeys(	)
+void HandleStealthChangeFromUIKeys()
 {
 	// If we have multiple guys selected, make all change stance!
-	SOLDIERTYPE *		pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32						cnt;
 
-	if ( gTacticalStatus.fAtLeastOneGuyOnMultiSelect && !( gTacticalStatus.uiFlags & INCOMBAT ) )
+	if (gTacticalStatus.fAtLeastOneGuyOnMultiSelect && !(gTacticalStatus.uiFlags & INCOMBAT))
 	{
 		// OK, loop through all guys who are 'multi-selected' and
 		// check if our currently selected guy is amoung the
 		// lucky few.. if not, change to a guy who is...
-		cnt = gTacticalStatus.Team[ gbPlayerNum ].bFirstID;
-		for ( pSoldier = MercPtrs[ cnt ]; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++, pSoldier++ )
+		cnt = gTacticalStatus.Team[gbPlayerNum].bFirstID;
+		for (pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
 		{
-			if ( pSoldier->bActive && !AM_A_ROBOT( pSoldier ) && pSoldier->bInSector )
+			if (pSoldier->bActive && !AM_A_ROBOT(pSoldier) && pSoldier->bInSector)
 			{
-				if ( pSoldier->flags.uiStatusFlags & SOLDIER_MULTI_SELECTED )
+				if (pSoldier->flags.uiStatusFlags & SOLDIER_MULTI_SELECTED)
 				{
-					ToggleStealthMode( pSoldier );
+					ToggleStealthMode(pSoldier);
 				}
 			}
 		}
 	}
 	else
 	{
-		if( gusSelectedSoldier != NOBODY )
+		if (gusSelectedSoldier != NOBODY)
 		{
-			if ( !AM_A_ROBOT( MercPtrs[ gusSelectedSoldier ] ) )
+			if (!AM_A_ROBOT(MercPtrs[gusSelectedSoldier]))
 			{
-				ToggleStealthMode( MercPtrs[ gusSelectedSoldier ] );
+				ToggleStealthMode(MercPtrs[gusSelectedSoldier]);
 			}
 		}
 	}
 }
 
-void PopupAssignmentMenuInTactical( SOLDIERTYPE *pSoldier )
+void PopupAssignmentMenuInTactical(SOLDIERTYPE* pSoldier)
 {
 	// do something
 	fShowAssignmentMenu = TRUE;
-	CreateDestroyAssignmentPopUpBoxes( );
-	SetTacticalPopUpAssignmentBoxXY( );
-	DetermineBoxPositions( );
-	DetermineWhichAssignmentMenusCanBeShown( );
+	CreateDestroyAssignmentPopUpBoxes();
+	SetTacticalPopUpAssignmentBoxXY();
+	DetermineBoxPositions();
+	DetermineWhichAssignmentMenusCanBeShown();
 	fFirstClickInAssignmentScreenMask = TRUE;
 	gfIgnoreScrolling = TRUE;
 }
 
 //lal
-void PopupMilitiaControlMenu( SOLDIERTYPE *pSoldier )
+void PopupMilitiaControlMenu(SOLDIERTYPE* pSoldier)
 {
 	// do something
 	fShowMilitiaControlMenu = TRUE;
-	CreateDestroyMilitiaControlPopUpBoxes( );
-	SetTacticalPopUpMilitiaControlBoxXY( pSoldier );
+	CreateDestroyMilitiaControlPopUpBoxes();
+	SetTacticalPopUpMilitiaControlBoxXY(pSoldier);
 	DetermineMilitiaControlBoxPositions();
-	DetermineWhichMilitiaControlMenusCanBeShown( );
+	DetermineWhichMilitiaControlMenusCanBeShown();
 	fFirstClickInMilitiaControlScreenMask = TRUE;
 	gfIgnoreScrolling = TRUE;
 }
 
-INT32 PickPocket(MERCPROFILESTRUCT *pProfile, UINT8 ppStart, UINT8 ppStop, UINT16 usItem, UINT8 iNumber, UINT8 * cap);
+INT32 PickPocket(MERCPROFILESTRUCT* pProfile, UINT8 ppStart, UINT8 ppStop, UINT16 usItem, UINT8 iNumber, UINT8* cap);
 
-bool BadGoggles(SOLDIERTYPE *pTeamSoldier)
+bool BadGoggles(SOLDIERTYPE* pTeamSoldier)
 {
-    // WDS - Smart goggle switching
+	// WDS - Smart goggle switching
 	// NOTE: Investigate using GetItemVisionRangeBonus from Items.cpp???
 	if (!gGameExternalOptions.smartGoggleSwitch)
 		return false;
@@ -6559,26 +4468,26 @@ bool BadGoggles(SOLDIERTYPE *pTeamSoldier)
 		for (int headSlot = HEAD1POS; headSlot <= HEAD2POS; ++headSlot)
 		{
 			// check if we are below ground
-			if ( pTeamSoldier->bSectorZ > 0 )
+			if (pTeamSoldier->bSectorZ > 0)
 			{
 				// we don't want a cave vision penalty
-				if ( Item[pTeamSoldier->inv[headSlot].usItem].cavevisionrangebonus < 0 )
+				if (Item[pTeamSoldier->inv[headSlot].usItem].cavevisionrangebonus < 0)
 					return true;
 			}
-			
+
 			// if we are above ground
 			else
 			{
 				// at night we don't want a night vision penalty
-				if ( NightTime() )
+				if (NightTime())
 				{
-					if ( Item[pTeamSoldier->inv[headSlot].usItem].nightvisionrangebonus < 0 )
+					if (Item[pTeamSoldier->inv[headSlot].usItem].nightvisionrangebonus < 0)
 						return true;
 				}
 				// at daytime we don't want a day vision penalty
 				// also if we have a bright light penalty make sure that is doesn't exceed the day vision bonus
-				else if ( Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus < 0 || 
-					( Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus + Item[pTeamSoldier->inv[headSlot].usItem].brightlightvisionrangebonus ) < 0 )
+				else if (Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus < 0 ||
+					(Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus + Item[pTeamSoldier->inv[headSlot].usItem].brightlightvisionrangebonus) < 0)
 					return true;
 			}
 		}
@@ -6586,45 +4495,45 @@ bool BadGoggles(SOLDIERTYPE *pTeamSoldier)
 	return false;
 }
 
-void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
+void SwapGoggles(SOLDIERTYPE* pTeamSoldier)
 {
-    // WDS - Smart goggle switching
+	// WDS - Smart goggle switching
 	// NOTE: Investigate using GetItemVisionRangeBonus from Items.cpp???
 	// Look through the head slots and find any sort of goggle or an empty spot
-	OBJECTTYPE * pGoggles = 0;
+	OBJECTTYPE* pGoggles = 0;
 	int slotToUse = -1;
 	INT8 swapSlot = -1;
 	BOOLEAN isAttach = FALSE;
 
-	for (int headSlot = HEAD1POS; headSlot <= HEAD2POS; ++headSlot) 
+	for (int headSlot = HEAD1POS; headSlot <= HEAD2POS; ++headSlot)
 	{
-		if ( (Item[pTeamSoldier->inv[headSlot].usItem].brightlightvisionrangebonus != 0) ) 
+		if ((Item[pTeamSoldier->inv[headSlot].usItem].brightlightvisionrangebonus != 0))
 		{
 			slotToUse = headSlot;
 			break;
-		} 
-		if ( (Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus != 0) ) 
+		}
+		if ((Item[pTeamSoldier->inv[headSlot].usItem].dayvisionrangebonus != 0))
 		{
 			slotToUse = headSlot;
 			break;
-		} 
-		else if ( (Item[pTeamSoldier->inv[headSlot].usItem].nightvisionrangebonus != 0) ) 
+		}
+		else if ((Item[pTeamSoldier->inv[headSlot].usItem].nightvisionrangebonus != 0))
 		{
 			slotToUse = headSlot;
 			break;
-		} 
-		else if ( (Item[pTeamSoldier->inv[headSlot].usItem].cavevisionrangebonus != 0) ) 
+		}
+		else if ((Item[pTeamSoldier->inv[headSlot].usItem].cavevisionrangebonus != 0))
 		{
 			slotToUse = headSlot;
 			break;
-		} 
-		else if (pTeamSoldier->inv[headSlot].exists() == false) 
+		}
+		else if (pTeamSoldier->inv[headSlot].exists() == false)
 		{
 			slotToUse = headSlot;
 		}
 	}
-	
-	if (slotToUse == -1) 
+
+	if (slotToUse == -1)
 	{
 		// No place to swap in a new goggle, give up
 		return;
@@ -6632,63 +4541,63 @@ void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
 
 	// Find the best goggles for the current time of day anywhere in inventory
 	// silversurfer: also check if underground
-	if (DayTime() && pTeamSoldier->bSectorZ == 0) 
+	if (DayTime() && pTeamSoldier->bSectorZ == 0)
 	{
-		pGoggles = FindSunGogglesInInv( pTeamSoldier, &swapSlot, &isAttach, TRUE );
-	} 
-	else 
+		pGoggles = FindSunGogglesInInv(pTeamSoldier, &swapSlot, &isAttach, TRUE);
+	}
+	else
 	{
-		pGoggles = FindNightGogglesInInv( pTeamSoldier, &swapSlot, &isAttach, TRUE );
+		pGoggles = FindNightGogglesInInv(pTeamSoldier, &swapSlot, &isAttach, TRUE);
 	}
 
 	if (pGoggles)
 	{
 		// We need to check that pGoggles is compatible with whatever is in the other face slot
-		int otherFaceSlot = (slotToUse == HEAD1POS?HEAD2POS:HEAD1POS);
-		if(pTeamSoldier->inv[otherFaceSlot].exists() == true && !CompatibleFaceItem(pGoggles->usItem, pTeamSoldier->inv[otherFaceSlot].usItem))
+		int otherFaceSlot = (slotToUse == HEAD1POS ? HEAD2POS : HEAD1POS);
+		if (pTeamSoldier->inv[otherFaceSlot].exists() == true && !CompatibleFaceItem(pGoggles->usItem, pTeamSoldier->inv[otherFaceSlot].usItem))
 			pGoggles = NULL;
 	}
 
-	if (pGoggles) 
+	if (pGoggles)
 	{
 		// Now either swap or equip the best one that was found
-		if (pTeamSoldier->inv[slotToUse].exists()) 
+		if (pTeamSoldier->inv[slotToUse].exists())
 		{
-			if(CanItemFitInPosition(pTeamSoldier, &pTeamSoldier->inv[slotToUse], swapSlot, TRUE))
-				SwapObjs( pTeamSoldier, slotToUse, pGoggles, TRUE );
+			if (CanItemFitInPosition(pTeamSoldier, &pTeamSoldier->inv[slotToUse], swapSlot, TRUE))
+				SwapObjs(pTeamSoldier, slotToUse, pGoggles, TRUE);
 			else if (swapSlot == HELMETPOS)
 				SwapObjs(pTeamSoldier, slotToUse, pGoggles, TRUE);
-			else if((pTeamSoldier->inv[HELMETPOS].exists()== true && pTeamSoldier->inv[HELMETPOS].AttachObject(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE)) ||
+			else if ((pTeamSoldier->inv[HELMETPOS].exists() == true && pTeamSoldier->inv[HELMETPOS].AttachObject(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE)) ||
 				AutoPlaceObject(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE))
 				pGoggles->MoveThisObjectTo(pTeamSoldier->inv[slotToUse], 1, pTeamSoldier, slotToUse);
 			else
 			{
-				CHAR16	zTemp[ 100 ];
-				swprintf( zTemp, Message[ STR_CANNOT_ATTACH_ANY_SLOT ], ItemNames[ pTeamSoldier->inv[slotToUse].usItem ] );
-				ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, zTemp );
+				CHAR16	zTemp[100];
+				swprintf(zTemp, Message[STR_CANNOT_ATTACH_ANY_SLOT], ItemNames[pTeamSoldier->inv[slotToUse].usItem]);
+				ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, zTemp);
 			}
-		} 
-		else 
+		}
+		else
 		{
 			pGoggles->MoveThisObjectTo(pTeamSoldier->inv[slotToUse], 1, pTeamSoldier, slotToUse);
 		}
-	} 
-	else 
+	}
+	else
 	{
 		// No goggles to equip, should the current ones be unequiped?
-		if (pTeamSoldier->inv[slotToUse].exists()) 
+		if (pTeamSoldier->inv[slotToUse].exists())
 		{
 			if ((DayTime() && Item[pTeamSoldier->inv[slotToUse].usItem].nightvisionrangebonus > 0 && pTeamSoldier->bSectorZ == 0) ||
-			    ((!DayTime() || pTeamSoldier->bSectorZ > 0) && (Item[pTeamSoldier->inv[slotToUse].usItem].brightlightvisionrangebonus > 0))) 
+				((!DayTime() || pTeamSoldier->bSectorZ > 0) && (Item[pTeamSoldier->inv[slotToUse].usItem].brightlightvisionrangebonus > 0)))
 			{
 				// It's day and we're wearing night goggles (or vice-versa), find a place to stash them
-				if (pTeamSoldier->inv[ HELMETPOS ].exists()) 
+				if (pTeamSoldier->inv[HELMETPOS].exists())
 				{
-					if (pTeamSoldier->inv[ HELMETPOS ].AttachObject( NULL, &pTeamSoldier->inv[slotToUse] )) 
+					if (pTeamSoldier->inv[HELMETPOS].AttachObject(NULL, &pTeamSoldier->inv[slotToUse]))
 					{
 						// It worked!
-					} 
-					else 
+					}
+					else
 					{
 						/* //If we're here we already know we can't attach, don't we?
 						// Try dumping it anywhere in inventory because it doesn't attach to the helmet
@@ -6701,11 +4610,11 @@ void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
 						*/
 						//{
 							// Remove sungoggles.
-							PlaceInAnyPocket(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE);
+						PlaceInAnyPocket(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE);
 						//}
 					}
-				} 
-				else 
+				}
+				else
 				{
 					/* //again useless?
 					// Try dumping it anywhere in inventory given there's no helemt
@@ -6718,7 +4627,7 @@ void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
 					*/
 					//{
 						// Remove sungoggles.
-						PlaceInAnyPocket(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE);
+					PlaceInAnyPocket(pTeamSoldier, &pTeamSoldier->inv[slotToUse], FALSE);
 					//}
 				}
 			}
@@ -6728,8 +4637,8 @@ void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
 	fCharacterInfoPanelDirty = TRUE;
 	fTeamPanelDirty = TRUE;
 	fInterfacePanelDirty = DIRTYLEVEL2;
-	pTeamSoldier->DeleteSoldierLight( );
-	pTeamSoldier->PositionSoldierLight( );
+	pTeamSoldier->DeleteSoldierLight();
+	pTeamSoldier->PositionSoldierLight();
 }
 
 // HEADROCK HAM B2.8: This function does the same as SwapGoggles, with a twist. It changes all worn goggles in the
@@ -6737,13 +4646,13 @@ void SwapGoggles(SOLDIERTYPE *pTeamSoldier)
 // before. The check is based on the headgear of the first character in the group (he'll switch, and everyone else
 // will switch to match him.
 
-void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision)
+void SwapGogglesUniformly(SOLDIERTYPE* pTeamSoldier, BOOLEAN fToNightVision)
 {
 	/* CHRISL - Adjusted this option to allow the game to search through Helmet attachments
 		as well as inventory positions.
 	*/
-	OBJECTTYPE * pObj;
-	OBJECTTYPE * pGoggles = NULL;
+	OBJECTTYPE* pObj;
+	OBJECTTYPE* pGoggles = NULL;
 	INT8		bSlot1;
 	int			bestBonus;
 	bool		itemFound = false;
@@ -6751,52 +4660,52 @@ void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision)
 	BOOLEAN isAttach = FALSE;
 
 	//CHRISL: Before doing anything, we should look at both head slots to see if either slot has some sort of goggles
-	for(bSlot1 = HEAD1POS; bSlot1 <= HEAD2POS; bSlot1++)
+	for (bSlot1 = HEAD1POS; bSlot1 <= HEAD2POS; bSlot1++)
 	{
-		if(Item[pTeamSoldier->inv[bSlot1].usItem].brightlightvisionrangebonus > 0)
+		if (Item[pTeamSoldier->inv[bSlot1].usItem].brightlightvisionrangebonus > 0)
 			itemFound = true;
-		if(Item[pTeamSoldier->inv[bSlot1].usItem].nightvisionrangebonus > 0)
+		if (Item[pTeamSoldier->inv[bSlot1].usItem].nightvisionrangebonus > 0)
 			itemFound = true;
 	}
 	//2 head slots
 	for (bSlot1 = HEAD1POS; bSlot1 <= HEAD2POS; bSlot1++)
 	{
 		// if wearing sungoggles
-		if ( Item[pTeamSoldier->inv[bSlot1].usItem].brightlightvisionrangebonus > 0	)
+		if (Item[pTeamSoldier->inv[bSlot1].usItem].brightlightvisionrangebonus > 0)
 		{
 			if (fToNightVision == TRUE) // Only if we want to switch to nightvision!
 			{
 				itemFound = true;
 				bestBonus = 0;
-				pGoggles = FindNightGogglesInInv( pTeamSoldier, &swapSlot, &isAttach );
+				pGoggles = FindNightGogglesInInv(pTeamSoldier, &swapSlot, &isAttach);
 				//search for better goggles on the helmet
 				if (pGoggles)
 				{
 					bestBonus = Item[pGoggles->usItem].nightvisionrangebonus;
 				}
 				//search helmet and vest
-				for(UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
+				for (UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
 				{
 					pObj = &(pTeamSoldier->inv[gear]);
 					for (attachmentList::iterator iter = (*pObj)[0]->attachments.begin(); iter != (*pObj)[0]->attachments.end(); ++iter)
 					{
-						if ( Item[ iter->usItem ].nightvisionrangebonus > bestBonus && Item[ iter->usItem ].usItemClass == IC_FACE && iter->exists())
+						if (Item[iter->usItem].nightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE && iter->exists())
 						{
 							pGoggles = &(*iter);
-							bestBonus = Item[ iter->usItem ].nightvisionrangebonus;
+							bestBonus = Item[iter->usItem].nightvisionrangebonus;
 						}
 					}
 				}
-				if ( pGoggles )
+				if (pGoggles)
 				{
-					SwapObjs( pTeamSoldier, bSlot1, pGoggles, TRUE );
+					SwapObjs(pTeamSoldier, bSlot1, pGoggles, TRUE);
 					break;
 				}
 				else if (Item[pTeamSoldier->inv[bSlot1].usItem].nightvisionrangebonus <= 0)
 				{	//WarmSteel - just try and see if it works
 					//if (NASValidAttachment( pTeamSoldier->inv[bSlot1].usItem, pTeamSoldier->inv[HELMETPOS].usItem ) &&
 					//	pTeamSoldier->inv[bSlot1][0]->attachments.size() < MAX_ATTACHMENTS)
-					if ( pTeamSoldier->inv[HELMETPOS].AttachObject( pTeamSoldier, &pTeamSoldier->inv[bSlot1], FALSE, 0 ) )
+					if (pTeamSoldier->inv[HELMETPOS].AttachObject(pTeamSoldier, &pTeamSoldier->inv[bSlot1], FALSE, 0))
 					{
 						break;
 					}
@@ -6810,41 +4719,41 @@ void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision)
 			}
 		}
 		// else if wearing NVGs
-		else if(Item[pTeamSoldier->inv[bSlot1].usItem].nightvisionrangebonus > 0)
+		else if (Item[pTeamSoldier->inv[bSlot1].usItem].nightvisionrangebonus > 0)
 		{
 			if (fToNightVision == FALSE) // Only if we want to switch to dayvision!
 			{
 				itemFound = true;
 				bestBonus = 0;
-				pGoggles = FindSunGogglesInInv( pTeamSoldier, &swapSlot, &isAttach );
+				pGoggles = FindSunGogglesInInv(pTeamSoldier, &swapSlot, &isAttach);
 				//search for better goggles on the helmet
 				if (pGoggles)
 				{
 					bestBonus = Item[pGoggles->usItem].brightlightvisionrangebonus;
 				}
 				//search helmet and vest
-				for(UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
+				for (UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
 				{
 					pObj = &(pTeamSoldier->inv[gear]);
 					for (attachmentList::iterator iter = (*pObj)[0]->attachments.begin(); iter != (*pObj)[0]->attachments.end(); ++iter)
 					{
-						if ( Item[ iter->usItem ].brightlightvisionrangebonus > bestBonus && Item[ iter->usItem ].usItemClass == IC_FACE && iter->exists())
+						if (Item[iter->usItem].brightlightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE && iter->exists())
 						{
 							pGoggles = &(*iter);
-							bestBonus = Item[ iter->usItem ].brightlightvisionrangebonus;
+							bestBonus = Item[iter->usItem].brightlightvisionrangebonus;
 						}
 					}
 				}
-				if ( pGoggles )
+				if (pGoggles)
 				{
-					SwapObjs( pTeamSoldier, bSlot1, pGoggles, TRUE );
+					SwapObjs(pTeamSoldier, bSlot1, pGoggles, TRUE);
 					break;
 				}
 				else if (Item[pTeamSoldier->inv[bSlot1].usItem].brightlightvisionrangebonus <= 0)
 				{	//WarmSteel - try
 					//if (NASValidAttachment( pTeamSoldier->inv[bSlot1].usItem, pTeamSoldier->inv[HELMETPOS].usItem ) &&
 					//	pTeamSoldier->inv[bSlot1][0]->attachments.size() < MAX_ATTACHMENTS)
-					if ( pTeamSoldier->inv[HELMETPOS].AttachObject( pTeamSoldier, &pTeamSoldier->inv[bSlot1], FALSE, 0 ) )
+					if (pTeamSoldier->inv[HELMETPOS].AttachObject(pTeamSoldier, &pTeamSoldier->inv[bSlot1], FALSE, 0))
 					{
 						break;
 					}
@@ -6858,44 +4767,44 @@ void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision)
 			}
 		}
 		// else if not wearing anything and no goggles found
-		else if(itemFound == false && pTeamSoldier->inv[bSlot1].exists() == false)
+		else if (itemFound == false && pTeamSoldier->inv[bSlot1].exists() == false)
 		{
 			bestBonus = 0;
 			// search helmet and vest for goggles of some kind
-			for(UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
+			for (UINT8 gear = HELMETPOS; gear <= VESTPOS; gear++)
 			{
 				pObj = &(pTeamSoldier->inv[gear]);
-				for(attachmentList::iterator iter = (*pObj)[0]->attachments.begin(); iter != (*pObj)[0]->attachments.end(); ++iter)
+				for (attachmentList::iterator iter = (*pObj)[0]->attachments.begin(); iter != (*pObj)[0]->attachments.end(); ++iter)
 				{
-					if(iter->exists()){
-						if(fToNightVision == FALSE && Item[iter->usItem].brightlightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE)
+					if (iter->exists()) {
+						if (fToNightVision == FALSE && Item[iter->usItem].brightlightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE)
 						{
 							pGoggles = &(*iter);
 							bestBonus = Item[iter->usItem].brightlightvisionrangebonus;
 						}
-						else if(fToNightVision == TRUE && Item[iter->usItem].nightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE)
+						else if (fToNightVision == TRUE && Item[iter->usItem].nightvisionrangebonus > bestBonus && Item[iter->usItem].usItemClass == IC_FACE)
 						{
 							pGoggles = &(*iter);
 							bestBonus = Item[iter->usItem].nightvisionrangebonus;
 						}
 					}
 				}
-				if(pGoggles)
+				if (pGoggles)
 				{
 					pGoggles->MoveThisObjectTo(pTeamSoldier->inv[bSlot1], 1, pTeamSoldier, bSlot1);
 					pObj->RemoveAttachment(pGoggles);
 					break;
 				}
 			}
-			if(pTeamSoldier->inv[bSlot1].exists() == false)
+			if (pTeamSoldier->inv[bSlot1].exists() == false)
 			{
-				if(fToNightVision == FALSE)
-					pGoggles = FindSunGogglesInInv( pTeamSoldier, &swapSlot, &isAttach );
+				if (fToNightVision == FALSE)
+					pGoggles = FindSunGogglesInInv(pTeamSoldier, &swapSlot, &isAttach);
 				else
-					pGoggles = FindNightGogglesInInv( pTeamSoldier, &swapSlot, &isAttach );
-				if(pGoggles)
+					pGoggles = FindNightGogglesInInv(pTeamSoldier, &swapSlot, &isAttach);
+				if (pGoggles)
 				{
-					SwapObjs( pTeamSoldier, bSlot1, pGoggles, TRUE );
+					SwapObjs(pTeamSoldier, bSlot1, pGoggles, TRUE);
 					break;
 				}
 			}
@@ -6908,33 +4817,33 @@ void SwapGogglesUniformly(SOLDIERTYPE *pTeamSoldier, BOOLEAN fToNightVision)
 	fCharacterInfoPanelDirty = TRUE;
 	fTeamPanelDirty = TRUE;
 	fInterfacePanelDirty = DIRTYLEVEL2;
-	pTeamSoldier->DeleteSoldierLight( );
-	pTeamSoldier->PositionSoldierLight( );
+	pTeamSoldier->DeleteSoldierLight();
+	pTeamSoldier->PositionSoldierLight();
 }
 
 void SeperateItems()
 {
-	if ( !(gTacticalStatus.fEnemyInSector) )
+	if (!(gTacticalStatus.fEnemyInSector))
 	{
-		HandleAllReachAbleItemsInTheSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
-		for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; uiLoop++ ) //for all items in sector
+		HandleAllReachAbleItemsInTheSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
+		for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; uiLoop++) //for all items in sector
 		{
-			if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) )//item exists, is reachable, is visible and is not trapped
+			if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB))//item exists, is reachable, is visible and is not trapped
 			{
-				for (int x = 0; x < gWorldItems[ uiLoop ].object.ubNumberOfObjects; ++x) {
-					if (( Item[ gWorldItems[ uiLoop ].object.usItem ].usItemClass == IC_GUN ) && (gGameExternalOptions.gfShiftFUnloadWeapons == TRUE) )//item is a gun and unloading is allowed
+				for (int x = 0; x < gWorldItems[uiLoop].object.ubNumberOfObjects; ++x) {
+					if ((Item[gWorldItems[uiLoop].object.usItem].usItemClass == IC_GUN) && (gGameExternalOptions.gfShiftFUnloadWeapons == TRUE))//item is a gun and unloading is allowed
 					{
 						//Remove magazine
-						if ( (gWorldItems[ uiLoop ].object[x]->data.gun.usGunAmmoItem != NONE) && (gWorldItems[ uiLoop ].object[x]->data.gun.ubGunShotsLeft > 0) )
+						if ((gWorldItems[uiLoop].object[x]->data.gun.usGunAmmoItem != NONE) && (gWorldItems[uiLoop].object[x]->data.gun.ubGunShotsLeft > 0))
 						{
-							CreateAmmo(gWorldItems[ uiLoop ].object[x]->data.gun.usGunAmmoItem, &gTempObject, gWorldItems[ uiLoop ].object[x]->data.gun.ubGunShotsLeft);
-							gWorldItems[ uiLoop ].object[x]->data.gun.ubGunShotsLeft = 0;
-							gWorldItems[ uiLoop ].object[x]->data.gun.usGunAmmoItem = NONE;
+							CreateAmmo(gWorldItems[uiLoop].object[x]->data.gun.usGunAmmoItem, &gTempObject, gWorldItems[uiLoop].object[x]->data.gun.ubGunShotsLeft);
+							gWorldItems[uiLoop].object[x]->data.gun.ubGunShotsLeft = 0;
+							gWorldItems[uiLoop].object[x]->data.gun.usGunAmmoItem = NONE;
 							// HEADROCK HAM 3.5: Clear ammo type
-							gWorldItems[ uiLoop ].object[x]->data.gun.ubGunAmmoType = NONE;
+							gWorldItems[uiLoop].object[x]->data.gun.ubGunAmmoType = NONE;
 
 							// put it on the ground
-							AddItemToPool( gWorldItems[ uiLoop ].sGridNo, &gTempObject, 1, gWorldItems[ uiLoop ].ubLevel, WORLD_ITEM_REACHABLE , -1 );
+							AddItemToPool(gWorldItems[uiLoop].sGridNo, &gTempObject, 1, gWorldItems[uiLoop].ubLevel, WORLD_ITEM_REACHABLE, -1);
 						}
 					}
 
@@ -6942,7 +4851,7 @@ void SeperateItems()
 					//WarmSteel - This causes a crash when unloading attachments, then sorting, then selling all items in the sector in the map screen.
 					//It is likely to be caused here because when i accidentally broke this part the bug didn't occur.
 					//TODO : fix this.
-					if ( gGameExternalOptions.gfShiftFRemoveAttachments == TRUE )
+					if (gGameExternalOptions.gfShiftFRemoveAttachments == TRUE)
 					{
 						//CHRISL: We run into a problem here because GetFreeWorldItemIndex, which gets called 
 						//	from AddItemToPool, resets gWorldItems when it increases it's size.  This means
@@ -6957,226 +4866,225 @@ void SeperateItems()
 						// launchers before detaching the launchers (and their grenade slots) themselves.
 						// Since the size of the attachmentList remains constant under NAS but decrements by one
 						// under OAS, recheck the list size every iteration in order to calculate an rindex.
-						while((size = gWorldItems[uiLoop].object[x]->attachments.size()) != cnt)
+						while ((size = gWorldItems[uiLoop].object[x]->attachments.size()) != cnt)
 						{
 							gTempObject = *gWorldItems[uiLoop].object[x]->GetAttachmentAtIndex(size - 1 - cnt);
 
 							//WarmSteel - This actually still works with NAS, be it by accident
-							if (gWorldItems[ uiLoop ].object.RemoveAttachment(&gTempObject,0,x))
+							if (gWorldItems[uiLoop].object.RemoveAttachment(&gTempObject, 0, x))
 							{
-								AddItemToPool( gWorldItems[ uiLoop ].sGridNo, &gTempObject, 1, gWorldItems[ uiLoop ].ubLevel, WORLD_ITEM_REACHABLE , -1 );
-								ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ ATTACHMENT_REMOVED ] );
+								AddItemToPool(gWorldItems[uiLoop].sGridNo, &gTempObject, 1, gWorldItems[uiLoop].ubLevel, WORLD_ITEM_REACHABLE, -1);
+								ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ATTACHMENT_REMOVED]);
 							}
 							else
 							{
 								cnt++;
 							}
 
-							uiLoopCnt ++;
-							if(uiLoopCnt > 100)
+							uiLoopCnt++;
+							if (uiLoopCnt > 100)
 								break;
 						}
 					}
-					
+
 					// Bob: also empty out LBE items in sector inventory
 					if (gWorldItems[uiLoop].object.IsActiveLBE(x)) {
-						LBENODE * lbePtr = gWorldItems[uiLoop].object.GetLBEPointer(x);
+						LBENODE* lbePtr = gWorldItems[uiLoop].object.GetLBEPointer(x);
 
 						for (auto lbeInvIter = lbePtr->inv.begin(); lbeInvIter != lbePtr->inv.end(); lbeInvIter++) {
-							OBJECTTYPE * LBEStack = lbeInvIter._Ptr;
-							
+							OBJECTTYPE* LBEStack = lbeInvIter._Ptr;
+
 							if (LBEStack->usItem != 0 && LBEStack->exists()) {
 								AddItemToPool(gWorldItems[uiLoop].sGridNo, LBEStack, 1, gWorldItems[uiLoop].ubLevel, WORLD_ITEM_REACHABLE, -1);
 							}
 						}
 						DestroyLBE(&(gWorldItems[uiLoop].object), x);
 					}
-				
+
 				}
 			}
 		}
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11]);
 	}
 }
 
-void StackAndSort( BOOLEAN fRestrictToAmmo )
+void StackAndSort(BOOLEAN fRestrictToAmmo)
 {
-	if (! ( gTacticalStatus.fEnemyInSector ) )
+	if (!(gTacticalStatus.fEnemyInSector))
 	{
-		HandleAllReachAbleItemsInTheSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
+		HandleAllReachAbleItemsInTheSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
 
-		for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; uiLoop++ )
+		for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; uiLoop++)
 		{
-			if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) )//item exists, is reachable, is visible and is not trapped
+			if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB))//item exists, is reachable, is visible and is not trapped
 			{
 				//start by putting all identical items into one large pile regardless of stacking limits so we can merge them
 				WORLDITEM dummyItem = gWorldItems[uiLoop];
-				RemoveItemFromPool(gWorldItems[uiLoop].sGridNo,(uiLoop),gWorldItems[uiLoop].ubLevel);
+				RemoveItemFromPool(gWorldItems[uiLoop].sGridNo, (uiLoop), gWorldItems[uiLoop].ubLevel);
 				RemoveItemFromWorld(uiLoop);
-				for(UINT32 i = uiLoop+1; i < guiNumWorldItems; i++)
+				for (UINT32 i = uiLoop + 1; i < guiNumWorldItems; i++)
 				{
-					if(dummyItem.object.usItem == gWorldItems[i].object.usItem && gWorldItems[i].bVisible == TRUE && gWorldItems[i].fExists && (gWorldItems[i].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[i].usFlags & WORLD_ITEM_ARMED_BOMB))
+					if (dummyItem.object.usItem == gWorldItems[i].object.usItem && gWorldItems[i].bVisible == TRUE && gWorldItems[i].fExists && (gWorldItems[i].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[i].usFlags & WORLD_ITEM_ARMED_BOMB))
 					{
-						dummyItem.object.AddObjectsToStack(gWorldItems[i].object,-1,NULL,NUM_INV_SLOTS,MAX_OBJECTS_PER_SLOT,false);
-						if(gWorldItems[i].object.exists() == false && gWorldItems[i].fExists)
+						dummyItem.object.AddObjectsToStack(gWorldItems[i].object, -1, NULL, NUM_INV_SLOTS, MAX_OBJECTS_PER_SLOT, false);
+						if (gWorldItems[i].object.exists() == false && gWorldItems[i].fExists)
 						{
-							RemoveItemFromPool(gWorldItems[i].sGridNo,i,gWorldItems[i].ubLevel);
+							RemoveItemFromPool(gWorldItems[i].sGridNo, i, gWorldItems[i].ubLevel);
 							RemoveItemFromWorld(i);
 						}
 					}
 				}
 
 				//merge items in stack
-				if(fRestrictToAmmo == FALSE || Item[dummyItem.object.usItem].usItemClass == IC_AMMO)
+				if (fRestrictToAmmo == FALSE || Item[dummyItem.object.usItem].usItemClass == IC_AMMO)
 					CleanUpStack(&dummyItem.object, NULL);
 
 				//return item to world
 				AddItemToPool(dummyItem.sGridNo, &dummyItem.object, dummyItem.bVisible, dummyItem.ubLevel, dummyItem.usFlags, dummyItem.bRenderZHeightAboveLevel, dummyItem.soldierID);
 
 				//find out how many items can be put in a big slot
-				UINT8 ubSlotLimit = ItemSlotLimit( &gWorldItems[ uiLoop ].object, STACK_SIZE_LIMIT );
+				UINT8 ubSlotLimit = ItemSlotLimit(&gWorldItems[uiLoop].object, STACK_SIZE_LIMIT);
 
-/*				//if we still have some space
-				INT32 i = 0;
-				while ( gWorldItems[ uiLoop ].object.ubNumberOfObjects < ubSlotLimit )
-				{
-					i++;
-					//if the next item is the same
-					if ( gWorldItems[ uiLoop ].object.usItem == gWorldItems[ uiLoop + i ].object.usItem )
-					{
-						// Clean up ammo stacks prior to trying to merge them
-						if(fRestrictToAmmo == FALSE || Item[gWorldItems[uiLoop].object.usItem].usItemClass == IC_AMMO)
-						{
-							CleanUpStack(&gWorldItems[uiLoop].object, NULL);
-							CleanUpStack(&gWorldItems[uiLoop+i].object, NULL);
-						}
-						INT8 ubObjCount = ubSlotLimit - gWorldItems[ uiLoop ].object.ubNumberOfObjects;
-						INT8 bPointsToMove = __min( ubObjCount, gWorldItems[ uiLoop + i ].object.ubNumberOfObjects );
+				/*				//if we still have some space
+								INT32 i = 0;
+								while ( gWorldItems[ uiLoop ].object.ubNumberOfObjects < ubSlotLimit )
+								{
+									i++;
+									//if the next item is the same
+									if ( gWorldItems[ uiLoop ].object.usItem == gWorldItems[ uiLoop + i ].object.usItem )
+									{
+										// Clean up ammo stacks prior to trying to merge them
+										if(fRestrictToAmmo == FALSE || Item[gWorldItems[uiLoop].object.usItem].usItemClass == IC_AMMO)
+										{
+											CleanUpStack(&gWorldItems[uiLoop].object, NULL);
+											CleanUpStack(&gWorldItems[uiLoop+i].object, NULL);
+										}
+										INT8 ubObjCount = ubSlotLimit - gWorldItems[ uiLoop ].object.ubNumberOfObjects;
+										INT8 bPointsToMove = __min( ubObjCount, gWorldItems[ uiLoop + i ].object.ubNumberOfObjects );
 
-						gWorldItems[ uiLoop ].object.AddObjectsToStack( (gWorldItems[ uiLoop + i ].object), bPointsToMove);
-						if(fRestrictToAmmo == FALSE || Item[gWorldItems[uiLoop].object.usItem].usItemClass == IC_AMMO)
-							CleanUpStack(&gWorldItems[uiLoop].object, NULL);
-						//CHRISL: After adding the object to the stack, we need to delete the old object from
-						//	both gWorldItems and the ItemPool otherwise we cause a CTD.
-						if(gWorldItems[uiLoop+i].object.exists() == false && gWorldItems[ uiLoop ].fExists)
-						{
-							RemoveItemFromPool(gWorldItems[uiLoop+i].sGridNo,(uiLoop+i),gWorldItems[uiLoop+i].ubLevel);
-							RemoveItemFromWorld(uiLoop+i);
-						}
-					}
-					//CHRISL: by changing this to a condition, we can use this hotkey immediately after the
-					//	SHITFT+F hotkey.  Otherwise, if a stackable item ends up at the end of the inventory
-					//	list, we won't be able to add it to the initial stack.
-					else if(uiLoop+i == guiNumWorldItems)
-					{
-						break;
-					}
-				}*/
+										gWorldItems[ uiLoop ].object.AddObjectsToStack( (gWorldItems[ uiLoop + i ].object), bPointsToMove);
+										if(fRestrictToAmmo == FALSE || Item[gWorldItems[uiLoop].object.usItem].usItemClass == IC_AMMO)
+											CleanUpStack(&gWorldItems[uiLoop].object, NULL);
+										//CHRISL: After adding the object to the stack, we need to delete the old object from
+										//	both gWorldItems and the ItemPool otherwise we cause a CTD.
+										if(gWorldItems[uiLoop+i].object.exists() == false && gWorldItems[ uiLoop ].fExists)
+										{
+											RemoveItemFromPool(gWorldItems[uiLoop+i].sGridNo,(uiLoop+i),gWorldItems[uiLoop+i].ubLevel);
+											RemoveItemFromWorld(uiLoop+i);
+										}
+									}
+									//CHRISL: by changing this to a condition, we can use this hotkey immediately after the
+									//	SHITFT+F hotkey.  Otherwise, if a stackable item ends up at the end of the inventory
+									//	list, we won't be able to add it to the initial stack.
+									else if(uiLoop+i == guiNumWorldItems)
+									{
+										break;
+									}
+								}*/
 			}
 		}
-		NotifySoldiersToLookforItems( );
+		NotifySoldiersToLookforItems();
 		//HandleAllReachAbleItemsInTheSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
 	}
 }
 
 
-
-void	QueryTBMButton( UINT32 *puiNewEvent )
+void	QueryTBMButton(UINT32* puiNewEvent)
 {
 	INT32	sMapPos;
 
-		if (!GetMouseMapPos( &sMapPos ) )
-			return;
-		
-		if (gViewportRegion.ButtonState & MSYS_MIDDLE_BUTTON) // MID MOUSE BUTTON
+	if (!GetMouseMapPos(&sMapPos))
+		return;
+
+	if (gViewportRegion.ButtonState & MSYS_MIDDLE_BUTTON) // MID MOUSE BUTTON
+	{
+		if (!fMiddleButtonDown)
 		{
-			if ( !fMiddleButtonDown )
-			{
-				fMiddleButtonDown = TRUE;
-				//RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
-			}
-		}
-		else if ( fMiddleButtonDown )
-		{
-		if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
-			{
-			if(gGameExternalOptions.bAlternateMouseCommands)
-				HandleAltMouseTBMButton( puiNewEvent );
-			else
-				HandleMouseTBMButton( puiNewEvent );
-				}
-			fMiddleButtonDown = FALSE;
-			// Reset counter
+			fMiddleButtonDown = TRUE;
 			//RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
 		}
+	}
+	else if (fMiddleButtonDown)
+	{
+		if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
+		{
+			if (gGameExternalOptions.bAlternateMouseCommands)
+				HandleAltMouseTBMButton(puiNewEvent);
+			else
+				HandleMouseTBMButton(puiNewEvent);
+		}
+		fMiddleButtonDown = FALSE;
+		// Reset counter
+		//RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
+	}
 }//void	QueryTBMButton( UINT32 *puiNewEvent )
 
-void	QueryTBWheel( UINT32 *puiNewEvent )
+void	QueryTBWheel(UINT32* puiNewEvent)
 {
-	SOLDIERTYPE	*pSoldier;
-	INT32		usMapPos=0;
+	SOLDIERTYPE* pSoldier;
+	INT32		usMapPos = 0;
 
-	gViewportRegion.WheelState = gViewportRegion.WheelState * ( gGameSettings.fOptions[TOPTION_INVERT_WHEEL] ? -1 : 1 );
+	gViewportRegion.WheelState = gViewportRegion.WheelState * (gGameSettings.fOptions[TOPTION_INVERT_WHEEL] ? -1 : 1);
 	// stub
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
 	{
-		if ( gViewportRegion.WheelState != 0 )
+		if (gViewportRegion.WheelState != 0)
 		{
 			//printf("wheel %d\n", gViewportRegion.WheelState);
 			//ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"wheel %d", gViewportRegion.WheelState);
-			if ( gpItemPointer == NULL )
+			if (gpItemPointer == NULL)
 			{
 				// ATE:
-				if ( gusSelectedSoldier != NOBODY )
+				if (gusSelectedSoldier != NOBODY)
 				{
 					// Switch on UI mode
-					switch( gCurrentUIMode )
+					switch (gCurrentUIMode)
 					{
 
-						case MOVE_MODE:
-						case CONFIRM_MOVE_MODE:
-						case HANDCURSOR_MODE:
-						case RADIOCURSOR_MODE:
-							if(gGameExternalOptions.bAlternateMouseCommands)
-								HandleAltMouseTBWheel();
-										else
-								HandleMouseTBWheel();
-						case IDLE_MODE:
-						case ACTION_MODE:
-						case LOCKOURTURN_UI_MODE:
-						case LOOKCURSOR_MODE:
-						case LOCKUI_MODE:
-						case TALKCURSOR_MODE:
-						case MENU_MODE:						
-							break;
-						case CONFIRM_ACTION_MODE:
-								if ( GetSoldier( &pSoldier, gusSelectedSoldier ) )
-								{
-									if(	gGameExternalOptions.bAimedBurstEnabled )
-										HandleWheelAdjustCursor( pSoldier, usMapPos, -gViewportRegion.WheelState, brstmode );
-									else
-										HandleWheelAdjustCursorWOAB( pSoldier, usMapPos, -gViewportRegion.WheelState);
-								}
-								break;
+					case MOVE_MODE:
+					case CONFIRM_MOVE_MODE:
+					case HANDCURSOR_MODE:
+					case RADIOCURSOR_MODE:
+						if (gGameExternalOptions.bAlternateMouseCommands)
+							HandleAltMouseTBWheel();
+						else
+							HandleMouseTBWheel();
+					case IDLE_MODE:
+					case ACTION_MODE:
+					case LOCKOURTURN_UI_MODE:
+					case LOOKCURSOR_MODE:
+					case LOCKUI_MODE:
+					case TALKCURSOR_MODE:
+					case MENU_MODE:
+						break;
+					case CONFIRM_ACTION_MODE:
+						if (GetSoldier(&pSoldier, gusSelectedSoldier))
+						{
+							if (gGameExternalOptions.bAimedBurstEnabled)
+								HandleWheelAdjustCursor(pSoldier, usMapPos, -gViewportRegion.WheelState, brstmode);
+							else
+								HandleWheelAdjustCursorWOAB(pSoldier, usMapPos, -gViewportRegion.WheelState);
+						}
+						break;
 					}
 				}
 			}
-			ResetWheelState( &gViewportRegion );
+			ResetWheelState(&gViewportRegion);
 		}
 	}
 }
 
-void QueryTBX1Button( UINT32 *puiNewEvent  )
+void QueryTBX1Button(UINT32* puiNewEvent)
 {
 	INT32	sMapPos;
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
 	{
-		if (!GetMouseMapPos( &sMapPos ) )
+		if (!GetMouseMapPos(&sMapPos))
 			return;
-		
+
 		if (gViewportRegion.ButtonState & MSYS_X1_BUTTON) // MID MOUSE BUTTON
 		{
-			if ( !fX1ButtonDown )
+			if (!fX1ButtonDown)
 			{
 				fX1ButtonDown = TRUE;
 				//RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
@@ -7184,56 +5092,56 @@ void QueryTBX1Button( UINT32 *puiNewEvent  )
 		}
 		else
 		{
-			if ( fX1ButtonDown )
+			if (fX1ButtonDown)
 			{
-			//*puiNewEvent = LC_LOOK;
-			fX1ButtonDown = FALSE;
+				//*puiNewEvent = LC_LOOK;
+				fX1ButtonDown = FALSE;
 
-				if(gGameExternalOptions.bAlternateMouseCommands)
-					HandleAltMouseTBX1Button( puiNewEvent );
+				if (gGameExternalOptions.bAlternateMouseCommands)
+					HandleAltMouseTBX1Button(puiNewEvent);
 				else
-					HandleMouseTBX1Button( puiNewEvent );
+					HandleMouseTBX1Button(puiNewEvent);
 			}
 		}
 	}
 }
 
-void QueryTBX2Button( UINT32 *puiNewEvent  )
+void QueryTBX2Button(UINT32* puiNewEvent)
 {
 	INT32	sMapPos;
-	if ( gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA )
-			{
-		if (!GetMouseMapPos( &sMapPos ) )
+	if (gViewportRegion.uiFlags & MSYS_MOUSE_IN_AREA)
+	{
+		if (!GetMouseMapPos(&sMapPos))
 			return;
-		
+
 		if (gViewportRegion.ButtonState & MSYS_X2_BUTTON) // MID MOUSE BUTTON
 		{
-			if ( !fX2ButtonDown )
+			if (!fX2ButtonDown)
 			{
 				fX2ButtonDown = TRUE;
 				//RESETCOUNTER( RMOUSECLICK_DELAY_COUNTER );
 			}
 		}
-		else if ( fX2ButtonDown )
-			{
+		else if (fX2ButtonDown)
+		{
 			fX2ButtonDown = FALSE;
-			if(gGameExternalOptions.bAlternateMouseCommands)
-				HandleAltMouseTBX2Button( puiNewEvent );
+			if (gGameExternalOptions.bAlternateMouseCommands)
+				HandleAltMouseTBX2Button(puiNewEvent);
 			else
-				HandleMouseTBX2Button( puiNewEvent );
+				HandleMouseTBX2Button(puiNewEvent);
 		}
 	}
 }
 
 //silversurfer: this allows swapping of merc portraits in tactical screen using CTRL+LEFTARROW / CTRL+RIGHTARROW
-void SwapMercPortraits ( SOLDIERTYPE *pSoldier, INT8 bDirection )
+void SwapMercPortraits(SOLDIERTYPE* pSoldier, INT8 bDirection)
 {
 	// only swap mercs when the Team Panel is active
-	if ( gsCurInterfacePanel != TEAM_PANEL )
+	if (gsCurInterfacePanel != TEAM_PANEL)
 		return;
 
 	// if someone is talking don't swap!
-	if ( gpCurrentTalkingFace != NULL )
+	if (gpCurrentTalkingFace != NULL)
 		return;
 
 	UINT8 ubSourceMerc = (UINT8)gusSelectedSoldier;
@@ -7241,19 +5149,19 @@ void SwapMercPortraits ( SOLDIERTYPE *pSoldier, INT8 bDirection )
 	INT32 iSourceFace;
 	INT32 iTargetFace;
 	UINT8 ubGroupID = pSoldier->ubGroupID;
-	INT8 bOldPosition = GetTeamSlotFromPlayerID ( MercPtrs[ ubSourceMerc ]->ubID );
+	INT8 bOldPosition = GetTeamSlotFromPlayerID(MercPtrs[ubSourceMerc]->ubID);
 	INT8 bNewPosition = bOldPosition + bDirection;
-	SOLDIERTYPE TempMenptr = Menptr[ ubSourceMerc ];
+	SOLDIERTYPE TempMenptr = Menptr[ubSourceMerc];
 
 	// anv: vehicle passengers are swapped differently
-	if( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER | SOLDIER_PASSENGER ) )
+	if (pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER | SOLDIER_PASSENGER))
 	{
-		SOLDIERTYPE *pVehicle = GetSoldierStructureForVehicle( pSoldier->iVehicleId );
-		if( pVehicle != NULL && bNewPosition < gNewVehicle[ pVehicleList[ pVehicle->bVehicleID ].ubVehicleType ].iNewSeatingCapacities )
+		SOLDIERTYPE* pVehicle = GetSoldierStructureForVehicle(pSoldier->iVehicleId);
+		if (pVehicle != NULL && bNewPosition < gNewVehicle[pVehicleList[pVehicle->bVehicleID].ubVehicleType].iNewSeatingCapacities)
 		{
-			if( SwapVehicleSeat( pVehicle, pSoldier, bNewPosition ) )
+			if (SwapVehicleSeat(pVehicle, pSoldier, bNewPosition))
 			{
-				RebuildCurrentSquad( );
+				RebuildCurrentSquad();
 				// refresh interface
 				fCharacterInfoPanelDirty = TRUE;
 				fTeamPanelDirty = TRUE;
@@ -7264,50 +5172,50 @@ void SwapMercPortraits ( SOLDIERTYPE *pSoldier, INT8 bDirection )
 	}
 
 	// check if new position is occupied by another merc? we won't replace an empty slot
-	if ( gTeamPanel[ bNewPosition ].fOccupied && gTeamPanel[ bNewPosition ].ubID != NOBODY )
+	if (gTeamPanel[bNewPosition].fOccupied && gTeamPanel[bNewPosition].ubID != NOBODY)
 	{
-		ubTargetMerc = gTeamPanel[ bNewPosition ].ubID;
+		ubTargetMerc = gTeamPanel[bNewPosition].ubID;
 
 		// Hey, you're dead. I don't want to swap with you.
-		if ( MercPtrs[ubTargetMerc]->stats.bLife <= 0 )
+		if (MercPtrs[ubTargetMerc]->stats.bLife <= 0)
 		{
-			RebuildCurrentSquad( );
+			RebuildCurrentSquad();
 			return;
 		}
 
 		// store face indexes
-		iSourceFace = MercPtrs[ ubSourceMerc ]->iFaceIndex;
-		iTargetFace = MercPtrs[ ubTargetMerc ]->iFaceIndex;
-		FACETYPE TempFace = gFacesData[ iSourceFace ];
+		iSourceFace = MercPtrs[ubSourceMerc]->iFaceIndex;
+		iTargetFace = MercPtrs[ubTargetMerc]->iFaceIndex;
+		FACETYPE TempFace = gFacesData[iSourceFace];
 
 		// swap the data
-		Menptr[ ubSourceMerc ] = Menptr[ ubTargetMerc ];
-		Menptr[ ubTargetMerc ] = TempMenptr; 
+		Menptr[ubSourceMerc] = Menptr[ubTargetMerc];
+		Menptr[ubTargetMerc] = TempMenptr;
 		// also swap face data, otherwise face gear, opp count etc won't update
-		gFacesData[ iSourceFace ] = gFacesData[ iTargetFace ];
-		gFacesData[ iTargetFace ] = TempFace;
+		gFacesData[iSourceFace] = gFacesData[iTargetFace];
+		gFacesData[iTargetFace] = TempFace;
 
 		// update IDs in the data so they match array index again
-		Menptr[ ubSourceMerc ].ubID = ubSourceMerc;
-		Menptr[ ubTargetMerc ].ubID = ubTargetMerc;
-		gFacesData[ iSourceFace ].iID = iSourceFace;
-		gFacesData[ iTargetFace ].iID = iTargetFace;
+		Menptr[ubSourceMerc].ubID = ubSourceMerc;
+		Menptr[ubTargetMerc].ubID = ubTargetMerc;
+		gFacesData[iSourceFace].iID = iSourceFace;
+		gFacesData[iTargetFace].iID = iTargetFace;
 
 		// update soldier ID so they match merc index again
-		gFacesData[ iSourceFace ].ubSoldierID = ubSourceMerc;
-		gFacesData[ iTargetFace ].ubSoldierID = ubTargetMerc;
+		gFacesData[iSourceFace].ubSoldierID = ubSourceMerc;
+		gFacesData[iTargetFace].ubSoldierID = ubTargetMerc;
 
 		// update face index in merc data
-		Menptr[ ubSourceMerc ].iFaceIndex = iSourceFace;
-		Menptr[ ubTargetMerc ].iFaceIndex = iTargetFace;
+		Menptr[ubSourceMerc].iFaceIndex = iSourceFace;
+		Menptr[ubTargetMerc].iFaceIndex = iTargetFace;
 
 		// update group info
-		RemovePlayerFromGroup( ubGroupID, MercPtrs[ ubSourceMerc ] );
-		RemovePlayerFromGroup( ubGroupID, MercPtrs[ ubTargetMerc ] );
-		AddPlayerToGroup( ubGroupID, MercPtrs[ ubSourceMerc ] );
-		AddPlayerToGroup( ubGroupID, MercPtrs[ ubTargetMerc ] );
-		SortSquadByID( MercPtrs[ ubSourceMerc ]->bAssignment );
-		RebuildCurrentSquad( );
+		RemovePlayerFromGroup(ubGroupID, MercPtrs[ubSourceMerc]);
+		RemovePlayerFromGroup(ubGroupID, MercPtrs[ubTargetMerc]);
+		AddPlayerToGroup(ubGroupID, MercPtrs[ubSourceMerc]);
+		AddPlayerToGroup(ubGroupID, MercPtrs[ubTargetMerc]);
+		SortSquadByID(MercPtrs[ubSourceMerc]->bAssignment);
+		RebuildCurrentSquad();
 
 		// don't forget to renew selection of merc
 		gusSelectedSoldier = ubTargetMerc;
@@ -7319,9 +5227,8 @@ void SwapMercPortraits ( SOLDIERTYPE *pSoldier, INT8 bDirection )
 	}
 }
 
-
 // sevenfm: new mouse commands
-void HandleAltMouseTBWheel( void )
+void HandleAltMouseTBWheel(void)
 {
 	if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV) &&
 		((gsCurInterfacePanel != SM_PANEL) || (ButtonList[iSMPanelButtons[NEXTMERC_BUTTON]]->uiFlags & BUTTON_ENABLED)))
@@ -7329,17 +5236,17 @@ void HandleAltMouseTBWheel( void )
 		if (gViewportRegion.WheelState > 0)	// wheel up
 		{
 			if (_KeyDown(ALT))
-			if (_KeyDown(SHIFT))
-			{
-				if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
-					;
-				else							// SHIFT+ALT
-					;
-			}
-			else if (_KeyDown(CTRL))		// CTRL+ALT
-				HandleTBPickUpBackpacks();
-			else								// ALT
-				HandleTBGotoHigherStance();
+				if (_KeyDown(SHIFT))
+				{
+					if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
+						;
+					else							// SHIFT+ALT
+						;
+				}
+				else if (_KeyDown(CTRL))		// CTRL+ALT
+					HandleTBPickUpBackpacks();
+				else								// ALT
+					HandleTBGotoHigherStance();
 			else if (_KeyDown(CTRL))
 			{
 				if (_KeyDown(SHIFT))				// SHIFT+CTRL
@@ -7355,17 +5262,17 @@ void HandleAltMouseTBWheel( void )
 		else										// wheel down
 		{
 			if (_KeyDown(ALT))
-			if (_KeyDown(SHIFT))
-			{
-				if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
-					;
-				else							// SHIFT+ALT
-					;
-			}
-			else if (_KeyDown(CTRL))		// CTRL+ALT
-				HandleTBDropBackpacks();
-			else								// ALT
-				HandleTBGotoLowerStance();
+				if (_KeyDown(SHIFT))
+				{
+					if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
+						;
+					else							// SHIFT+ALT
+						;
+				}
+				else if (_KeyDown(CTRL))		// CTRL+ALT
+					HandleTBDropBackpacks();
+				else								// ALT
+					HandleTBGotoLowerStance();
 			else if (_KeyDown(CTRL))
 			{
 				if (_KeyDown(SHIFT))				// SHIFT+CTRL
@@ -7381,23 +5288,29 @@ void HandleAltMouseTBWheel( void )
 	}
 }
 
-void HandleAltMouseTBMButton(UINT32 *puiNewEvent)
+void HandleAltMouseTBMButton(UINT32* puiNewEvent)
 {
 	INT32 usMapPos;
 	GetMouseMapPos(&usMapPos);
 
 	if (_KeyDown(ALT))
-	if (_KeyDown(SHIFT))
 	{
-		if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
-			;
-		else							// SHIFT+ALT
-			;// reserved
+		if (_KeyDown(SHIFT))
+		{
+			if (_KeyDown(CTRL))			// SHIFT+CTRL+ALT
+				;
+			else							// SHIFT+ALT
+				;// reserved
+		}
+		else if (_KeyDown(CTRL))		// CTRL+ALT
+		{
+			HandleTacticalReload();
+		}
+		else								// ALT
+		{
+			HandleTBToggleFireMode();
+		}
 	}
-	else if (_KeyDown(CTRL))		// CTRL+ALT
-		HandleTacticalReload();
-	else								// ALT
-		HandleTBToggleFireMode();
 	else if (_KeyDown(CTRL))
 	{
 		if (_KeyDown(SHIFT))				// SHIFT+CTRL
@@ -7406,25 +5319,31 @@ void HandleAltMouseTBMButton(UINT32 *puiNewEvent)
 			SetScopeMode(usMapPos);
 	}
 	else if (_KeyDown(SHIFT))			// SHIFT
+	{
 		HandleTacticalTransformItem();
+	}
 	else									// Button
+	{
 		HandleTBLook(puiNewEvent);
+	}
 }
 
-void HandleAltMouseTBX1Button(UINT32 *puiNewEvent)
+void HandleAltMouseTBX1Button(UINT32* puiNewEvent)
 {
 	if (_KeyDown(ALT))
-	if (_KeyDown(SHIFT))
 	{
-		if (_KeyDown(CTRL))		// SHIFT+CTRL+ALT
-			;
-		else						// SHIFT+ALT
-			;
+		if (_KeyDown(SHIFT))
+		{
+			if (_KeyDown(CTRL))		// SHIFT+CTRL+ALT
+				;
+			else						// SHIFT+ALT
+				;
+		}
+		else if (_KeyDown(CTRL))	// CTRL+ALT
+			ToggleTrapNetworkView();
+		else							// ALT
+			HandleTBSwapGunsling();
 	}
-	else if (_KeyDown(CTRL))	// CTRL+ALT
-		ToggleTrapNetworkView();
-	else							// ALT
-		HandleTBSwapGunsling();
 	else if (_KeyDown(CTRL))
 	{
 		if (_KeyDown(SHIFT))			// SHIFT+CTRL
@@ -7438,20 +5357,22 @@ void HandleAltMouseTBX1Button(UINT32 *puiNewEvent)
 		HandleTBShowLOS();
 }
 
-void HandleAltMouseTBX2Button(UINT32 *puiNewEvent)
+void HandleAltMouseTBX2Button(UINT32* puiNewEvent)
 {
 	if (_KeyDown(ALT))
-	if (_KeyDown(SHIFT))
 	{
-		if (_KeyDown(CTRL))		// SHIFT+CTRL+ALT
-			;
-		else						// SHIFT+ALT
-			;
+		if (_KeyDown(SHIFT))
+		{
+			if (_KeyDown(CTRL))		// SHIFT+CTRL+ALT
+				;
+			else						// SHIFT+ALT
+				;
+		}
+		else if (_KeyDown(CTRL))	// CTRL+ALT
+			ToggleHostileTrapsView();
+		else							// ALT
+			HandleTBToggleFormation();
 	}
-	else if (_KeyDown(CTRL))	// CTRL+ALT
-		ToggleHostileTrapsView();
-	else							// ALT
-		HandleTBToggleFormation();
 	else if (_KeyDown(CTRL))
 	{
 		if (_KeyDown(SHIFT))			// SHIFT+CTRL
@@ -7466,427 +5387,429 @@ void HandleAltMouseTBX2Button(UINT32 *puiNewEvent)
 }
 
 // sevenfm: these functions keep original mouse code functionality
-void HandleMouseTBWheel( void )
+void HandleMouseTBWheel(void)
 {
 	UINT8		bID;
 
-	if ( !( gTacticalStatus.uiFlags & ENGAGED_IN_CONV )	&&
-		( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ NEXTMERC_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
+	if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV) &&
+		((gsCurInterfacePanel != SM_PANEL) || (ButtonList[iSMPanelButtons[NEXTMERC_BUTTON]]->uiFlags & BUTTON_ENABLED)))
 	{
-		if ( gViewportRegion.WheelState > 0 )
+		if (gViewportRegion.WheelState > 0)
 		{
 			//change stance ->DOWN
-			if ( _KeyDown( ALT ) )
-			{	if ( (gusSelectedSoldier != NOBODY) && ( gpItemPointer == NULL ) )
-				GotoLowerStance(MercPtrs[ gusSelectedSoldier ]);
+			if (_KeyDown(ALT))
+			{
+				if ((gusSelectedSoldier != NOBODY) && (gpItemPointer == NULL))
+					GotoLowerStance(MercPtrs[gusSelectedSoldier]);
 				return;
 			}
-			if ( gusSelectedSoldier != NOBODY )
-			{ 
-				bID = FindPrevActiveAndAliveMerc( MercPtrs[ gusSelectedSoldier ], TRUE, TRUE );
-				HandleLocateSelectMerc( bID, LOCATEANDSELECT_MERC );
+			if (gusSelectedSoldier != NOBODY)
+			{
+				bID = FindPrevActiveAndAliveMerc(MercPtrs[gusSelectedSoldier], TRUE, TRUE);
+				HandleLocateSelectMerc(bID, LOCATEANDSELECT_MERC);
 				ErasePath(TRUE);
 				gfPlotNewMovement = TRUE;
 				// Center to guy....
-				LocateSoldier( gusSelectedSoldier, SETLOCATOR );
+				LocateSoldier(gusSelectedSoldier, SETLOCATOR);
 			}
 		}
-							else
-							{
+		else
+		{
 
 			//change stance ->UP
-			if ( _KeyDown( ALT ) )
-			{	if ( (gusSelectedSoldier != NOBODY) && ( gpItemPointer == NULL ) )
-					GotoHeigherStance( MercPtrs[ gusSelectedSoldier ] );
+			if (_KeyDown(ALT))
+			{
+				if ((gusSelectedSoldier != NOBODY) && (gpItemPointer == NULL))
+					GotoHeigherStance(MercPtrs[gusSelectedSoldier]);
 				return;
-							}
+			}
 
 			//ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"wheel %d", gViewportRegion.WheelState);
-			if ( gusSelectedSoldier != NOBODY )
+			if (gusSelectedSoldier != NOBODY)
 			{ //Select next merc
-				bID = FindNextMercInTeamPanel( MercPtrs[ gusSelectedSoldier ], FALSE, FALSE );
-				HandleLocateSelectMerc( bID, LOCATEANDSELECT_MERC );
+				bID = FindNextMercInTeamPanel(MercPtrs[gusSelectedSoldier], FALSE, FALSE);
+				HandleLocateSelectMerc(bID, LOCATEANDSELECT_MERC);
 				ErasePath(TRUE);
 				gfPlotNewMovement = TRUE;
 				// Center to guy....
-				LocateSoldier( gusSelectedSoldier, SETLOCATOR );
+				LocateSoldier(gusSelectedSoldier, SETLOCATOR);
 			}
+		}
+		//*puiNewEvent = M_ON_TERRAIN; ????????????????
 	}
-	//*puiNewEvent = M_ON_TERRAIN; ????????????????
-}
 }
 
-void HandleMouseTBMButton(  UINT32 *puiNewEvent )
+void HandleMouseTBMButton(UINT32* puiNewEvent)
 {
-		if ( _KeyDown( ALT ) )
-							{
-			// toggle fire mode
-			if ( ( gpItemPointer == NULL ) &&
-				( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ BURSTMODE_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
-				SetBurstMode();
-							}
-		else
-		{
-			HandleTBLook( puiNewEvent );
-						}
+	if (_KeyDown(ALT))
+	{
+		// toggle fire mode
+		if ((gpItemPointer == NULL) &&
+			((gsCurInterfacePanel != SM_PANEL) || (ButtonList[iSMPanelButtons[BURSTMODE_BUTTON]]->uiFlags & BUTTON_ENABLED)))
+			SetBurstMode();
+	}
+	else
+	{
+		HandleTBLook(puiNewEvent);
+	}
 }
 
-void HandleMouseTBX1Button( UINT32 *puiNewEvent )
-{			
-		if ( !_KeyDown( ALT ) && !_KeyDown( SHIFT ))
-		{
-			UIHandleChangeLevel( NULL );
-					}
-		else if( _KeyDown( SHIFT ) )
-		{
-			HandleTBJumpThroughWindow();
-				}
-			else if (_KeyDown( ALT ) )
-			{
-			HandleTBJump();
-		}	
-}
-void HandleMouseTBX2Button( UINT32 *puiNewEvent )
+void HandleMouseTBX1Button(UINT32* puiNewEvent)
 {
-	if ( _KeyDown( ALT ) )
-		AutoReload( MercPtrs[ gusSelectedSoldier ] );
+	if (!_KeyDown(ALT) && !_KeyDown(SHIFT))
+	{
+		UIHandleChangeLevel(NULL);
+	}
+	else if (_KeyDown(SHIFT))
+	{
+		HandleTBJumpThroughWindow();
+	}
+	else if (_KeyDown(ALT))
+	{
+		HandleTBJump();
+	}
+}
+void HandleMouseTBX2Button(UINT32* puiNewEvent)
+{
+	if (_KeyDown(ALT))
+		AutoReload(MercPtrs[gusSelectedSoldier]);
 	else
 		HandleTBToggleStealthAll();
 }
 
 // sevenfm: common TurnBased functionality
-void HandleTBLook( UINT32 *puiNewEvent )
+void HandleTBLook(UINT32* puiNewEvent)
 {
 	//*puiNewEvent = LC_LOOK;
-	if(gCurrentUIMode == CONFIRM_ACTION_MODE)
-		brstmode=(brstmode==1)?0:1;
+	if (gCurrentUIMode == CONFIRM_ACTION_MODE)
+		brstmode = (brstmode == 1) ? 0 : 1;
 	else
 	{
-		ErasePath( TRUE );
+		ErasePath(TRUE);
 		*puiNewEvent = LC_ON_TERRAIN;
 	}
 }
-void HandleTBJump( void )
+void HandleTBJump(void)
 {
-				SOLDIERTYPE *pjSoldier;
-				if ( GetSoldier( &pjSoldier, gusSelectedSoldier ) )
+	SOLDIERTYPE* pjSoldier;
+	if (GetSoldier(&pjSoldier, gusSelectedSoldier))
+	{
+		INT16							sAPCost;
+		INT16							sBPCost;
+		BOOLEAN	fNearHeigherLevel;
+		BOOLEAN	fNearLowerLevel;
+		INT8	bDirection;
+
+		// Make sure the merc is not collapsed!
+		if (!IsValidStance(pjSoldier, ANIM_CROUCH))
+		{
+			if (pjSoldier->bCollapsed && pjSoldier->bBreath < OKBREATH)
+				ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, gzLateLocalizedString[4], pjSoldier->GetName());
+			return;
+		}
+
+		// Climb on roofs
+		GetMercClimbDirection(pjSoldier->ubID, &fNearLowerLevel, &fNearHeigherLevel);
+
+		if (fNearLowerLevel)
+		{
+			// CHRISL: Turn off manual jumping while wearing a backpack
+			if (!pjSoldier->CanClimbWithCurrentBackpack())
+				return;
+
+			if (EnoughPoints(pjSoldier, GetAPsToClimbRoof(pjSoldier, TRUE), GetBPsToClimbRoof(pjSoldier, TRUE), FALSE))
+			{
+				pjSoldier->BeginSoldierClimbDownRoof();
+			}
+		}
+
+		if (fNearHeigherLevel)
+		{
+			// No climbing when wearing a backpack!
+			if (!pjSoldier->CanClimbWithCurrentBackpack())
+				return;
+
+			if (EnoughPoints(pjSoldier, GetAPsToClimbRoof(pjSoldier, FALSE), GetBPsToClimbRoof(pjSoldier, FALSE), FALSE))
+			{
+				pjSoldier->BeginSoldierClimbUpRoof();
+			}
+		}
+
+		// Jump over fence
+		if (FindFenceJumpDirection(pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection))
+		{
+			if (!pjSoldier->CanClimbWithCurrentBackpack())
+			{
+				sAPCost = GetAPsToJumpFence(pjSoldier, TRUE);
+				sBPCost = GetBPsToJumpFence(pjSoldier, TRUE);
+			}
+			else
+			{
+				sAPCost = GetAPsToJumpFence(pjSoldier, FALSE);
+				sBPCost = GetBPsToJumpFence(pjSoldier, FALSE);
+			}
+
+			if (EnoughPoints(pjSoldier, sAPCost, sBPCost, FALSE))
+			{
+				pjSoldier->BeginSoldierClimbFence();
+			}
+		}
+
+		// Climb on walls
+		if (gGameExternalOptions.fCanClimbOnWalls == TRUE)
+		{
+			if (FindWallJumpDirection(pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection))
+			{
+				// No climbing when wearing a backpack!
+				if (!pjSoldier->CanClimbWithCurrentBackpack())
+					return;
+
+				if (EnoughPoints(pjSoldier, GetAPsToJumpWall(pjSoldier, FALSE), GetBPsToJumpWall(pjSoldier, FALSE), FALSE))
 				{
-					INT16							sAPCost;
-					INT16							sBPCost;
-					BOOLEAN	fNearHeigherLevel;
-					BOOLEAN	fNearLowerLevel;
-					INT8	bDirection;
-
-					// Make sure the merc is not collapsed!
-					if (!IsValidStance(pjSoldier, ANIM_CROUCH) )
-					{
-						if ( pjSoldier->bCollapsed && pjSoldier->bBreath < OKBREATH )
-							ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, gzLateLocalizedString[ 4 ], pjSoldier->GetName() );
-						return;
-					}
-
-					// Climb on roofs
-					GetMercClimbDirection( pjSoldier->ubID, &fNearLowerLevel, &fNearHeigherLevel );
-
-					if ( fNearLowerLevel )
-					{
-						// CHRISL: Turn off manual jumping while wearing a backpack
-						if (!pjSoldier->CanClimbWithCurrentBackpack())
-							return;
-
-						if ( EnoughPoints( pjSoldier, GetAPsToClimbRoof( pjSoldier, TRUE ), GetBPsToClimbRoof( pjSoldier, TRUE ), FALSE )	)
-						{
-							pjSoldier->BeginSoldierClimbDownRoof( );
-						}
-					}
-					
-					if ( fNearHeigherLevel )
-					{
-						// No climbing when wearing a backpack!
-						if (!pjSoldier->CanClimbWithCurrentBackpack())
-							return;
-
-						if ( EnoughPoints( pjSoldier, GetAPsToClimbRoof( pjSoldier, FALSE ), GetBPsToClimbRoof( pjSoldier, FALSE ), FALSE )	)
-						{
-							pjSoldier->BeginSoldierClimbUpRoof(	);
-						}
-					}
-					
-					// Jump over fence
-					if ( FindFenceJumpDirection( pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection ) )
-					{
-						if (!pjSoldier->CanClimbWithCurrentBackpack())
-						{
-							sAPCost = GetAPsToJumpFence( pjSoldier, TRUE );
-							sBPCost = GetBPsToJumpFence( pjSoldier, TRUE );
-						}
-						else
-						{
-							sAPCost = GetAPsToJumpFence( pjSoldier, FALSE );
-							sBPCost = GetBPsToJumpFence( pjSoldier, FALSE );
-						}
-
-						if ( EnoughPoints( pjSoldier, sAPCost, sBPCost, FALSE )	)
-						{
-							pjSoldier->BeginSoldierClimbFence(	);
-						}
-					}
-
-					// Climb on walls
-					if (gGameExternalOptions.fCanClimbOnWalls == TRUE)
-					{ 
-						if ( FindWallJumpDirection( pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection ) )
-						{
-							// No climbing when wearing a backpack!
-							if (!pjSoldier->CanClimbWithCurrentBackpack())
-								return;
-
-							if ( EnoughPoints( pjSoldier, GetAPsToJumpWall( pjSoldier, FALSE ), GetBPsToJumpWall( pjSoldier, FALSE ), FALSE )	)
-							{
-								pjSoldier->BeginSoldierClimbWall(  );
-							}
-						}
-					}
+					pjSoldier->BeginSoldierClimbWall();
 				}
+			}
+		}
+	}
 }
-void HandleTBJumpThroughWindow( void ){
+void HandleTBJumpThroughWindow(void) {
 	// WANNE: Jump through window?
-	if (gGameExternalOptions.fCanJumpThroughWindows == TRUE )
+	if (gGameExternalOptions.fCanJumpThroughWindows == TRUE)
 	{
 		INT16		sAPCost;
 		INT16		sBPCost;
-		SOLDIERTYPE *pjSoldier;
+		SOLDIERTYPE* pjSoldier;
 		INT8	bDirection;
 
-		if ( GetSoldier( &pjSoldier, gusSelectedSoldier ) )
-	{
-			if ( FindWindowJumpDirection( pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection ) )
+		if (GetSoldier(&pjSoldier, gusSelectedSoldier))
 		{
-				if (!pjSoldier->CanClimbWithCurrentBackpack())
+			if (FindWindowJumpDirection(pjSoldier, pjSoldier->sGridNo, pjSoldier->ubDirection, &bDirection))
 			{
-					sAPCost = GetAPsToJumpThroughWindows( pjSoldier, TRUE );
-					sBPCost = GetBPsToJumpThroughWindows( pjSoldier, TRUE );
-			}
+				if (!pjSoldier->CanClimbWithCurrentBackpack())
+				{
+					sAPCost = GetAPsToJumpThroughWindows(pjSoldier, TRUE);
+					sBPCost = GetBPsToJumpThroughWindows(pjSoldier, TRUE);
+				}
 				else
 				{
-					sAPCost = GetAPsToJumpFence( pjSoldier, FALSE );
-					sBPCost = GetBPsToJumpFence( pjSoldier, FALSE );
-		}
+					sAPCost = GetAPsToJumpFence(pjSoldier, FALSE);
+					sBPCost = GetBPsToJumpFence(pjSoldier, FALSE);
+				}
 				if (EnoughPoints(pjSoldier, sAPCost, sBPCost, FALSE))
-		{
+				{
 					pjSoldier->BeginSoldierClimbWindow();
 				}
 			}
 		}
 	}
 }
-void HandleTBToggleStealthAll( void )
+void HandleTBToggleStealthAll(void)
 {
-			// Toggle squad's stealth mode.....
-			// For each guy on squad...
-				SOLDIERTYPE				*pTeamSoldier;
-				INT8					bLoop;
-				BOOLEAN					fStealthOn = FALSE;
+	// Toggle squad's stealth mode.....
+	// For each guy on squad...
+	SOLDIERTYPE* pTeamSoldier;
+	INT8					bLoop;
+	BOOLEAN					fStealthOn = FALSE;
 
-				// Check if at least one guy is on stealth....
-				for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
-				{
-					if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) )
-					{
-						if ( pTeamSoldier->bStealthMode )
-							fStealthOn = TRUE;
-						}
-					}
+	// Check if at least one guy is on stealth....
+	for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+	{
+		if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad())
+		{
+			if (pTeamSoldier->bStealthMode)
+				fStealthOn = TRUE;
+		}
+	}
 
-				fStealthOn = !fStealthOn;
+	fStealthOn = !fStealthOn;
 
-				for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
-				{
-					if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
-					{
-						if ( gpSMCurrentMerc != NULL && bLoop == gpSMCurrentMerc->ubID )
-							gfUIStanceDifferent = TRUE;
-						pTeamSoldier->bStealthMode = fStealthOn;
-					}
-				}
+	for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+	{
+		if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad() && !AM_A_ROBOT(pTeamSoldier))
+		{
+			if (gpSMCurrentMerc != NULL && bLoop == gpSMCurrentMerc->ubID)
+				gfUIStanceDifferent = TRUE;
+			pTeamSoldier->bStealthMode = fStealthOn;
+		}
+	}
 
-				fInterfacePanelDirty = DIRTYLEVEL2;
+	fInterfacePanelDirty = DIRTYLEVEL2;
 
-				// OK, display message
-				if ( fStealthOn )
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_ON_STEALTHMODE ] );
-				else
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_SQUAD_OFF_STEALTHMODE ] );
+	// OK, display message
+	if (fStealthOn)
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_SQUAD_ON_STEALTHMODE]);
+	else
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_SQUAD_OFF_STEALTHMODE]);
 }
-void HandleTBToggleFireMode( void )
+void HandleTBToggleFireMode(void)
 {
 	// toggle fire mode
-	if ( ( gpItemPointer == NULL ) &&
-		( ( gsCurInterfacePanel != SM_PANEL ) || ( ButtonList[ iSMPanelButtons[ BURSTMODE_BUTTON ] ]->uiFlags & BUTTON_ENABLED ) ) )
+	if ((gpItemPointer == NULL) &&
+		((gsCurInterfacePanel != SM_PANEL) || (ButtonList[iSMPanelButtons[BURSTMODE_BUTTON]]->uiFlags & BUTTON_ENABLED)))
 		SetBurstMode();
 }
-void HandleTBSelectAllMercs( void )
+void HandleTBSelectAllMercs(void)
 {
-	SOLDIERTYPE *		pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT32						cnt;
 
-	cnt = gTacticalStatus.Team[ gbPlayerNum ].bFirstID;
-	for ( pSoldier = MercPtrs[ cnt ]; cnt <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; cnt++, pSoldier++ )
-				{
+	cnt = gTacticalStatus.Team[gbPlayerNum].bFirstID;
+	for (pSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[gbPlayerNum].bLastID; cnt++, pSoldier++)
+	{
 
 		// Check if this guy is OK to control....
-		if ( OK_CONTROLLABLE_MERC( pSoldier ) && !( pSoldier->flags.uiStatusFlags & ( SOLDIER_VEHICLE | SOLDIER_PASSENGER | SOLDIER_DRIVER ) ) )
+		if (OK_CONTROLLABLE_MERC(pSoldier) && !(pSoldier->flags.uiStatusFlags & (SOLDIER_VEHICLE | SOLDIER_PASSENGER | SOLDIER_DRIVER)))
 		{
 			pSoldier->flags.uiStatusFlags |= SOLDIER_MULTI_SELECTED;
-				}
-			}
-	EndMultiSoldierSelection( TRUE );
-}
-void HandleTBCycleThroughKnownEnemies( void )
-{
-	if ( gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT) )
-	{
-	//	if ( (InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == ENTER	)
-			CycleThroughKnownEnemies( );
-		}
-}
-void HandleTBCycleThroughKnownEnemiesBackward( void )
-{
-	if ( gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT) )
-	{
-	//	if ( (InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == ENTER	)
-			CycleThroughKnownEnemies( TRUE );
-	}
-}
-void HandleTBCycleThroughVisibleEnemies( void )
-{
-	SOLDIERTYPE *pSoldier;
-		
-	if ( gusSelectedSoldier != NOBODY )
-	{
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
-
-		if ( pSoldier->aiData.bOppCnt > 0 )
-		{
-			// Cycle....
-			CycleVisibleEnemies( pSoldier );
-	}
-		else
-		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_ENEMIES_IN_SIGHT_STR ] );
 		}
 	}
+	EndMultiSoldierSelection(TRUE);
 }
-void HandleTBCycleThroughVisibleEnemiesBackward( void )
+void HandleTBCycleThroughKnownEnemies(void)
 {
-	SOLDIERTYPE *pSoldier;
-	
-	if ( gusSelectedSoldier != NOBODY )
+	if (gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT))
 	{
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+		//	if ( (InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == ENTER	)
+		CycleThroughKnownEnemies();
+	}
+}
+void HandleTBCycleThroughKnownEnemiesBackward(void)
+{
+	if (gTacticalStatus.uiFlags & TURNBASED && (gTacticalStatus.uiFlags & INCOMBAT))
+	{
+		//	if ( (InputEvent.usEvent == KEY_DOWN ) && InputEvent.usParam == ENTER	)
+		CycleThroughKnownEnemies(TRUE);
+	}
+}
+void HandleTBCycleThroughVisibleEnemies(void)
+{
+	SOLDIERTYPE* pSoldier;
 
-		if ( pSoldier->aiData.bOppCnt > 0 )
+	if (gusSelectedSoldier != NOBODY)
+	{
+		pSoldier = MercPtrs[gusSelectedSoldier];
+
+		if (pSoldier->aiData.bOppCnt > 0)
 		{
 			// Cycle....
-			CycleVisibleEnemiesBackward( pSoldier );
+			CycleVisibleEnemies(pSoldier);
 		}
 		else
 		{
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[ NO_ENEMIES_IN_SIGHT_STR ] );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_ENEMIES_IN_SIGHT_STR]);
 		}
 	}
 }
-void HandleTBLocateSoldier( void )
+void HandleTBCycleThroughVisibleEnemiesBackward(void)
 {
-	if ( gusSelectedSoldier != NOBODY )
+	SOLDIERTYPE* pSoldier;
+
+	if (gusSelectedSoldier != NOBODY)
 	{
-		LocateSoldier( gusSelectedSoldier, 10 );
+		pSoldier = MercPtrs[gusSelectedSoldier];
+
+		if (pSoldier->aiData.bOppCnt > 0)
+		{
+			// Cycle....
+			CycleVisibleEnemiesBackward(pSoldier);
+		}
+		else
+		{
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, TacticalStr[NO_ENEMIES_IN_SIGHT_STR]);
+		}
 	}
 }
-void HandleTBChangeLevel( void )
+void HandleTBLocateSoldier(void)
 {
-	if ( gpItemPointer == NULL ) 
-		UIHandleChangeLevel( NULL );
+	if (gusSelectedSoldier != NOBODY)
+	{
+		LocateSoldier(gusSelectedSoldier, 10);
+	}
 }
-void HandleTBSwapHands( void )
+void HandleTBChangeLevel(void)
+{
+	if (gpItemPointer == NULL)
+		UIHandleChangeLevel(NULL);
+}
+void HandleTBSwapHands(void)
 {
 	// swap primary & secondary hand
-	if ( gusSelectedSoldier != NOBODY && !AM_A_ROBOT( MercPtrs[ gusSelectedSoldier ] ))
+	if (gusSelectedSoldier != NOBODY && !AM_A_ROBOT(MercPtrs[gusSelectedSoldier]))
 	{
-		SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
+		SOLDIERTYPE* pSoldier = MercPtrs[gusSelectedSoldier];
 		UINT16 usOldHandItem = pSoldier->inv[HANDPOS].usItem;
-		SwapHandItems( pSoldier );
-		pSoldier->ReLoadSoldierAnimationDueToHandItemChange( usOldHandItem, pSoldier->inv[HANDPOS].usItem );
+		SwapHandItems(pSoldier);
+		pSoldier->ReLoadSoldierAnimationDueToHandItemChange(usOldHandItem, pSoldier->inv[HANDPOS].usItem);
 
 		fCharacterInfoPanelDirty = TRUE;
 		fInterfacePanelDirty = DIRTYLEVEL2;
 	}
 }
-void HandleTBSwapGunsling( void )
+void HandleTBSwapGunsling(void)
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 
-	if ( gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
+	if (gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
 	{
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
-		pSoldier->SwitchWeapons( );
+		pSoldier = MercPtrs[gusSelectedSoldier];
+		pSoldier->SwitchWeapons();
 	}
 }
-void HandleTBSwapKnife( void )
+void HandleTBSwapKnife(void)
 {
-	if ( gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
+	if (gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
 	{
-		SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-		pSoldier->SwitchWeapons( TRUE );
+		SOLDIERTYPE* pSoldier = MercPtrs[gusSelectedSoldier];
+		pSoldier->SwitchWeapons(TRUE);
 	}
 }
-void HandleTBSwapSidearm( void )
+void HandleTBSwapSidearm(void)
 {
-	if ( gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
+	if (gusSelectedSoldier != NOBODY && UsingNewInventorySystem() == true)
 	{
-		SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-		pSoldier->SwitchWeapons( FALSE, TRUE );
+		SOLDIERTYPE* pSoldier = MercPtrs[gusSelectedSoldier];
+		pSoldier->SwitchWeapons(FALSE, TRUE);
 	}
 }
-void HandleTBSwapGoogles( void )
+void HandleTBSwapGoogles(void)
 {
-	SOLDIERTYPE	*pTeamSoldier;
+	SOLDIERTYPE* pTeamSoldier;
 	INT8		bLoop;
 
-	for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+	for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
 	{
 		// HEADROCK HAM 3.5: When this INI setting is enabled, ALL mercs in the current sector will do a goggle swap.
 		if (gGameExternalOptions.fGoggleSwapAffectsAllMercsInSector)
 		{
-			if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->sSectorX == gWorldSectorX && pTeamSoldier->sSectorY == gWorldSectorY && pTeamSoldier->bSectorZ == gbWorldSectorZ && !AM_A_ROBOT( pTeamSoldier ) )
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->sSectorX == gWorldSectorX && pTeamSoldier->sSectorY == gWorldSectorY && pTeamSoldier->bSectorZ == gbWorldSectorZ && !AM_A_ROBOT(pTeamSoldier))
 			{
 				SwapGoggles(pTeamSoldier);
 			}
 		}
 		else
 		{
-			if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad() && !AM_A_ROBOT(pTeamSoldier))
 			{
 				SwapGoggles(pTeamSoldier);
 			}
 		}
 	}
 }
-void HandleTBToggleFormation( void )
+void HandleTBToggleFormation(void)
 {
 	// Flugente: toggle formation
-	if ( gGameSettings.fOptions[TOPTION_MERCENARY_FORMATIONS] )
+	if (gGameSettings.fOptions[TOPTION_MERCENARY_FORMATIONS])
 	{
 		gGameSettings.fOptions[TOPTION_MERCENARY_FORMATIONS] = FALSE;
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_FORMATIONS_OFF ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_FORMATIONS_OFF]);
 	}
 	else
 	{
 		gGameSettings.fOptions[TOPTION_MERCENARY_FORMATIONS] = TRUE;
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[ MSG_FORMATIONS_ON ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_FORMATIONS_ON]);
 	}
 }
-void HandleTBEnterTurnbased( void )
+void HandleTBEnterTurnbased(void)
 {
 	if (!is_networked)
 	{
@@ -7895,26 +5818,26 @@ void HandleTBEnterTurnbased( void )
 		{
 			BOOLEAN fSneakingInRealTime = true;
 
-			if( gTacticalStatus.uiFlags & INCOMBAT )
+			if (gTacticalStatus.uiFlags & INCOMBAT)
 			{	// Don't allow this in combat
 				if (!gGameExternalOptions.fQuietRealTimeSneak)
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_IN_COMBAT_ALREADY]);
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_IN_COMBAT_ALREADY]);
 				fSneakingInRealTime = false;
 			}
 
-			if( WeSeeNoOne() )
+			if (WeSeeNoOne())
 			{	// Don't allow this if no enemies are seen - we have the forced turn mode for that
 				if (!gGameExternalOptions.fQuietRealTimeSneak)
-					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_NO_ENEMIES]);
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_NO_ENEMIES]);
 				fSneakingInRealTime = false;
 			}
-							
+
 			if (fSneakingInRealTime)
 				EnterCombatMode(OUR_TEAM);
 		}
 	}
 }
-void HandleTBToggleSneak( void )
+void HandleTBToggleSneak(void)
 {
 	if (!is_networked)
 	{
@@ -7922,296 +5845,293 @@ void HandleTBToggleSneak( void )
 		if (gGameSettings.fOptions[TOPTION_ALLOW_REAL_TIME_SNEAK])
 		{
 			gGameSettings.fOptions[TOPTION_ALLOW_REAL_TIME_SNEAK] = false;
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_SNEAKING_OFF]);
-							
-			if( !WeSeeNoOne() )	// if we're sneaking up on someone, enter turn-based
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_SNEAKING_OFF]);
+
+			if (!WeSeeNoOne())	// if we're sneaking up on someone, enter turn-based
 				EnterCombatMode(OUR_TEAM);
 		}
 		else
 		{
 			gGameSettings.fOptions[TOPTION_ALLOW_REAL_TIME_SNEAK] = true;
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_SNEAKING_ON]);
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_RTM_SNEAKING_ON]);
 		}
 	}
 }
-void HandleTBToggleStealth( void )
+void HandleTBToggleStealth(void)
 {
 	// nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
-	if ( ( gpItemPointer == NULL ) )
+	if ((gpItemPointer == NULL))
 	{
-		HandleStealthChangeFromUIKeys( );
+		HandleStealthChangeFromUIKeys();
 	}
 }
-void HandleTBReload( void )
+void HandleTBReload(void)
 {
-	AutoReload( MercPtrs[ gusSelectedSoldier ] );
+	AutoReload(MercPtrs[gusSelectedSoldier]);
 }
-void HandleTBReloadAll( void )
+void HandleTBReloadAll(void)
 {
-				if (! ( gTacticalStatus.fEnemyInSector ) )
+	if (!(gTacticalStatus.fEnemyInSector))
+	{
+		SOLDIERTYPE* pTeamSoldier;
+		UINT8		bLoop;
+		UINT16		bullets;
+		OBJECTTYPE* pGun, * pAmmo, * pAmmoMags;
+
+		// Search for soldier
+		for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+		{
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad() && !AM_A_ROBOT(pTeamSoldier))
+			{
+				// Search for gun in soldier inventory
+				UINT32 invsize = pTeamSoldier->inv.size();
+				for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
 				{
-					SOLDIERTYPE	*pTeamSoldier;
-					UINT8		bLoop;
-					UINT16		bullets;		
-					OBJECTTYPE *pGun, *pAmmo, *pAmmoMags;
-
-					// Search for soldier
-					for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+					if ((Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & (IC_GUN | IC_LAUNCHER)))
 					{
-						if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
+						pGun = &(pTeamSoldier->inv[bLoop2]);
+
+						UINT16 gunmagsize = GetMagSize(pGun);
+
+						//if magazine is not full
+						if ((*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize)
 						{
-							// Search for gun in soldier inventory
-							UINT32 invsize = pTeamSoldier->inv.size();
-							for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
+							// Search for ammo in sector
+							for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop)
 							{
-								if ( (Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & (IC_GUN | IC_LAUNCHER)) )
+								if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB))//item exists, is reachable, is visible and is not trapped
 								{
-									pGun	= &(pTeamSoldier->inv[bLoop2]);
-
-									UINT16 gunmagsize = GetMagSize( pGun );
-
-									//if magazine is not full
-									if ( (*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize )
+									if ((Item[gWorldItems[uiLoop].object.usItem].usItemClass & IC_AMMO)) // the item is ammo
 									{
-										// Search for ammo in sector
-										for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop )
+										pAmmo = &(gWorldItems[uiLoop].object);
+
+										if (CompatibleAmmoForGun(pAmmo, pGun)) // can use the ammo with this gun
 										{
-											if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) )//item exists, is reachable, is visible and is not trapped
+											// same ammo type in gun and magazine
+											if (Magazine[Item[(*pGun)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType)
 											{
-												if ( ( Item[ gWorldItems[ uiLoop ].object.usItem ].usItemClass & IC_AMMO ) ) // the item is ammo
-												{
-													pAmmo = &( gWorldItems[ uiLoop ].object );
-
-													if ( CompatibleAmmoForGun( pAmmo, pGun ) ) // can use the ammo with this gun
-													{
-														// same ammo type in gun and magazine
-														if ( Magazine[Item[(*pGun)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType )
-														{
-															ReloadGun( pTeamSoldier, pGun, pAmmo );
-														}
-
-														if ((*pAmmo)[0]->data.ubShotsLeft == 0)
-														{
-															RemoveItemFromPool( gWorldItems[ uiLoop ].sGridNo, uiLoop, gWorldItems[ uiLoop ].ubLevel );
-														}
-
-														// if gun is full, we can stop this
-														if ( (*pGun)[0]->data.gun.ubGunShotsLeft >= gunmagsize )
-															break;
-													}
-												}
+												ReloadGun(pTeamSoldier, pGun, pAmmo);
 											}
+
+											if ((*pAmmo)[0]->data.ubShotsLeft == 0)
+											{
+												RemoveItemFromPool(gWorldItems[uiLoop].sGridNo, uiLoop, gWorldItems[uiLoop].ubLevel);
+											}
+
+											// if gun is full, we can stop this
+											if ((*pGun)[0]->data.gun.ubGunShotsLeft >= gunmagsize)
+												break;
 										}
-									}
-									//CHRISL: if not enough ammo in sector, reload using ammo carried in inventory
-									if ( (*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize )
-									{
-										AutoReload( pTeamSoldier );
 									}
 								}
 							}
 						}
-					}
-
-					//MM: loop thru the soldiers again (lazy copy/paste :p).  could do it all at once, but then there may not be enough ammo from the world items to fill everyone's guns first
-					for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
-					{
-						if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
+						//CHRISL: if not enough ammo in sector, reload using ammo carried in inventory
+						if ((*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize)
 						{
-							// Search for ammo in soldier inventory
-							UINT32 invsize = pTeamSoldier->inv.size();
-							for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
-							{
-								if ( Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & IC_AMMO )
-								{
-									pAmmoMags = &(pTeamSoldier->inv[bLoop2]);
-
-									for ( UINT16 stackMag = 0; stackMag < (*pAmmoMags).ubNumberOfObjects; stackMag++ )
-									{
-										if ( (*pAmmoMags)[stackMag]->data.ubShotsLeft < Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize )
-										{
-											// Search for ammo in sector
-											for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop )
-											{
-												if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) )//item exists, is reachable, is visible and is not trapped
-												{
-													if ( ( Item[ gWorldItems[ uiLoop ].object.usItem ].usItemClass & IC_AMMO ) ) // the item is ammo
-													{
-														pAmmo = &( gWorldItems[ uiLoop ].object );
-
-														if ( Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubCalibre == Magazine[Item[pAmmo->usItem].ubClassIndex].ubCalibre ) // same calibre
-														{
-															// same ammo type
-															if ( Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType )
-															{
-																bullets = Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize - (*pAmmoMags)[stackMag]->data.ubShotsLeft;
-																
-																if ((*pAmmo)[0]->data.ubShotsLeft < bullets)
-																	bullets = (*pAmmo)[0]->data.ubShotsLeft;
-
-																(*pAmmoMags)[stackMag]->data.ubShotsLeft += bullets;
-																(*pAmmo)[0]->data.ubShotsLeft -= bullets;
-
-																fCharacterInfoPanelDirty = TRUE;
-																fInterfacePanelDirty = DIRTYLEVEL2;
-															}
-
-															if ((*pAmmo)[0]->data.ubShotsLeft == 0)
-															{
-																RemoveItemFromPool( gWorldItems[ uiLoop ].sGridNo, uiLoop, gWorldItems[ uiLoop ].ubLevel );
-															}
-														}
-													}
-												}
-											}
-
-											//MM: if magazines still are partly empty, look through inventory for boxes and crates
-											if ( (*pAmmoMags)[stackMag]->data.ubShotsLeft < Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize )
-											{
-												UINT32 invsize = pTeamSoldier->inv.size();
-												for (UINT32 uiLoop = 0; uiLoop < invsize; ++uiLoop)
-												{
-													if ( (Item[pTeamSoldier->inv[uiLoop].usItem].usItemClass & IC_AMMO) && Magazine[Item[pTeamSoldier->inv[uiLoop].usItem].ubClassIndex].ubMagType >= AMMO_BOX )
-													{
-														pAmmo = &(pTeamSoldier->inv[uiLoop]);
-
-														if ( Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubCalibre == Magazine[Item[pAmmo->usItem].ubClassIndex].ubCalibre ) // same calibre
-														{
-															// same ammo type
-															if ( Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType )
-															{
-																bullets = Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize - (*pAmmoMags)[stackMag]->data.ubShotsLeft;
-																
-																if ((*pAmmo)[0]->data.ubShotsLeft < bullets)
-																	bullets = (*pAmmo)[0]->data.ubShotsLeft;
-
-																(*pAmmoMags)[stackMag]->data.ubShotsLeft += bullets;
-																(*pAmmo)[0]->data.ubShotsLeft -= bullets;
-
-																fCharacterInfoPanelDirty = TRUE;
-																fInterfacePanelDirty = DIRTYLEVEL2;
-															}
-
-															if ((*pAmmo)[0]->data.ubShotsLeft == 0)
-																DeleteObj(pAmmo);
-														}
-													}
-												}
-											}
-										}
-									}
-
-									if (IsWeaponAttached(pGun, IC_GUN))
-									{
-										OBJECTTYPE *pGun2 = FindAttachedWeapon(pGun, IC_GUN);
-
-										UINT16 gunmagsize2 = GetMagSize( pGun2 );
-
-										if ( (*pGun2)[0]->data.gun.ubGunShotsLeft < gunmagsize2 )
-										{
-											// Search for ammo in sector
-											for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop )
-											{
-												if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) )//item exists, is reachable, is visible and is not trapped
-												{
-													if ( ( Item[ gWorldItems[ uiLoop ].object.usItem ].usItemClass & IC_AMMO ) ) // the item is ammo
-													{
-														pAmmo = &( gWorldItems[ uiLoop ].object );
-
-														if ( CompatibleAmmoForGun( pAmmo, pGun2 ) ) // can use the ammo with this gun
-														{
-															// same ammo type in gun and magazine
-															if ( Magazine[Item[(*pGun2)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType )
-															{
-																ReloadGun( pTeamSoldier, pGun2, pAmmo );
-															}
-
-															if ((*pAmmo)[0]->data.ubShotsLeft == 0)
-															{
-																RemoveItemFromPool( gWorldItems[ uiLoop ].sGridNo, uiLoop, gWorldItems[ uiLoop ].ubLevel );
-															}
-
-															// if gun is full, we can stop this
-															if ( (*pGun2)[0]->data.gun.ubGunShotsLeft >= gunmagsize2 )
-																break;
-														}
-													}
-												}
-											}
-										}
-
-										//CHRISL: if not enough ammo in sector, reload using ammo carried in inventory
-										if ( (*pGun2)[0]->data.gun.ubGunShotsLeft < gunmagsize2 )
-										{
-											AutoReload( pTeamSoldier );
-										}
-									}
-								}
-							}
+							AutoReload(pTeamSoldier);
 						}
 					}
 				}
-				else
+			}
+		}
+
+		//MM: loop thru the soldiers again (lazy copy/paste :p).  could do it all at once, but then there may not be enough ammo from the world items to fill everyone's guns first
+		for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; bLoop++, pTeamSoldier++)
+		{
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad() && !AM_A_ROBOT(pTeamSoldier))
+			{
+				// Search for ammo in soldier inventory
+				UINT32 invsize = pTeamSoldier->inv.size();
+				for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
 				{
-					SOLDIERTYPE	*pTeamSoldier;
-					UINT8		bLoop;
-					OBJECTTYPE *pGun, *pAmmo;
-
-					for (bLoop=gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier=MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; ++bLoop, pTeamSoldier++)
+					if (Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & IC_AMMO)
 					{
-						if ( OK_CONTROLLABLE_MERC( pTeamSoldier ) && pTeamSoldier->bAssignment == CurrentSquad( ) && !AM_A_ROBOT( pTeamSoldier ) )
-						{
-							if ( (Item[pTeamSoldier->inv[HANDPOS].usItem].usItemClass & (IC_GUN | IC_LAUNCHER) ) )
-							{
-								if ( ( gTacticalStatus.uiFlags & INCOMBAT ) )
-								{
-									// Flugente: check for underbarrel weapons and use that object if necessary
-									pGun = pTeamSoldier->GetUsedWeapon( &(pTeamSoldier->inv[HANDPOS]) );
+						pAmmoMags = &(pTeamSoldier->inv[bLoop2]);
 
-									//magazine is not full
-									if ( (*pGun)[0]->data.gun.ubGunShotsLeft < GetMagSize( pGun )	)
+						for (UINT16 stackMag = 0; stackMag < (*pAmmoMags).ubNumberOfObjects; stackMag++)
+						{
+							if ((*pAmmoMags)[stackMag]->data.ubShotsLeft < Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize)
+							{
+								// Search for ammo in sector
+								for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop)
+								{
+									if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB))//item exists, is reachable, is visible and is not trapped
 									{
-										AutoReload( pTeamSoldier );
+										if ((Item[gWorldItems[uiLoop].object.usItem].usItemClass & IC_AMMO)) // the item is ammo
+										{
+											pAmmo = &(gWorldItems[uiLoop].object);
+
+											if (Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubCalibre == Magazine[Item[pAmmo->usItem].ubClassIndex].ubCalibre) // same calibre
+											{
+												// same ammo type
+												if (Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType)
+												{
+													bullets = Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize - (*pAmmoMags)[stackMag]->data.ubShotsLeft;
+
+													if ((*pAmmo)[0]->data.ubShotsLeft < bullets)
+														bullets = (*pAmmo)[0]->data.ubShotsLeft;
+
+													(*pAmmoMags)[stackMag]->data.ubShotsLeft += bullets;
+													(*pAmmo)[0]->data.ubShotsLeft -= bullets;
+
+													fCharacterInfoPanelDirty = TRUE;
+													fInterfacePanelDirty = DIRTYLEVEL2;
+												}
+
+												if ((*pAmmo)[0]->data.ubShotsLeft == 0)
+												{
+													RemoveItemFromPool(gWorldItems[uiLoop].sGridNo, uiLoop, gWorldItems[uiLoop].ubLevel);
+												}
+											}
+										}
 									}
 								}
-								else
+
+								//MM: if magazines still are partly empty, look through inventory for boxes and crates
+								if ((*pAmmoMags)[stackMag]->data.ubShotsLeft < Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize)
 								{
-									// Search for gun in soldier inventory
 									UINT32 invsize = pTeamSoldier->inv.size();
-									for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
+									for (UINT32 uiLoop = 0; uiLoop < invsize; ++uiLoop)
 									{
-										if ( (Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & (IC_GUN | IC_LAUNCHER)) )
+										if ((Item[pTeamSoldier->inv[uiLoop].usItem].usItemClass & IC_AMMO) && Magazine[Item[pTeamSoldier->inv[uiLoop].usItem].ubClassIndex].ubMagType >= AMMO_BOX)
 										{
-											pGun	= &(pTeamSoldier->inv[bLoop2]);
+											pAmmo = &(pTeamSoldier->inv[uiLoop]);
 
-											UINT16 gunmagsize = GetMagSize( pGun );
-
-											//if magazine is not full
-											if ( (*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize )
+											if (Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubCalibre == Magazine[Item[pAmmo->usItem].ubClassIndex].ubCalibre) // same calibre
 											{
-												// Search for ammo in soldier inventory
-												for ( UINT32 uiLoop = 0; uiLoop < invsize; ++uiLoop )
+												// same ammo type
+												if (Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType)
 												{
-													if ( (Item[pTeamSoldier->inv[uiLoop].usItem].usItemClass & IC_AMMO ) ) // the item is ammo
-													{
-														pAmmo = &(pTeamSoldier->inv[uiLoop]);
+													bullets = Magazine[Item[pAmmoMags->usItem].ubClassIndex].ubMagSize - (*pAmmoMags)[stackMag]->data.ubShotsLeft;
 
-														if ( CompatibleAmmoForGun( pAmmo, pGun ) ) // can use the ammo with this gun
-														{
-															// same ammo type in gun and magazine
-															if ( Magazine[Item[(*pGun)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType )
-															{
-																ReloadGun( pTeamSoldier, pGun, pAmmo );
+													if ((*pAmmo)[0]->data.ubShotsLeft < bullets)
+														bullets = (*pAmmo)[0]->data.ubShotsLeft;
 
-																fCharacterInfoPanelDirty = TRUE;
-																fInterfacePanelDirty = DIRTYLEVEL2;
+													(*pAmmoMags)[stackMag]->data.ubShotsLeft += bullets;
+													(*pAmmo)[0]->data.ubShotsLeft -= bullets;
 
-																// if gun is full, we can stop this
-																if ( (*pGun)[0]->data.gun.ubGunShotsLeft >= gunmagsize )
-																	break;
-															}
-														}
-													}
+													fCharacterInfoPanelDirty = TRUE;
+													fInterfacePanelDirty = DIRTYLEVEL2;
+												}
+
+												if ((*pAmmo)[0]->data.ubShotsLeft == 0)
+													DeleteObj(pAmmo);
+											}
+										}
+									}
+								}
+							}
+						}
+
+						if (IsWeaponAttached(pGun, IC_GUN))
+						{
+							OBJECTTYPE* pGun2 = FindAttachedWeapon(pGun, IC_GUN);
+
+							UINT16 gunmagsize2 = GetMagSize(pGun2);
+
+							if ((*pGun2)[0]->data.gun.ubGunShotsLeft < gunmagsize2)
+							{
+								// Search for ammo in sector
+								for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop)
+								{
+									if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB))//item exists, is reachable, is visible and is not trapped
+									{
+										if ((Item[gWorldItems[uiLoop].object.usItem].usItemClass & IC_AMMO)) // the item is ammo
+										{
+											pAmmo = &(gWorldItems[uiLoop].object);
+
+											if (CompatibleAmmoForGun(pAmmo, pGun2)) // can use the ammo with this gun
+											{
+												// same ammo type in gun and magazine
+												if (Magazine[Item[(*pGun2)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType)
+												{
+													ReloadGun(pTeamSoldier, pGun2, pAmmo);
+												}
+
+												if ((*pAmmo)[0]->data.ubShotsLeft == 0)
+												{
+													RemoveItemFromPool(gWorldItems[uiLoop].sGridNo, uiLoop, gWorldItems[uiLoop].ubLevel);
+												}
+
+												// if gun is full, we can stop this
+												if ((*pGun2)[0]->data.gun.ubGunShotsLeft >= gunmagsize2)
+													break;
+											}
+										}
+									}
+								}
+							}
+
+							//CHRISL: if not enough ammo in sector, reload using ammo carried in inventory
+							if ((*pGun2)[0]->data.gun.ubGunShotsLeft < gunmagsize2)
+							{
+								AutoReload(pTeamSoldier);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		SOLDIERTYPE* pTeamSoldier;
+		UINT8		bLoop;
+		OBJECTTYPE* pGun, * pAmmo;
+
+		for (bLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID, pTeamSoldier = MercPtrs[bLoop]; bLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; ++bLoop, pTeamSoldier++)
+		{
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) && pTeamSoldier->bAssignment == CurrentSquad() && !AM_A_ROBOT(pTeamSoldier))
+			{
+				if ((Item[pTeamSoldier->inv[HANDPOS].usItem].usItemClass & (IC_GUN | IC_LAUNCHER)))
+				{
+					if ((gTacticalStatus.uiFlags & INCOMBAT))
+					{
+						// Flugente: check for underbarrel weapons and use that object if necessary
+						pGun = pTeamSoldier->GetUsedWeapon(&(pTeamSoldier->inv[HANDPOS]));
+
+						//magazine is not full
+						if ((*pGun)[0]->data.gun.ubGunShotsLeft < GetMagSize(pGun))
+						{
+							AutoReload(pTeamSoldier);
+						}
+					}
+					else
+					{
+						// Search for gun in soldier inventory
+						UINT32 invsize = pTeamSoldier->inv.size();
+						for (UINT32 bLoop2 = 0; bLoop2 < invsize; ++bLoop2)
+						{
+							if ((Item[pTeamSoldier->inv[bLoop2].usItem].usItemClass & (IC_GUN | IC_LAUNCHER)))
+							{
+								pGun = &(pTeamSoldier->inv[bLoop2]);
+
+								UINT16 gunmagsize = GetMagSize(pGun);
+
+								//if magazine is not full
+								if ((*pGun)[0]->data.gun.ubGunShotsLeft < gunmagsize)
+								{
+									// Search for ammo in soldier inventory
+									for (UINT32 uiLoop = 0; uiLoop < invsize; ++uiLoop)
+									{
+										if ((Item[pTeamSoldier->inv[uiLoop].usItem].usItemClass & IC_AMMO)) // the item is ammo
+										{
+											pAmmo = &(pTeamSoldier->inv[uiLoop]);
+
+											if (CompatibleAmmoForGun(pAmmo, pGun)) // can use the ammo with this gun
+											{
+												// same ammo type in gun and magazine
+												if (Magazine[Item[(*pGun)[0]->data.gun.usGunAmmoItem].ubClassIndex].ubAmmoType == Magazine[Item[pAmmo->usItem].ubClassIndex].ubAmmoType)
+												{
+													ReloadGun(pTeamSoldier, pGun, pAmmo);
+
+													fCharacterInfoPanelDirty = TRUE;
+													fInterfacePanelDirty = DIRTYLEVEL2;
+
+													// if gun is full, we can stop this
+													if ((*pGun)[0]->data.gun.ubGunShotsLeft >= gunmagsize)
+														break;
 												}
 											}
 										}
@@ -8221,57 +6141,60 @@ void HandleTBReloadAll( void )
 						}
 					}
 				}
+			}
+		}
+	}
 }
 
-void HandleTBShowCover( void )
+void HandleTBShowCover(void)
 {
 	ToggleEnemyView();
 }
-void HandleTBShowMines( void )
+void HandleTBShowMines(void)
 {
 	ToggleHostileTrapsView();
 }
-void HandleTBShowLOS( void )
+void HandleTBShowLOS(void)
 {
 	ToggleMercView();
 }
 
-void HandleTBToggleTrapNetworkView( void )
+void HandleTBToggleTrapNetworkView(void)
 {
 	ToggleTrapNetworkView();
 }
 
 
-void HandleTBGotoHigherStance( void )
+void HandleTBGotoHigherStance(void)
 {
-	if ( (gusSelectedSoldier != NOBODY) && ( gpItemPointer == NULL ) )
-		GotoHeigherStance(MercPtrs[ gusSelectedSoldier ]);
+	if ((gusSelectedSoldier != NOBODY) && (gpItemPointer == NULL))
+		GotoHeigherStance(MercPtrs[gusSelectedSoldier]);
 }
-void HandleTBGotoLowerStance( void )
+void HandleTBGotoLowerStance(void)
 {
-	if ( (gusSelectedSoldier != NOBODY) && ( gpItemPointer == NULL ) )
-		GotoLowerStance( MercPtrs[ gusSelectedSoldier ] );
+	if ((gusSelectedSoldier != NOBODY) && (gpItemPointer == NULL))
+		GotoLowerStance(MercPtrs[gusSelectedSoldier]);
 }
-void HandleTBLocateNextMerc( void )
+void HandleTBLocateNextMerc(void)
 {
 	UINT8	bID;
-	if ( gusSelectedSoldier != NOBODY )
+	if (gusSelectedSoldier != NOBODY)
 	{ //Select next merc
-		bID = FindNextMercInTeamPanel( MercPtrs[ gusSelectedSoldier ], FALSE, FALSE );
-		HandleLocateSelectMerc( bID, LOCATEANDSELECT_MERC );
+		bID = FindNextMercInTeamPanel(MercPtrs[gusSelectedSoldier], FALSE, FALSE);
+		HandleLocateSelectMerc(bID, LOCATEANDSELECT_MERC);
 		// Center to guy....
-		LocateSoldier( gusSelectedSoldier, SETLOCATOR );
+		LocateSoldier(gusSelectedSoldier, SETLOCATOR);
 	}
 }
-void HandleTBLocatePrevMerc( void )
+void HandleTBLocatePrevMerc(void)
 {
 	UINT8	bID;
-	if ( gusSelectedSoldier != NOBODY )
-	{ 
-		bID = FindPrevActiveAndAliveMerc( MercPtrs[ gusSelectedSoldier ], TRUE, TRUE );
-		HandleLocateSelectMerc( bID, LOCATEANDSELECT_MERC );
+	if (gusSelectedSoldier != NOBODY)
+	{
+		bID = FindPrevActiveAndAliveMerc(MercPtrs[gusSelectedSoldier], TRUE, TRUE);
+		HandleLocateSelectMerc(bID, LOCATEANDSELECT_MERC);
 		// Center to guy....
-		LocateSoldier( gusSelectedSoldier, SETLOCATOR );
+		LocateSoldier(gusSelectedSoldier, SETLOCATOR);
 	}
 }
 
@@ -8336,32 +6259,32 @@ void HandleTBBackpacks(void)
 	}
 }
 
-void HandleTBDropBackpacks( void )
+void HandleTBDropBackpacks(void)
 {
 	//if( UsingNewInventorySystem() && gusSelectedSoldier != NOBODY )
-	if( UsingNewInventorySystem() )
+	if (UsingNewInventorySystem())
 	{
 		//SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-		SOLDIERTYPE	*pTeamSoldier;
+		SOLDIERTYPE* pTeamSoldier;
 		UINT8		ubLoop;
 
 		INT16	sAPCost = APBPConstants[AP_BACK_PACK];
 		INT32	iBPCost = APBPConstants[BP_BACK_PACK];
 
-		for( ubLoop = gTacticalStatus.Team[ gbPlayerNum ].bFirstID; ubLoop <= gTacticalStatus.Team[ gbPlayerNum ].bLastID; ubLoop++ )
+		for (ubLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID; ubLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; ubLoop++)
 		{
-			pTeamSoldier=MercPtrs[ ubLoop ];
+			pTeamSoldier = MercPtrs[ubLoop];
 
-			if( OK_CONTROLLABLE_MERC( pTeamSoldier ) &&
-				OK_INTERRUPT_MERC( pTeamSoldier ) &&
-				!AM_A_ROBOT( pTeamSoldier ) &&
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) &&
+				OK_INTERRUPT_MERC(pTeamSoldier) &&
+				!AM_A_ROBOT(pTeamSoldier) &&
 				EnoughPoints(pTeamSoldier, sAPCost, iBPCost, FALSE) &&
 				//pTeamSoldier->bAssignment == pSoldier->bAssignment &&
 				pTeamSoldier->bAssignment < ON_DUTY &&
 				pTeamSoldier->inv[BPACKPOCKPOS].exists() &&
-				!pTeamSoldier->flags.DropPackFlag )
-			{				
-				if( ChangeDropPackStatus(pTeamSoldier, TRUE) )
+				!pTeamSoldier->flags.DropPackFlag)
+			{
+				if (ChangeDropPackStatus(pTeamSoldier, TRUE))
 				{
 					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_SOLDIER_DROP], pTeamSoldier->GetName());
 				}
@@ -8374,32 +6297,32 @@ void HandleTBDropBackpacks( void )
 	}
 }
 
-void HandleTBPickUpBackpacks( void )
+void HandleTBPickUpBackpacks(void)
 {
 	//if( UsingNewInventorySystem() && gusSelectedSoldier != NOBODY )
-	if( UsingNewInventorySystem() )
+	if (UsingNewInventorySystem())
 	{
 		//SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-		SOLDIERTYPE	*pTeamSoldier;
+		SOLDIERTYPE* pTeamSoldier;
 		UINT8		ubLoop;
 
 		INT16	sAPCost = APBPConstants[AP_BACK_PACK];
 		INT32	iBPCost = APBPConstants[BP_BACK_PACK];
 
-		for( ubLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID; ubLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; ubLoop++ )
+		for (ubLoop = gTacticalStatus.Team[gbPlayerNum].bFirstID; ubLoop <= gTacticalStatus.Team[gbPlayerNum].bLastID; ubLoop++)
 		{
-			pTeamSoldier=MercPtrs[ubLoop];
+			pTeamSoldier = MercPtrs[ubLoop];
 
-			if( OK_CONTROLLABLE_MERC( pTeamSoldier ) &&
-				OK_INTERRUPT_MERC( pTeamSoldier ) &&
-				!AM_A_ROBOT( pTeamSoldier ) &&
+			if (OK_CONTROLLABLE_MERC(pTeamSoldier) &&
+				OK_INTERRUPT_MERC(pTeamSoldier) &&
+				!AM_A_ROBOT(pTeamSoldier) &&
 				EnoughPoints(pTeamSoldier, sAPCost, iBPCost, FALSE) &&
 				//pTeamSoldier->bAssignment == pSoldier->bAssignment &&
 				pTeamSoldier->bAssignment < ON_DUTY &&
 				!pTeamSoldier->inv[BPACKPOCKPOS].exists() &&
-				pTeamSoldier->flags.DropPackFlag )
-			{				
-				if( ChangeDropPackStatus(pTeamSoldier, FALSE) )
+				pTeamSoldier->flags.DropPackFlag)
+			{
+				if (ChangeDropPackStatus(pTeamSoldier, FALSE))
 				{
 					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, NewInvMessage[NIV_SOLDIER_PICKUP], pTeamSoldier->GetName());
 				}
@@ -8412,23 +6335,23 @@ void HandleTBPickUpBackpacks( void )
 	}
 }
 
-void HandleTBSoldierRun( void )
+void HandleTBSoldierRun(void)
 {
-	SOLDIERTYPE *pSoldier = MercPtrs[ gusSelectedSoldier ];
-	if ( pSoldier->flags.uiStatusFlags & ( SOLDIER_DRIVER ) )
+	SOLDIERTYPE* pSoldier = MercPtrs[gusSelectedSoldier];
+	if (pSoldier->flags.uiStatusFlags & (SOLDIER_DRIVER))
 	{
-		pSoldier = GetSoldierStructureForVehicle( pSoldier->iVehicleId );
+		pSoldier = GetSoldierStructureForVehicle(pSoldier->iVehicleId);
 	}
-	if ( !pSoldier->MercInWater() && !(pSoldier->flags.uiStatusFlags & SOLDIER_ROBOT ) )
+	if (!pSoldier->MercInWater() && !(pSoldier->flags.uiStatusFlags & SOLDIER_ROBOT))
 	{
 		//change selected merc to run
-		if ( pSoldier->usUIMovementMode != WALKING 
-		   && pSoldier->usUIMovementMode != RUNNING
+		if (pSoldier->usUIMovementMode != WALKING
+			&& pSoldier->usUIMovementMode != RUNNING
 			&& pSoldier->usUIMovementMode != WALKING_WEAPON_RDY
-			 && pSoldier->usUIMovementMode != WALKING_DUAL_RDY
-			  && pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY )
+			&& pSoldier->usUIMovementMode != WALKING_DUAL_RDY
+			&& pSoldier->usUIMovementMode != WALKING_ALTERNATIVE_RDY)
 		{
-			UIHandleSoldierStanceChange( (UINT8)pSoldier->ubID, ANIM_STAND );
+			UIHandleSoldierStanceChange((UINT8)pSoldier->ubID, ANIM_STAND);
 			pSoldier->flags.fUIMovementFast = 1;
 		}
 		else
@@ -8447,15 +6370,15 @@ void HandleTBSoldierRun( void )
 	}
 }
 
-void HandleTacticalAmmoCrates( UINT8 magType )
+void HandleTacticalAmmoCrates(UINT8 magType)
 {
-	if(gTacticalStatus.fEnemyInSector)
+	if (gTacticalStatus.fEnemyInSector)
 		return;
 
 	INT32		crateItem;
 	INT32		worldItem;
 	//UINT8		magType;
-	bool		mergeSuccessful, ammoPresent;
+	bool		mergeSuccessful = false, ammoPresent = false;
 	int loopCount = 0;
 	OBJECTTYPE	newCrate;
 	ammoPresent = true;
@@ -8463,15 +6386,15 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 	while (ammoPresent && loopCount <= 10)
 	{
 		//look through all sector items for ammo.
-		for(unsigned int wItem = 0; wItem < guiNumWorldItems; wItem++)
+		for (unsigned int wItem = 0; wItem < guiNumWorldItems; wItem++)
 		{
 			crateItem = 0;
 			mergeSuccessful = false;
-			if(Item[gWorldItems[wItem].object.usItem].usItemClass == IC_AMMO && gWorldItems[wItem].bVisible == TRUE && gWorldItems[wItem].fExists && (gWorldItems[wItem].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[wItem].usFlags & WORLD_ITEM_ARMED_BOMB))
+			if (Item[gWorldItems[wItem].object.usItem].usItemClass == IC_AMMO && gWorldItems[wItem].bVisible == TRUE && gWorldItems[wItem].fExists && (gWorldItems[wItem].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[wItem].usFlags & WORLD_ITEM_ARMED_BOMB))
 			{
 				worldItem = gWorldItems[wItem].object.usItem;
 				//we don't want to do anything if the world item is already an ammo crate/box
-				if(Magazine[Item[worldItem].ubClassIndex].ubMagType == magType)
+				if (Magazine[Item[worldItem].ubClassIndex].ubMagType == magType)
 					continue;
 
 				//we have a valid, ammo item.  Look through Items.xml and see if we have an ammo crate for
@@ -8479,7 +6402,7 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 				for (UINT32 iLoop = 0; iLoop < gMAXITEMS_READ; ++iLoop)
 				{
 					//if ammo crate && calibers match && Ammo Types match
-					if(Item[iLoop].usItemClass == IC_AMMO && Magazine[Item[iLoop].ubClassIndex].ubMagType == magType && Magazine[Item[iLoop].ubClassIndex].ubCalibre == Magazine[Item[worldItem].ubClassIndex].ubCalibre && Magazine[Item[iLoop].ubClassIndex].ubAmmoType == Magazine[Item[worldItem].ubClassIndex].ubAmmoType)
+					if (Item[iLoop].usItemClass == IC_AMMO && Magazine[Item[iLoop].ubClassIndex].ubMagType == magType && Magazine[Item[iLoop].ubClassIndex].ubCalibre == Magazine[Item[worldItem].ubClassIndex].ubCalibre && Magazine[Item[iLoop].ubClassIndex].ubAmmoType == Magazine[Item[worldItem].ubClassIndex].ubAmmoType)
 					{
 						crateItem = iLoop;
 						break;
@@ -8487,18 +6410,18 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 				}
 
 				//if we found a crateItem in the list, we first want to see if we already have an item created
-				if(crateItem != 0)
+				if (crateItem != 0)
 				{
 					//look through world items first
-					for(unsigned int loop=0; loop < guiNumWorldItems; ++loop)
+					for (unsigned int loop = 0; loop < guiNumWorldItems; ++loop)
 					{
-						if(gWorldItems[loop].object.usItem == crateItem)
+						if (gWorldItems[loop].object.usItem == crateItem)
 						{
 							DistributeStatus(&gWorldItems[wItem].object, &gWorldItems[loop].object, Magazine[Item[crateItem].ubClassIndex].ubMagSize);
-							if(gWorldItems[wItem].object.ubNumberOfObjects < 1)
+							if (gWorldItems[wItem].object.ubNumberOfObjects < 1)
 							{
 								mergeSuccessful = true;
-								RemoveItemFromPool(gWorldItems[wItem].sGridNo,(wItem),gWorldItems[wItem].ubLevel);
+								RemoveItemFromPool(gWorldItems[wItem].sGridNo, (wItem), gWorldItems[wItem].ubLevel);
 								RemoveItemFromWorld(wItem);
 								break;
 							}
@@ -8506,42 +6429,42 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 
 					}
 					//no crates in sector inventory.  search merc inventories
-					if(!mergeSuccessful)
+					if (!mergeSuccessful)
 					{
-						for(int loop=0; loop<(int)OUR_TEAM_SIZE_NO_VEHICLE; ++loop)
+						for (int loop = 0; loop < (int)OUR_TEAM_SIZE_NO_VEHICLE; ++loop)
 						{
-							if(MercPtrs[loop]->bActive && MercPtrs[loop]->bInSector)
+							if (MercPtrs[loop]->bActive && MercPtrs[loop]->bInSector)
 							{
 								UINT32 invsize = MercPtrs[loop]->inv.size();
-								for(UINT32 pocket=0; pocket < invsize; ++pocket)
+								for (UINT32 pocket = 0; pocket < invsize; ++pocket)
 								{
-									if(MercPtrs[loop]->inv[pocket].usItem == crateItem)
+									if (MercPtrs[loop]->inv[pocket].usItem == crateItem)
 									{
 										DistributeStatus(&gWorldItems[wItem].object, &MercPtrs[loop]->inv[pocket], Magazine[Item[crateItem].ubClassIndex].ubMagSize);
-										if(gWorldItems[wItem].object.ubNumberOfObjects < 1)
+										if (gWorldItems[wItem].object.ubNumberOfObjects < 1)
 										{
 											mergeSuccessful = true;
-											RemoveItemFromPool(gWorldItems[wItem].sGridNo,(wItem),gWorldItems[wItem].ubLevel);
+											RemoveItemFromPool(gWorldItems[wItem].sGridNo, (wItem), gWorldItems[wItem].ubLevel);
 											RemoveItemFromWorld(wItem);
 											break;
 										}
 									}
 								}
-								if(mergeSuccessful == true)
+								if (mergeSuccessful == true)
 									break;
 							}
 						}
 					}
 					//no crates in merc inventory.  create a new sector item
-					if(!mergeSuccessful)
+					if (!mergeSuccessful)
 					{
 						CreateAmmo(crateItem, &newCrate, 0);
 						DistributeStatus(&gWorldItems[wItem].object, &newCrate, Magazine[Item[crateItem].ubClassIndex].ubMagSize);
 						AddItemToPool(gWorldItems[wItem].sGridNo, &newCrate, 1, gWorldItems[wItem].ubLevel, gWorldItems[wItem].usFlags, gWorldItems[wItem].bRenderZHeightAboveLevel);
-						if(gWorldItems[wItem].object.ubNumberOfObjects < 1)
+						if (gWorldItems[wItem].object.ubNumberOfObjects < 1)
 						{
 							mergeSuccessful = true;
-							RemoveItemFromPool(gWorldItems[wItem].sGridNo,(wItem),gWorldItems[wItem].ubLevel);
+							RemoveItemFromPool(gWorldItems[wItem].sGridNo, (wItem), gWorldItems[wItem].ubLevel);
 							RemoveItemFromWorld(wItem);
 						}
 					}
@@ -8550,17 +6473,17 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 		}
 
 		// if we added to / created a box/crate, then we're fine to reset this
-		if ( mergeSuccessful )
+		if (mergeSuccessful)
 			loopCount = 0;
 
 		//MM: loop through ammo multiple times, as boxes and crates may take a few passes to fill
 		ammoPresent = false;
-		for(unsigned int wItem = 0; wItem < guiNumWorldItems; ++wItem)
+		for (unsigned int wItem = 0; wItem < guiNumWorldItems; ++wItem)
 		{
-			if(Item[gWorldItems[wItem].object.usItem].usItemClass == IC_AMMO && gWorldItems[wItem].bVisible == TRUE && gWorldItems[wItem].fExists && (gWorldItems[wItem].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[wItem].usFlags & WORLD_ITEM_ARMED_BOMB))
+			if (Item[gWorldItems[wItem].object.usItem].usItemClass == IC_AMMO && gWorldItems[wItem].bVisible == TRUE && gWorldItems[wItem].fExists && (gWorldItems[wItem].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[wItem].usFlags & WORLD_ITEM_ARMED_BOMB))
 			{
 				worldItem = gWorldItems[wItem].object.usItem;
-				if(Magazine[Item[worldItem].ubClassIndex].ubMagType == magType)
+				if (Magazine[Item[worldItem].ubClassIndex].ubMagType == magType)
 					continue;
 
 				loopCount++;
@@ -8571,14 +6494,14 @@ void HandleTacticalAmmoCrates( UINT8 magType )
 
 		StackAndSort(TRUE);
 	}
-	ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11] );
+	ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pImpButtonText[11]);
 }
 
-void HandleTacticalInventoryMenu( void )
+void HandleTacticalInventoryMenu(void)
 {
-	for( INT32 cnt = 0; cnt < TACTICAL_INVENTORY_DIALOG_NUM; ++cnt)
+	for (INT32 cnt = 0; cnt < TACTICAL_INVENTORY_DIALOG_NUM; ++cnt)
 	{
-		wcscpy( gzUserDefinedButton[cnt], szTacticalInventoryDialogString[cnt+1] );		
+		wcscpy(gzUserDefinedButton[cnt], szTacticalInventoryDialogString[cnt + 1]);
 		gzUserDefinedButtonColor[cnt] = 0;
 	}
 
@@ -8596,12 +6519,14 @@ void HandleTacticalInventoryMenu( void )
 	gzUserDefinedButtonColor[10] = FONT_MCOLOR_LTYELLOW;
 	gzUserDefinedButtonColor[11] = FONT_MCOLOR_LTYELLOW;
 
-	DoMessageBox( MSG_BOX_BASIC_STYLE,  szTacticalInventoryDialogString[0], GAME_SCREEN, MSG_BOX_FLAG_GENERIC_SIXTEEN_BUTTONS, TacticalInventoryMessageBoxCallBack, NULL );
+	DoMessageBox(MSG_BOX_BASIC_STYLE,
+		szTacticalInventoryDialogString[0], GAME_SCREEN, MSG_BOX_FLAG_GENERIC_SIXTEEN_BUTTONS,
+		TacticalInventoryMessageBoxCallBack, NULL);
 }
 
-void TacticalInventoryMessageBoxCallBack( UINT8 ubExitValue )
+void TacticalInventoryMessageBoxCallBack(UINT8 ubExitValue)
 {
-	switch( ubExitValue )
+	switch (ubExitValue)
 	{
 	case 1:		// switch NVG
 		HandleTBSwapGoogles();
@@ -8612,26 +6537,26 @@ void TacticalInventoryMessageBoxCallBack( UINT8 ubExitValue )
 	case 3:		// move items (Shift+m)
 		HandleTacticalMoveItems();
 		break;
-	case 4:		
+	case 4:
 		break;
 	case 5:		// sort items
-		StackAndSort( TRUE );
+		StackAndSort(TRUE);
 		break;
 	case 6:		// merge items
-		StackAndSort( FALSE );
+		StackAndSort(FALSE);
 		break;
 	case 7:		// remove att
 		SeperateItems();
 		break;
 	case 8:		// organize items
 		SeperateItems();
-		StackAndSort( FALSE );
+		StackAndSort(FALSE);
 		break;
 	case 9:		// ammo crates
-		HandleTacticalAmmoCrates( AMMO_CRATE );		
+		HandleTacticalAmmoCrates(AMMO_CRATE);
 		break;
 	case 10:	// ammo boxes
-		HandleTacticalAmmoCrates( AMMO_BOX );
+		HandleTacticalAmmoCrates(AMMO_BOX);
 		break;
 	case 11:	// drop backpacks
 		HandleTBDropBackpacks();
@@ -8650,17 +6575,17 @@ void TacticalInventoryMessageBoxCallBack( UINT8 ubExitValue )
 	}
 }
 
-void FortificationSettingCallBack( UINT8 ubExitValue )
+void FortificationSettingCallBack(UINT8 ubExitValue)
 {
-	gCurrentFortificationStructure			= (UINT8)(DropDownTemplate<DROPDOWNNR_MSGBOX_1>::getInstance( ).GetSelectedEntryKey( ));
-	gCurrentFortificationTileLibraryIndex	= (UINT8)(DropDownTemplate<DROPDOWNNR_MSGBOX_2>::getInstance( ).GetSelectedEntryKey( ));
+	gCurrentFortificationStructure = (UINT8)(DropDownTemplate<DROPDOWNNR_MSGBOX_1>::getInstance().GetSelectedEntryKey());
+	gCurrentFortificationTileLibraryIndex = (UINT8)(DropDownTemplate<DROPDOWNNR_MSGBOX_2>::getInstance().GetSelectedEntryKey());
 }
 
-void HandleTacticalCoverMenu( void )
+void HandleTacticalCoverMenu(void)
 {
-	for( INT32 cnt = 0; cnt < TACTICAL_COVER_DIALOG_NUM; ++cnt)
+	for (INT32 cnt = 0; cnt < TACTICAL_COVER_DIALOG_NUM; ++cnt)
 	{
-		wcscpy( gzUserDefinedButton[cnt], szTacticalCoverDialogString[cnt+1] );		
+		wcscpy(gzUserDefinedButton[cnt], szTacticalCoverDialogString[cnt + 1]);
 		gzUserDefinedButtonColor[cnt] = 0;
 	}
 	gzUserDefinedButtonColor[0] = 0;
@@ -8680,12 +6605,13 @@ void HandleTacticalCoverMenu( void )
 	gzUserDefinedButtonColor[14] = (gubDrawMode != MINES_DRAW_NET_C) ? FONT_LTRED : FONT_MCOLOR_LTGREEN;
 	gzUserDefinedButtonColor[15] = (gubDrawMode != MINES_DRAW_NET_D) ? FONT_LTRED : FONT_MCOLOR_LTGREEN;
 
-	DoMessageBox( MSG_BOX_BASIC_STYLE,  szTacticalCoverDialogString[0], GAME_SCREEN, MSG_BOX_FLAG_GENERIC_SIXTEEN_BUTTONS, TacticalCoverMessageBoxCallBack, NULL );
+	DoMessageBox(MSG_BOX_BASIC_STYLE, szTacticalCoverDialogString[0], GAME_SCREEN,
+		MSG_BOX_FLAG_GENERIC_SIXTEEN_BUTTONS, TacticalCoverMessageBoxCallBack, NULL);
 }
 
-void TacticalCoverMessageBoxCallBack( UINT8 ubExitValue )
+void TacticalCoverMessageBoxCallBack(UINT8 ubExitValue)
 {
-	switch( ubExitValue )
+	switch (ubExitValue)
 	{
 	case 1:
 		gubDrawMode = DRAW_MODE_OFF;
@@ -8701,20 +6627,20 @@ void TacticalCoverMessageBoxCallBack( UINT8 ubExitValue )
 	case 5:
 		gDisplayEnemyRoles = !gDisplayEnemyRoles;
 		break;
-	case 6:		
-		if ( gubDrawMode == DRAW_MODE_FORTIFY )
+	case 6:
+		if (gubDrawMode == DRAW_MODE_FORTIFY)
 			gubDrawMode = DRAW_MODE_OFF;
 		else
 			gubDrawMode = DRAW_MODE_FORTIFY;
 		break;
 	case 7:
-		if ( gubDrawMode == DRAW_MODE_TRACKER_SMELL )
+		if (gubDrawMode == DRAW_MODE_TRACKER_SMELL)
 			gubDrawMode = DRAW_MODE_OFF;
 		else
 			gubDrawMode = DRAW_MODE_TRACKER_SMELL;
 		break;
 	case 8:
-		if ( gubDrawMode == DRAW_MODE_WEAPONDATA )
+		if (gubDrawMode == DRAW_MODE_WEAPONDATA)
 			gubDrawMode = DRAW_MODE_OFF;
 		else
 			gubDrawMode = DRAW_MODE_WEAPONDATA;
@@ -8744,35 +6670,36 @@ void TacticalCoverMessageBoxCallBack( UINT8 ubExitValue )
 		break;
 	}
 
-	DisplayCover( TRUE );
+	DisplayCover(TRUE);
 
-	if( ubExitValue <= TACTICAL_COVER_DIALOG_NUM )
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szTacticalCoverDialogPrintString[ubExitValue-1]);
+	if (ubExitValue <= TACTICAL_COVER_DIALOG_NUM)
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szTacticalCoverDialogPrintString[ubExitValue - 1]);
 }
 
-void ActivateCheatsMessageBoxCallBack( UINT8 ubExitValue )
+void ActivateCheatsMessageBoxCallBack(UINT8 ubExitValue)
 {
-	if ( ubExitValue == MSG_BOX_RETURN_YES )
+	if (ubExitValue == MSG_BOX_RETURN_YES)
 	{
-		if ( CHEATER_CHEAT_LEVEL( ) )
+		if (CHEATER_CHEAT_LEVEL())
 		{
-			RESET_CHEAT_LEVEL( );
+			RESET_CHEAT_LEVEL();
 		}
 		else
 		{
-			ACTIVATE_CHEAT_LEVEL( );
+			ACTIVATE_CHEAT_LEVEL();
 
 			// ATE; We're done.... start cheat mode....
-			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_CHEAT_LEVEL_TWO] );
-			SetHistoryFact( HISTORY_CHEAT_ENABLED, 0, GetWorldTotalMin( ), -1, -1 );
+			ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_CHEAT_LEVEL_TWO]);
+			SetHistoryFact(HISTORY_CHEAT_ENABLED, 0, GetWorldTotalMin(), -1, -1);
 		}
 	}
 }
 
+
 void HandleTacticalTransformItem(void)
 {
 	UINT16 usItem;
-	TransformInfoStruct *pTransformation;
+	TransformInfoStruct* pTransformation;
 
 	SOLDIERTYPE* pSoldier;
 	if (!GetSoldier(&pSoldier, gusSelectedSoldier))
@@ -8811,20 +6738,20 @@ void HandleTacticalTransformItem(void)
 	}
 }
 
-BOOLEAN FindTransformation(UINT16 usItem, TransformInfoStruct **pTransformation, BOOLEAN fTactical)
+BOOLEAN FindTransformation(UINT16 usItem, TransformInfoStruct** pTransformation, BOOLEAN fTactical)
 {
 	// find transformation
-	for ( UINT32 x = 0; x < MAXITEMS + 1; ++x )
+	for (UINT32 x = 0; x < MAXITEMS + 1; ++x)
 	{
-		if ( Transform[x].usItem == (UINT16)-1 )
+		if (Transform[x].usItem == (UINT16)-1)
 		{
 			break;
 		}
 		if (Transform[x].usItem == usItem &&
 			(!fTactical ||
-			HasItemFlag(usItem, CORPSE) ||
-			Transform[x].usResult[0] != usItem && Item[Transform[x].usResult[0]].usItemClass == Item[usItem].usItemClass ||
-			Transform[x].usResult[0] != usItem && Item[Transform[x].usResult[0]].ItemSize == Item[usItem].ItemSize))
+				HasItemFlag(usItem, CORPSE) ||
+				Transform[x].usResult[0] != usItem && Item[Transform[x].usResult[0]].usItemClass == Item[usItem].usItemClass ||
+				Transform[x].usResult[0] != usItem && Item[Transform[x].usResult[0]].ItemSize == Item[usItem].ItemSize))
 		{
 			*pTransformation = &Transform[x];
 			return TRUE;
@@ -8833,90 +6760,90 @@ BOOLEAN FindTransformation(UINT16 usItem, TransformInfoStruct **pTransformation,
 	return FALSE;
 }
 
-void HandleTacticalMoveItems( void )
+void HandleTacticalMoveItems(void)
 {
 	// Move all sector items to current mercs feet
-	if ( !(gTacticalStatus.fEnemyInSector) )
+	if (!(gTacticalStatus.fEnemyInSector))
 	{
-		HandleAllReachAbleItemsInTheSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
+		HandleAllReachAbleItemsInTheSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
 
-		SOLDIERTYPE *pSoldier;
-		if ( GetSoldier( &pSoldier, gusSelectedSoldier ) )
+		SOLDIERTYPE* pSoldier;
+		if (GetSoldier(&pSoldier, gusSelectedSoldier))
 		{
 
-			for ( UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop ) //for all items in sector
+			for (UINT32 uiLoop = 0; uiLoop < guiNumWorldItems; ++uiLoop) //for all items in sector
 			{
-				if ( (gWorldItems[ uiLoop ].bVisible == TRUE) && (gWorldItems[ uiLoop ].fExists) && (gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[ uiLoop ].usFlags & WORLD_ITEM_ARMED_BOMB) && (gWorldItems[ uiLoop ].sGridNo != pSoldier->sGridNo) )//item exists and is reachable and is not already on soldiers tile
+				if ((gWorldItems[uiLoop].bVisible == TRUE) && (gWorldItems[uiLoop].fExists) && (gWorldItems[uiLoop].usFlags & WORLD_ITEM_REACHABLE) && !(gWorldItems[uiLoop].usFlags & WORLD_ITEM_ARMED_BOMB) && (gWorldItems[uiLoop].sGridNo != pSoldier->sGridNo))//item exists and is reachable and is not already on soldiers tile
 				{
-					MoveItemPools(gWorldItems[ uiLoop ].sGridNo, pSoldier->sGridNo, gWorldItems[ uiLoop ].ubLevel, pSoldier->pathing.bLevel);
+					MoveItemPools(gWorldItems[uiLoop].sGridNo, pSoldier->sGridNo, gWorldItems[uiLoop].ubLevel, pSoldier->pathing.bLevel);
 				}
 			}
 
-			NotifySoldiersToLookforItems( );
+			NotifySoldiersToLookforItems();
 		}
 	}
 }
 
-void HandleTacticalStoreInvItem( void )
+void HandleTacticalStoreInvItem(void)
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	UINT8 ubStoreSlot = 0;
 	UINT16 APTotalCost = 0;
 
-	if( gusSelectedSoldier != NOBODY )
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+	if (gusSelectedSoldier != NOBODY)
+		pSoldier = MercPtrs[gusSelectedSoldier];
 	else
 		return;
 
-	if ( !UsingNewInventorySystem() )
+	if (!UsingNewInventorySystem())
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEMS_ONLY_NIV ] );
-		return;
-	}
-	
-	if( !pSoldier->inv[HANDPOS].exists() )
-	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEMS_NO_ITEM_IN_HAND ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEMS_ONLY_NIV]);
 		return;
 	}
 
-	if( pSoldier->usQuickItemId == pSoldier->inv[HANDPOS].usItem &&
-		( CanItemFitInPosition(pSoldier, &pSoldier->inv[HANDPOS], pSoldier->ubQuickItemSlot, FALSE) && !pSoldier->inv[pSoldier->ubQuickItemSlot].exists() ) )
+	if (!pSoldier->inv[HANDPOS].exists())
+	{
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEMS_NO_ITEM_IN_HAND]);
+		return;
+	}
+
+	if (pSoldier->usQuickItemId == pSoldier->inv[HANDPOS].usItem &&
+		(CanItemFitInPosition(pSoldier, &pSoldier->inv[HANDPOS], pSoldier->ubQuickItemSlot, FALSE) && !pSoldier->inv[pSoldier->ubQuickItemSlot].exists()))
 		ubStoreSlot = pSoldier->ubQuickItemSlot;
 
 	// find slot to store HANDPOS in
-	for(UINT8 i = GUNSLINGPOCKPOS; i < NUM_INV_SLOTS && ubStoreSlot == 0; ++i)
+	for (UINT8 i = GUNSLINGPOCKPOS; i < NUM_INV_SLOTS && ubStoreSlot == 0; ++i)
 	{
 		// take first slot that hand item would fit
-		if ( ( CanItemFitInPosition(pSoldier, &pSoldier->inv[HANDPOS], i, FALSE) && !pSoldier->inv[i].exists() ) )
+		if ((CanItemFitInPosition(pSoldier, &pSoldier->inv[HANDPOS], i, FALSE) && !pSoldier->inv[i].exists()))
 		{
 			ubStoreSlot = i;
 			break;
 		}
 	}
 
-	if( ubStoreSlot == 0 )
+	if (ubStoreSlot == 0)
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEMS_NOWHERE_TO_PLACE ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEMS_NOWHERE_TO_PLACE]);
 		return;
 	}
-	
+
 	// calculate needed APs
-	if ( UsingInventoryCostsAPSystem() )
-	{		
-		APTotalCost += GetInvMovementCost(&pSoldier->inv[HANDPOS], HANDPOS, ubStoreSlot  );
-		if( !EnoughPoints( pSoldier, APTotalCost, 0, TRUE ) )
+	if (UsingInventoryCostsAPSystem())
+	{
+		APTotalCost += GetInvMovementCost(&pSoldier->inv[HANDPOS], HANDPOS, ubStoreSlot);
+		if (!EnoughPoints(pSoldier, APTotalCost, 0, TRUE))
 			return;
 
 		// move item from HANDPOS to found ubStoreSlot
-		DeductPoints( pSoldier, APTotalCost, 0 );
+		DeductPoints(pSoldier, APTotalCost, 0);
 	}
 
 	pSoldier->inv[HANDPOS].MoveThisObjectTo(pSoldier->inv[ubStoreSlot], 1, pSoldier);
-	
+
 	// swap hands
-	if( pSoldier->inv[SECONDHANDPOS].exists() )
-		SwapHandItems( pSoldier );
+	if (pSoldier->inv[SECONDHANDPOS].exists())
+		SwapHandItems(pSoldier);
 
 	// update interface
 	fCharacterInfoPanelDirty = TRUE;
@@ -8924,89 +6851,89 @@ void HandleTacticalStoreInvItem( void )
 	pSoldier->HandleFlashLights();
 }
 
-void HandleTacticalTakeInvItem( INT32 iType )
+void HandleTacticalTakeInvItem(INT32 iType)
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	UINT8 ubItemSlot = HANDPOS;
 	UINT16 APTotalCost = 0;
 
-	if( iType == 0 )
+	if (iType == 0)
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEM_NO_DEFINED_ITEM ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEM_NO_DEFINED_ITEM]);
 		return;
 	}
 
-	if( gusSelectedSoldier != NOBODY )
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+	if (gusSelectedSoldier != NOBODY)
+		pSoldier = MercPtrs[gusSelectedSoldier];
 	else
 		return;
 
-	if ( !UsingNewInventorySystem() )
+	if (!UsingNewInventorySystem())
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEMS_ONLY_NIV ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEMS_ONLY_NIV]);
 		return;
 	}
 
 	// check if item is already in main hand
-	if ( pSoldier->inv[HANDPOS].exists() &&		
-		( iType > 0 ? ( pSoldier->inv[HANDPOS].usItem == iType ) : ( InvItemType( pSoldier->inv[HANDPOS].usItem ) == iType ) ) )
+	if (pSoldier->inv[HANDPOS].exists() &&
+		(iType > 0 ? (pSoldier->inv[HANDPOS].usItem == iType) : (InvItemType(pSoldier->inv[HANDPOS].usItem) == iType)))
 		return;
 
-	if( pSoldier->inv[HANDPOS].exists() && pSoldier->inv[SECONDHANDPOS].exists() )
+	if (pSoldier->inv[HANDPOS].exists() && pSoldier->inv[SECONDHANDPOS].exists())
 	{
 		// try to free HANDPOS for new item
 		HandleTacticalStoreInvItem();
 	}
 
 	// both hands are full
-	if( pSoldier->inv[HANDPOS].exists() && pSoldier->inv[SECONDHANDPOS].exists() )
+	if (pSoldier->inv[HANDPOS].exists() && pSoldier->inv[SECONDHANDPOS].exists())
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEM_NO_FREE_HAND ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEM_NO_FREE_HAND]);
 		return;
 	}
 
 	// search for type of item
-	for(UINT8 i = GUNSLINGPOCKPOS; i < NUM_INV_SLOTS; ++i)
+	for (UINT8 i = GUNSLINGPOCKPOS; i < NUM_INV_SLOTS; ++i)
 	{
-		if ( pSoldier->inv[i].exists() &&
-			!Item[ pSoldier->inv[i].usItem ].twohanded &&
-			( iType > 0 ? ( pSoldier->inv[i].usItem == iType ) : ( InvItemType( pSoldier->inv[i].usItem ) == iType ) ) )
+		if (pSoldier->inv[i].exists() &&
+			!Item[pSoldier->inv[i].usItem].twohanded &&
+			(iType > 0 ? (pSoldier->inv[i].usItem == iType) : (InvItemType(pSoldier->inv[i].usItem) == iType)))
 		{
 			ubItemSlot = i;
 			break;
 		}
 	}
 	// if not found item
-	if( ubItemSlot == HANDPOS )
+	if (ubItemSlot == HANDPOS)
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEM_NOT_FOUND ]);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEM_NOT_FOUND]);
 		return;
 	}
 
 	// remember item slot and id
 	pSoldier->usQuickItemId = pSoldier->inv[ubItemSlot].usItem;
-	pSoldier->ubQuickItemSlot = ubItemSlot; 	
+	pSoldier->ubQuickItemSlot = ubItemSlot;
 
-	if ( UsingInventoryCostsAPSystem() )
-	{		
+	if (UsingInventoryCostsAPSystem())
+	{
 		APTotalCost += GetInvMovementCost(&pSoldier->inv[ubItemSlot], ubItemSlot, HANDPOS);
-		if( !EnoughPoints( pSoldier, APTotalCost, 0, TRUE ) )
+		if (!EnoughPoints(pSoldier, APTotalCost, 0, TRUE))
 			return;
 	}
 
-	if( !CanItemFitInPosition( pSoldier, &pSoldier->inv[ubItemSlot], HANDPOS, FALSE ) )
+	if (!CanItemFitInPosition(pSoldier, &pSoldier->inv[ubItemSlot], HANDPOS, FALSE))
 	{
-		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[ QUICK_ITEM_CANNOT_TAKE ] );
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, TacticalStr[QUICK_ITEM_CANNOT_TAKE]);
 		return;
 	}
 
 	// if item in main hand exists -> move it to second hand
-	if( pSoldier->inv[HANDPOS].exists() )
+	if (pSoldier->inv[HANDPOS].exists())
 		HandleTBSwapHands();
 
 	// move item to handpos
-	if ( UsingInventoryCostsAPSystem() )
-		DeductPoints( pSoldier, APTotalCost, 0 );
+	if (UsingInventoryCostsAPSystem())
+		DeductPoints(pSoldier, APTotalCost, 0);
 	pSoldier->inv[ubItemSlot].MoveThisObjectTo(pSoldier->inv[HANDPOS], 1, pSoldier);
 
 	// update interface
@@ -9015,71 +6942,71 @@ void HandleTacticalTakeInvItem( INT32 iType )
 	pSoldier->HandleFlashLights();
 }
 
-INT32 InvItemType( UINT16 usItem )
+INT32 InvItemType(UINT16 usItem)
 {
-	if( usItem == XRAY_DEVICE )
+	if (usItem == XRAY_DEVICE)
 		return INV_ITEM_TYPE_XRAY;
-	if( Item[ usItem ].firstaidkit )
+	if (Item[usItem].firstaidkit)
 		return INV_ITEM_TYPE_FIRSTAID;
-	if( Item[ usItem ].usItemClass == IC_BLADE )
+	if (Item[usItem].usItemClass == IC_BLADE)
 		return INV_ITEM_TYPE_MELEE;
-	if( Item[ usItem ].usItemClass == IC_PUNCH && !HasItemFlag( usItem, TASER ) )
+	if (Item[usItem].usItemClass == IC_PUNCH && !HasItemFlag(usItem, TASER))
 		return INV_ITEM_TYPE_HTH;
-	if( HasItemFlag( usItem, HANDCUFFS ) )
-	//if( Item[ usItem ].usItemClass == IC_MISC && Item[ usItem ].usItemFlag & HANDCUFFS )
+	if (HasItemFlag(usItem, HANDCUFFS))
+		//if( Item[ usItem ].usItemClass == IC_MISC && Item[ usItem ].usItemFlag & HANDCUFFS )
 		return INV_ITEM_TYPE_HANDCUFFS;
 	//Item[ uiItem ].usSpotting
-	if( Item[ usItem ].usItemClass == IC_MISC && Item[ usItem ].dayvisionrangebonus )
+	if (Item[usItem].usItemClass == IC_MISC && Item[usItem].dayvisionrangebonus)
 		return INV_ITEM_TYPE_BINOCULARS;
-	if( HasItemFlag( usItem, TASER ) )
+	if (HasItemFlag(usItem, TASER))
 		return INV_ITEM_TYPE_TASER;
-	if( Item[ usItem ].usItemClass == IC_GUN && !Item[ usItem ].twohanded && Weapon[Item[ usItem ].ubClassIndex].ubWeaponType <= GUN_SMG )
+	if (Item[usItem].usItemClass == IC_GUN && !Item[usItem].twohanded && Weapon[Item[usItem].ubClassIndex].ubWeaponType <= GUN_SMG)
 		return INV_ITEM_TYPE_SIDEARM;
-	if( Item[ usItem ].usItemClass == IC_MISC && Item[ usItem ].metaldetector )
+	if (Item[usItem].usItemClass == IC_MISC && Item[usItem].metaldetector)
 		return INV_ITEM_TYPE_METALDETECTOR;
-		
+
 	return INV_ITEM_TYPE_UNKNOWN;
 }
 
-void HandleTacticalDropItem( UINT8 ubSlot )
+void HandleTacticalDropItem(UINT8 ubSlot)
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	UINT16 APTotalCost = 0;
-	
-	if( gusSelectedSoldier != NOBODY )
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+
+	if (gusSelectedSoldier != NOBODY)
+		pSoldier = MercPtrs[gusSelectedSoldier];
 	else
 		return;
 
-	if( pSoldier->inv[ ubSlot ].exists() )
-	{		
-		if ( UsingInventoryCostsAPSystem() )
-		{		
+	if (pSoldier->inv[ubSlot].exists())
+	{
+		if (UsingInventoryCostsAPSystem())
+		{
 			APTotalCost += GetInvMovementCost(&pSoldier->inv[ubSlot], ubSlot, HANDPOS);
-			APTotalCost += GetBasicAPsToPickupItem( pSoldier );
-			if( !EnoughPoints( pSoldier, APTotalCost, 0, TRUE ) )
+			APTotalCost += GetBasicAPsToPickupItem(pSoldier);
+			if (!EnoughPoints(pSoldier, APTotalCost, 0, TRUE))
 				return;
-			DeductPoints( pSoldier, APTotalCost, 0 );
+			DeductPoints(pSoldier, APTotalCost, 0);
 		}
 
-		SoldierDropItem( pSoldier, &pSoldier->inv[ ubSlot ] );
-		DeleteObj( &(pSoldier->inv[ ubSlot ]) );
+		SoldierDropItem(pSoldier, &pSoldier->inv[ubSlot]);
+		DeleteObj(&(pSoldier->inv[ubSlot]));
 	}
 }
 
-void HandleTacticalTakeItem( void )
+void HandleTacticalTakeItem(void)
 {
-	SOLDIERTYPE *pSoldier;
-	
-	if( gusSelectedSoldier != NOBODY )
-		pSoldier = MercPtrs[ gusSelectedSoldier ];
+	SOLDIERTYPE* pSoldier;
+
+	if (gusSelectedSoldier != NOBODY)
+		pSoldier = MercPtrs[gusSelectedSoldier];
 	else
 		return;
 
-	if( gpItemPointer == NULL )
+	if (gpItemPointer != NULL)
 	{
 		//not holding anything
-		if( pSoldier->inv[HANDPOS].exists() )
+		if (pSoldier->inv[HANDPOS].exists())
 		{
 			pSoldier->inv[HANDPOS].MoveThisObjectTo(gItemPointer);
 			gpItemPointer = &gItemPointer;
@@ -9092,22 +7019,25 @@ void HandleTacticalTakeItem( void )
 	pSoldier->HandleFlashLights();
 
 	// Set mouse
-	if( gpItemPointer->exists() )
+	if (gpItemPointer != NULL)
 	{
-		guiExternVo = GetInterfaceGraphicForItem( &(Item[ gpItemPointer->usItem ]) );
-		gusExternVoSubIndex = g_bUsePngItemImages ? 0 : Item[ gpItemPointer->usItem ].ubGraphicNum;
+		if (gpItemPointer->exists())
+		{
+			guiExternVo = GetInterfaceGraphicForItem(&(Item[gpItemPointer->usItem]));
+			gusExternVoSubIndex = g_bUsePngItemImages ? 0 : Item[gpItemPointer->usItem].ubGraphicNum;
 
-		MSYS_ChangeRegionCursor( &gMPanelRegion , EXTERN_CURSOR );
-		MSYS_SetCurrentCursor( EXTERN_CURSOR );
+			MSYS_ChangeRegionCursor(&gMPanelRegion, EXTERN_CURSOR);
+			MSYS_SetCurrentCursor(EXTERN_CURSOR);
 
-		fMapInventoryItem=TRUE;
-		fTeamPanelDirty=TRUE;
+			fMapInventoryItem = TRUE;
+			fTeamPanelDirty = TRUE;
+		}
 	}
 }
 
 void HandleTacticalReload()
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE* pSoldier;
 	INT16 bAPs = 0;
 
 	if (gusSelectedSoldier != NOBODY)
@@ -9122,10 +7052,10 @@ void HandleTacticalReload()
 	if (EnoughPoints(pSoldier, bAPs, 0, TRUE))
 	{
 		// OK, we have some ammo we can reload.... reload now!
-		if ( !AutoReload(pSoldier, false) )
+		if (!AutoReload(pSoldier, false))
 		{
 			// Do we say we could not reload gun...?
-			pSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE1);
+			pSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);
 			//TacticalCharacterDialogue( pSoldier, QUOTE_OUT_OF_AMMO );
 		}
 
@@ -9134,12 +7064,10 @@ void HandleTacticalReload()
 	}
 }
 
-extern OBJECTTYPE	*gpItemDescOrigAttachmentObject;
-
 void HandleTacticalTransformScope(void)
 {
 	UINT16 usItem;
-	TransformInfoStruct *pTransformation;
+	TransformInfoStruct* pTransformation;
 	OBJECTTYPE* pObj;
 
 	SOLDIERTYPE* pSoldier;
@@ -9204,7 +7132,7 @@ void HandleTacticalTransformScope(void)
 void HandleTacticalTransformLaser(void)
 {
 	UINT16 usItem;
-	TransformInfoStruct *pTransformation;
+	TransformInfoStruct* pTransformation;
 	OBJECTTYPE* pObj;
 
 	SOLDIERTYPE* pSoldier;
@@ -9267,7 +7195,7 @@ void HandleTacticalTransformLaser(void)
 void HandleTacticalTransformStock(void)
 {
 	UINT16 usItem;
-	TransformInfoStruct *pTransformation;
+	TransformInfoStruct* pTransformation;
 	OBJECTTYPE* pObj;
 
 	SOLDIERTYPE* pSoldier;
@@ -9350,7 +7278,7 @@ void HandleTacticalTransformStock(void)
 void HandleTacticalTransformFlashlight(void)
 {
 	UINT16 usItem;
-	TransformInfoStruct *pTransformation;
+	TransformInfoStruct* pTransformation;
 	OBJECTTYPE* pObj;
 
 	SOLDIERTYPE* pSoldier;
@@ -9430,7 +7358,7 @@ void HandleTacticalTransformFlashlight(void)
 	}
 }
 
-BOOLEAN FindLaserTransformation(UINT16 usItem, TransformInfoStruct **pTransformation)
+BOOLEAN FindLaserTransformation(UINT16 usItem, TransformInfoStruct** pTransformation)
 {
 	// find transformation
 	for (INT32 x = 0; x < MAXITEMS + 1; x++)
@@ -9452,7 +7380,7 @@ BOOLEAN FindLaserTransformation(UINT16 usItem, TransformInfoStruct **pTransforma
 	return FALSE;
 }
 
-BOOLEAN FindStockTransformation(UINT16 usItem, TransformInfoStruct **pTransformation)
+BOOLEAN FindStockTransformation(UINT16 usItem, TransformInfoStruct** pTransformation)
 {
 	// find transformation
 	for (INT32 x = 0; x < MAXITEMS + 1; x++)
@@ -9465,7 +7393,7 @@ BOOLEAN FindStockTransformation(UINT16 usItem, TransformInfoStruct **pTransforma
 			Transform[x].usResult[0] != 0 &&
 			Transform[x].usResult[0] != usItem &&
 			(Item[Transform[x].usResult[0]].usItemClass == Item[usItem].usItemClass && Transform[x].usResult[0] != usItem && Item[Transform[x].usResult[0]].ItemSize != Item[usItem].ItemSize ||
-			Item[Transform[x].usResult[0]].usItemClass & IC_MISC &&	Item[Transform[x].usResult[0]].attachmentclass & AC_STOCK))
+				Item[Transform[x].usResult[0]].usItemClass & IC_MISC && Item[Transform[x].usResult[0]].attachmentclass & AC_STOCK))
 		{
 			*pTransformation = &Transform[x];
 			return TRUE;
@@ -9474,7 +7402,7 @@ BOOLEAN FindStockTransformation(UINT16 usItem, TransformInfoStruct **pTransforma
 	return FALSE;
 }
 
-BOOLEAN FindFlashlightTransformation(UINT16 usItem, TransformInfoStruct **pTransformation)
+BOOLEAN FindFlashlightTransformation(UINT16 usItem, TransformInfoStruct** pTransformation)
 {
 	// find transformation
 	for (INT32 x = 0; x < MAXITEMS + 1; x++)
@@ -9495,7 +7423,7 @@ BOOLEAN FindFlashlightTransformation(UINT16 usItem, TransformInfoStruct **pTrans
 	return FALSE;
 }
 
-BOOLEAN FindScopeTransformation(UINT16 usItem, TransformInfoStruct **pTransformation)
+BOOLEAN FindScopeTransformation(UINT16 usItem, TransformInfoStruct** pTransformation)
 {
 	INT32 iFoundIndex;
 	FLOAT scope;
@@ -9588,6 +7516,213 @@ void HandleTBSkillsMenu(void)
 		TraitsMenu(MercPtrs[gusSelectedSoldier]->sGridNo);
 	}
 }
+
+void CreateCivillian(INT8 civBodyType)
+{
+	SOLDIERCREATE_STRUCT		MercCreateStruct;
+	INT32 usMapPos = gusMapPos;
+	//static						INT8 ubBodyType = FATCIV;
+
+	// FATCIV = 11 .... CRIPPLECIV = 17 total civ body type : 7
+
+	INT8 ubBodyType = civBodyType;
+	if (ubBodyType == NULL)
+		ubBodyType = 11 + Random(7);
+	else if (ubBodyType == -1) // this option always random
+	{
+		ubBodyType = 11 + Random(7);
+		gCivilianBodyType = -1; // keep random position
+	}
+
+	MercCreateStruct.ubProfile = NO_PROFILE;
+	MercCreateStruct.sSectorX = gWorldSectorX;
+	MercCreateStruct.sSectorY = gWorldSectorY;
+	MercCreateStruct.bSectorZ = gbWorldSectorZ;
+	MercCreateStruct.ubBodyType = ubBodyType;
+	MercCreateStruct.ubDirection = Random(NUM_WORLD_DIRECTIONS);
+
+	++ubBodyType;
+
+	if (ubBodyType > KIDCIV)
+	{
+		ubBodyType = FATCIV;
+	}
+
+	MercCreateStruct.bTeam = CIV_TEAM;
+	MercCreateStruct.sInsertionGridNo = usMapPos;
+	RandomizeNewSoldierStats(&MercCreateStruct);
+
+	INT8 iubID;
+	SOLDIERTYPE* pEntity = TacticalCreateSoldier(&MercCreateStruct, (UINT8*)&iubID);
+	if (pEntity)
+	{
+		AddSoldierToSector(iubID);
+
+		DebugMsg(TOPIC_CREATE_ENTITY, DBG_LEVEL_3,
+			String("CreateCivillian type: %d, ubID: %d, gridNo: %d", ubBodyType, pEntity->ubID, gusMapPos)
+		);
+
+		// So we can see them!
+		AllTeamsLookForAll(NO_INTERRUPTS);
+	}
+}
+
+void HandleSelectCreateCivilian()
+{
+	if (GetMouseMapPos(&gusMapPos))
+	{
+		wcscpy(gzUserDefinedButton[0], L"FATCIV");		// ubExitValue equal with 1
+		wcscpy(gzUserDefinedButton[1], L"MANCIV");
+		wcscpy(gzUserDefinedButton[2], L"MINICIV");
+		wcscpy(gzUserDefinedButton[3], L"DRESSCIV");
+		wcscpy(gzUserDefinedButton[4], L"HATKIDCIV");
+		wcscpy(gzUserDefinedButton[5], L"KIDCIV");
+		wcscpy(gzUserDefinedButton[6], L"CRIPPLECIV");
+		wcscpy(gzUserDefinedButton[7], L"-RANDOM-");			// ubExitValue equal with 8
+
+		DoMessageBox(MSG_BOX_BASIC_MEDIUM_BUTTONS, L"Select Type of Civilian", GAME_SCREEN,
+			MSG_BOX_FLAG_GENERIC_EIGHT_BUTTONS, SelectCreateCivilianCallback, NULL);
+	}
+}
+
+void SelectCreateCivilianCallback(UINT8 ubExitValue)
+{
+	if (ubExitValue != NULL)
+	{
+		if (ubExitValue >= 1 && ubExitValue <= 7)
+			gCivilianBodyType = 10 + ubExitValue;
+		else // pick random
+			gCivilianBodyType = -1;
+		CreateCivillian(gCivilianBodyType);
+	}
+}
+
+
+//***************************************************************************
+// JADOL -- Cheat Create New Bad Merc with Option
+void CreateBadMerc(UINT32* puiNewEvent, bool hasSelected)
+{
+	//if (!hasSelected)
+	//{
+	//	if (*puiNewEvent != NULL)
+	//		*puiNewEvent = I_NEW_BADMERC;
+	//	return;
+	//}
+
+	SOLDIERTYPE* pSoldier = NULL;
+	INT32 usMapPos = gusMapPos;
+
+	if (!hasSelected)
+		GetMouseMapPos(&usMapPos);
+
+	// Are we an OK dest?
+	if (!IsLocationSittable(usMapPos, 0))
+	{
+		return;
+	}
+
+	if ((gBadMercBodyType < 1 || gBadMercBodyType > 7))
+		gBadMercBodyType = 3; // default is ArmyTroop with red shirt
+
+
+	switch (gBadMercBodyType)
+	{
+	case 1: pSoldier = TacticalCreateNewbie(); break;
+	case 2: pSoldier = TacticalCreateAdministrator(); break;
+	case 3: pSoldier = TacticalCreateArmyTroop(); break;
+	case 4: pSoldier = TacticalCreateEliteEnemy(); break;
+	case 5: pSoldier = TacticalCreateEnemyTank(); break;
+	case 6: pSoldier = TacticalCreateEnemyJeep(); break;
+	case 7: pSoldier = TacticalCreateEnemyRobot(); break;
+	}
+
+	DebugMsg(TOPIC_CREATE_ENTITY, DBG_LEVEL_3,
+		String("CreateBadMerc type: %d, ubID: %d, gridNo: %d", gBadMercBodyType, pSoldier->ubID, gusMapPos)
+	);
+
+	//Add soldier strategic info, so it doesn't break the counters!
+	if (pSoldier)
+	{
+		if (!gbWorldSectorZ)
+		{
+			SECTORINFO* pSector = &SectorInfo[SECTOR(gWorldSectorX, gWorldSectorY)];
+			switch (pSoldier->ubSoldierClass)
+			{
+			case SOLDIER_CLASS_NONE:					pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
+			case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
+			case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
+			case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
+			case SOLDIER_CLASS_TANK:					pSector->ubNumTanks++;	pSector->ubTanksInBattle++;  break;
+			case SOLDIER_CLASS_JEEP:					pSector->ubNumJeeps++;	pSector->ubJeepsInBattle++; break;
+			case SOLDIER_CLASS_ROBOT:					pSector->ubNumRobots++; pSector->ubRobotsInBattle++; break;
+			}
+		}
+		else
+		{
+			UNDERGROUND_SECTORINFO* pSector = FindUnderGroundSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
+			if (pSector)
+			{
+				switch (pSoldier->ubSoldierClass)
+				{
+				case SOLDIER_CLASS_NONE:					pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
+				case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
+				case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
+				case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
+				case SOLDIER_CLASS_TANK:					pSector->ubNumTanks++;	pSector->ubTanksInBattle++; break;
+				case SOLDIER_CLASS_JEEP:					pSector->ubNumJeeps++;	pSector->ubJeepsInBattle++; break;
+				case SOLDIER_CLASS_ROBOT:					pSector->ubNumRobots++; pSector->ubRobotsInBattle++; break;
+				}
+			}
+		}
+
+		// sevenfm
+		if (IS_MERC_BODY_TYPE(pSoldier))
+		{
+			if (gsInterfaceLevel)
+				pSoldier->SetSoldierHeight(WALL_HEIGHT);
+			else
+				pSoldier->SetSoldierHeight(0);
+		}
+
+		pSoldier->ubStrategicInsertionCode = INSERTION_CODE_GRIDNO;
+		pSoldier->usStrategicInsertionData = usMapPos;
+		UpdateMercInSector(pSoldier, gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
+		AllTeamsLookForAll(NO_INTERRUPTS);
+	}
+
+}
+
+void HandleSelectBadMercType()
+{
+	if (GetMouseMapPos(&gusMapPos))
+	{
+		wcscpy(gzUserDefinedButton[0], L"Newbie Troop");		// ubExitValue equal with 1
+		wcscpy(gzUserDefinedButton[1], L"Administrator");
+		wcscpy(gzUserDefinedButton[2], L"Army Troop");
+		wcscpy(gzUserDefinedButton[3], L"Elite Troop");
+		wcscpy(gzUserDefinedButton[4], L"Tank");
+		wcscpy(gzUserDefinedButton[5], L"Jeep");
+		wcscpy(gzUserDefinedButton[6], L"Robot");
+		wcscpy(gzUserDefinedButton[7], L"-Unused-");			// ubExitValue equal with 8
+
+		DoMessageBox(MSG_BOX_BASIC_MEDIUM_BUTTONS, L"Select Type of Enemy", GAME_SCREEN,
+			MSG_BOX_FLAG_GENERIC_EIGHT_BUTTONS, SelectBadMercTypeCallback, NULL);
+	}
+}
+
+void SelectBadMercTypeCallback(UINT8 ubExitValue)
+{
+	if (ubExitValue != NULL)
+	{
+		if (ubExitValue >= 1 && ubExitValue <= 7) {
+			gBadMercBodyType = ubExitValue;
+			CreateBadMerc(NULL, true);
+		}
+	}
+}
+
+//--
+//***************************************************************************
 
 BOOLEAN CheckAutoBandage(void)
 {

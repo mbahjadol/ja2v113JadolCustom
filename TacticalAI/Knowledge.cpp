@@ -8,6 +8,11 @@
 	#include "Render Fun.h"
 	#include "Soldier macros.h"
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif // DEBUGDECISIONS
+
+
 extern SECTOR_EXT_DATA	SectorExternalData[256][4];
 
 void CallAvailableEnemiesTo( INT32 sGridNo )

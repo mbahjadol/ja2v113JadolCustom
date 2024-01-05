@@ -21,6 +21,7 @@ enum
 	NUM_SM_BUTTONS
 };
 
+
 enum
 {
 	TEAM_DONE_BUTTON = 0,

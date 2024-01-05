@@ -890,6 +890,16 @@ void MercComplainAboutEquipment( UINT8 ubProfile )
 				// anv: morale hit
 				HandleMoraleEvent( pSoldier, MORALE_BAD_EQUIPMENT, pSoldier->sSectorX, pSoldier->sSectorY, pSoldier->bSectorZ );
 				ModifyPlayerReputation( REPUTATION_TOWN_LOST );
+
+				// JADOL -- Every merc is complaining about their gear only once if TRUE, after complaint once then they will NEVER complaint again
+				if (gGameExternalOptions.fMercGearComplainOnlyOnce == TRUE)
+				{
+					gMercProfiles[pSoldier->ubProfile].bArmourAttractiveness = -1;
+					gMercProfiles[pSoldier->ubProfile].bMainGunAttractiveness = -1;
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"'%s' complaint about weapon/armour they uses, and will not complaint again!",
+						pSoldier->GetName(), pSoldier->GetName());
+				}
+				// -- 
 			}
 		}
 		// if we can't complain right now, do it later
@@ -911,7 +921,7 @@ void UpdateBuddyAndHatedCounters( void )
 	UINT8									ubOtherProfileID;
 	SOLDIERTYPE						*pSoldier;
 	SOLDIERTYPE						*pOtherSoldier;
-	MERCPROFILESTRUCT			*pProfile;
+	MERCPROFILESTRUCT			*pProfile; 
 	BOOLEAN								fSameGroupOnly;
 
 	BOOLEAN								fUpdatedTimeTillNextHatedComplaint = FALSE;
@@ -1024,6 +1034,7 @@ void UpdateBuddyAndHatedCounters( void )
 												else
 													TacticalCharacterDialogue( pSoldier, QUOTE_NON_AIM_HATED_5 );
 											}
+											RespondHateQuoteByTheirPersonality(pOtherSoldier); // JADOL -- Add respond hate by someone
 											StopTimeCompression();
 										}
 										else if ( pProfile->bHatedCount[iLoop] == 0 )
@@ -1053,10 +1064,26 @@ void UpdateBuddyAndHatedCounters( void )
 													TacticalCharacterDialogue( pSoldier, QUOTE_MERC_QUIT_HATED_5 );
 												}
 
-												// Leave now! ( handle equipment too )....
-												TacticalCharacterDialogueWithSpecialEvent( pSoldier, 0, DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING, 0,0 );
-
-												pSoldier->ubLeaveHistoryCode = HISTORY_MERC_QUIT;
+												// JADOL -- Handle irresistible player external gamesetting option flag
+												if (!gGameExternalOptions.fMercIrresistiblePlayer)
+												{
+													// Leave now! ( handle equipment too )....
+													TacticalCharacterDialogueWithSpecialEvent(pSoldier, 0, DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING, 0, 0);
+													pSoldier->ubLeaveHistoryCode = HISTORY_MERC_QUIT;
+												}
+												else
+												{
+													RespondHateQuoteByTheirPersonality(pOtherSoldier);
+													TacticalCharacterDialogueWithSpecialEvent(pSoldier,
+														0,
+														DIALOGUE_SPECIAL_EVENT_MULTIPURPOSE,
+														MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE,
+														(UINT32)pOtherSoldier->ubID);
+													// reset their hatedCount, add next complain to next day in event on
+													// MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE
+													StopTimeCompression();
+												}
+												// --
 											}
 											else
 											{
@@ -1091,6 +1118,7 @@ void UpdateBuddyAndHatedCounters( void )
 														TacticalCharacterDialogue( pSoldier, QUOTE_NON_AIM_HATED_5 );
 												}
 												pProfile->ubTimeTillNextHatedComplaint = TIME_BETWEEN_HATED_COMPLAINTS - 1;
+												RespondHateQuoteByTheirPersonality(pOtherSoldier); // JADOL -- Add respond hate by someone
 											}
 										}
 									}
@@ -1143,6 +1171,7 @@ void UpdateBuddyAndHatedCounters( void )
 												else
 													TacticalCharacterDialogue( pSoldier, QUOTE_NON_AIM_HATED_5 );
 											}
+											RespondHateQuoteByTheirPersonality(pOtherSoldier); // JADOL -- Add respond hate by someone
 										}
 									}
 								}
@@ -1162,14 +1191,14 @@ void UpdateBuddyAndHatedCounters( void )
 										{
 											// complain!
 											TacticalCharacterDialogue( pSoldier, QUOTE_LEARNED_TO_HATE_MERC );
+											RespondHateQuoteByTheirPersonality(pOtherSoldier);
 											StopTimeCompression();
 										}
 										else if (pProfile->bLearnToHateCount == 0)
 										{
 											// set as bHated[2];
 											// anv: nope, we don't want to overwrite possible standard foe, instead added extra check to WhichHated(), CanMercBeHired()
-											if (OKToCheckOpinion(ubOtherProfileID)) {
-											//pProfile->bHated[2] = pProfile->bLearnToHate;
+											if (OKToCheckOpinion(ubOtherProfileID)) {											
 											pProfile->bMercOpinion[ubOtherProfileID] = HATED_OPINION;
 											}
 #ifdef JA2UB
@@ -1178,10 +1207,28 @@ void UpdateBuddyAndHatedCounters( void )
 											if (pSoldier->ubWhatKindOfMercAmI == MERC_TYPE__MERC || (pSoldier->ubWhatKindOfMercAmI == MERC_TYPE__NPC && (pSoldier->ubProfile == DEVIN || pSoldier->ubProfile == SLAY || pSoldier->ubProfile == IGGY || pSoldier->ubProfile == CONRAD ) ) )
 #endif
 											{
-												// Leave now! ( handle equipment too )....
-												TacticalCharacterDialogue( pSoldier, QUOTE_MERC_QUIT_LEARN_TO_HATE );
-												TacticalCharacterDialogueWithSpecialEvent( pSoldier, 0, DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING, 0,0 );
-												pSoldier->ubLeaveHistoryCode = HISTORY_MERC_QUIT;
+												// JADOL -- Handle irresistible player external gamesetting option flag
+												if (!gGameExternalOptions.fMercIrresistiblePlayer)
+												{
+													// Leave now! ( handle equipment too )....
+													TacticalCharacterDialogue(pSoldier, QUOTE_MERC_QUIT_LEARN_TO_HATE);
+													TacticalCharacterDialogueWithSpecialEvent(pSoldier, 0, DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING, 0, 0);
+													pSoldier->ubLeaveHistoryCode = HISTORY_MERC_QUIT;
+												}
+												else
+												{
+													TacticalCharacterDialogue(pSoldier, QUOTE_MERC_QUIT_LEARN_TO_HATE);
+													RespondHateQuoteByTheirPersonality(pOtherSoldier);
+													TacticalCharacterDialogueWithSpecialEvent(pSoldier,
+														0,
+														DIALOGUE_SPECIAL_EVENT_MULTIPURPOSE,
+														MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE,
+														(UINT32) pOtherSoldier->ubID);
+													// reset their hatedCount, add next complain to next day in event on
+													// MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE
+													StopTimeCompression();
+												}
+												// --
 
 											}
 											else if (pSoldier->ubWhatKindOfMercAmI == MERC_TYPE__NPC)

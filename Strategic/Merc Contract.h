@@ -59,6 +59,9 @@ BOOLEAN	MercContractHandling( SOLDIERTYPE	*pSoldier, UINT8 ubDesiredAction );
 BOOLEAN StrategicRemoveMerc( SOLDIERTYPE *pSoldier );
 BOOLEAN BeginStrategicRemoveMerc( SOLDIERTYPE *pSoldier, BOOLEAN fAddRehireButton );
 
+// JADOL -- Merc want to depart because hate some one and player reject that!
+void MercWantDepartCauseHateAndRejectedByPlayer(SOLDIERTYPE* pSoldier, SOLDIERTYPE* pOtherSoldier);
+// --
 
 BOOLEAN WillMercRenew( SOLDIERTYPE	*pSoldier, BOOLEAN fSayQuote );
 void HandleBuddiesReactionToFiringMerc(SOLDIERTYPE *pFiredSoldier, INT8 bMoraleEvent );

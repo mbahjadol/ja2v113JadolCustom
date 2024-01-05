@@ -553,6 +553,16 @@ INT32 GetStrategicAIResourceCount( UINT8 aType )
 	return gASDResource[aType];
 }
 
+// JADOL -- Add to show in game statistic when press "v"
+INT32 GetStrategicAIResource_OrderedCount( UINT8 aType )
+{
+	if (aType < 0 || aType >= ASD_RESOURCE_MAX)
+		return 0;
+
+	return gASDResource_Ordered[aType];
+}
+//--
+
 // add resources to the AIs resource pool
 void AddStrategicAIResources( UINT8 aType, INT32 aAmount )
 {

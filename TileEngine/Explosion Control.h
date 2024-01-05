@@ -28,6 +28,9 @@ typedef struct
 	INT8												bLevel;								// World level
 	UINT8												ubUnsed[1];
 
+#ifdef JADOLDEBUG
+	INT8 commingFrom;
+#endif // JADOLDEBUG
 } EXPLOSION_PARAMS;
  
 
@@ -100,8 +103,16 @@ extern	EXPLOSIONTYPE								gExplosionData[ NUM_EXPLOSION_SLOTS ];
 extern UINT8 gubElementsOnExplosionQueue;
 extern BOOLEAN gfExplosionQueueActive;
 
-void IgniteExplosion( UINT8 ubOwner, INT16 sX, INT16 sY, INT16 sZ, INT32 sGridNo, UINT16 usItem, INT8 bLevel, UINT8 ubDirection = DIRECTION_IRRELEVANT, OBJECTTYPE * pObj =NULL );
-void InternalIgniteExplosion( UINT8 ubOwner, INT16 sX, INT16 sY, INT16 sZ, INT32 sGridNo, UINT16 usItem, BOOLEAN fLocate, INT8 bLevel, UINT8 ubDirection = DIRECTION_IRRELEVANT, OBJECTTYPE * pObj =NULL );
+void IgniteExplosion( UINT8 ubOwner, INT16 sX, INT16 sY, INT16 sZ, INT32 sGridNo, UINT16 usItem, INT8 bLevel, UINT8 ubDirection = DIRECTION_IRRELEVANT, OBJECTTYPE * pObj =NULL
+#ifdef JADOLDEBUG
+	, INT8 commingFrom = NULL
+#endif // JADOLDEBUG
+);
+void InternalIgniteExplosion( UINT8 ubOwner, INT16 sX, INT16 sY, INT16 sZ, INT32 sGridNo, UINT16 usItem, BOOLEAN fLocate, INT8 bLevel, UINT8 ubDirection = DIRECTION_IRRELEVANT, OBJECTTYPE * pObj =NULL
+#ifdef JADOLDEBUG
+	, INT8 commingFrom = NULL
+#endif // JADOLDEBUG
+);
 
 
 void GenerateExplosion( EXPLOSION_PARAMS *pExpParams );

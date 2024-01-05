@@ -230,7 +230,7 @@ void StartPlayerTeamTurn( BOOLEAN fDoBattleSnd, BOOLEAN fEnteringCombatMode )
 					if ( fDoBattleSnd )
 					{
 						// Say ATTENTION SOUND...
-						MercPtrs[ gusSelectedSoldier ]->DoMercBattleSound( BATTLE_SOUND_ATTN1 );
+						MercPtrs[ gusSelectedSoldier ]->DoMercBattleSound( BATTLE_SOUND_ATTN );
 					}
 
 					if ( gsInterfaceLevel == 1 )
@@ -1332,7 +1332,7 @@ void EndInterrupt( BOOLEAN fMarkInterruptOccurred )
 					SlideTo( NOWHERE, gusSelectedSoldier, NOBODY ,SETLOCATOR);
 
 					// Say ATTENTION SOUND...
-					MercPtrs[ gusSelectedSoldier ]->DoMercBattleSound( BATTLE_SOUND_ATTN1 );
+					MercPtrs[ gusSelectedSoldier ]->DoMercBattleSound( BATTLE_SOUND_ATTN );
 
 					if ( gsInterfaceLevel == 1 )
 					{
@@ -2174,7 +2174,11 @@ void AddToIntList( UINT8 ubID, BOOLEAN fGainControl, BOOLEAN fCommunicate )
 		if (Menptr[ubID].flags.uiStatusFlags & SOLDIER_UNDERAICONTROL)
 		{
 			DebugAI( String( "Taking away AI control from %d", ubID ) );
-			Menptr[ubID].flags.uiStatusFlags &= (~SOLDIER_UNDERAICONTROL);
+			// JADOL -- Change to Use AIMain.cpp=>EndAIGuysTurn() because inconsistent when on MainAI.cpp=>HandleSoldierAI()
+			// that fTurnInProgress is TRUE but flags.uiStatusFlags is not SOLDIER_UNDERAICONTROL
+			//Menptr[ubID].flags.uiStatusFlags &= (~SOLDIER_UNDERAICONTROL);
+			EndAIGuysTurn(&Menptr[ubID]);
+			// --
 		}
 	}
 }

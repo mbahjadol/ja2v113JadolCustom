@@ -489,6 +489,12 @@ BOOLEAN		gfUINewStateForIntTile						= FALSE;
 
 BOOLEAN		gfUIForceReExamineCursorData		= FALSE;
 
+// selection bad merc body type when cheat
+INT8 gBadMercBodyType = NULL;
+
+// selection civilian body type when cheat
+INT8 gCivilianBodyType = NULL;
+
 void SetUIMouseCursor( );
 void ClearEvent( UI_EVENT *pUIEvent );
 UINT8 GetAdjustedAnimHeight( UINT8 ubAnimHeight, INT8 bChange );
@@ -1179,11 +1185,15 @@ UINT32 UIHandleNewMerc( UI_EVENT *pUIEvent )
 	return( GAME_SCREEN );
 }
 
+// JADOL -- this function is *DEPRECATED*, the reason is prone to errors and the alternative is to call
+// "Turn Based Input.cpp"::CreateBadMerc(..)
 UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 {
+	return(GAME_SCREEN); // DEPRECATED ...
+	// ===================================
+
 	SOLDIERTYPE *pSoldier;
 	INT32 usMapPos;
-	UINT16 usRandom;
 
 	//Get map postion and place the enemy there.
 	if( GetMouseMapPos( &usMapPos) )
@@ -1193,16 +1203,20 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 		{
 			return( GAME_SCREEN );
 		}
+
+		if (gBadMercBodyType == NULL || (gBadMercBodyType < 0 && gBadMercBodyType > 6))
+			gBadMercBodyType = 2; // default is ArmyTroop with red shirt
+
 		
-		usRandom = 1;// (UINT16)Random( 6 );
-		switch (usRandom)
+		switch (gBadMercBodyType)
 		{
-		case 0: pSoldier = TacticalCreateAdministrator(); break;
-		case 1: pSoldier = TacticalCreateArmyTroop(); break;
-		case 2: pSoldier = TacticalCreateEliteEnemy(); break;
-		case 3: pSoldier = TacticalCreateEnemyTank(); break;
-		case 4: pSoldier = TacticalCreateEnemyJeep(); break;
-		case 5: pSoldier = TacticalCreateEnemyRobot(); break;
+		case 0: pSoldier = TacticalCreateNewbie(); break;
+		case 1: pSoldier = TacticalCreateAdministrator(); break;
+		case 2: pSoldier = TacticalCreateArmyTroop(); break;
+		case 3: pSoldier = TacticalCreateEliteEnemy(); break;
+		case 4: pSoldier = TacticalCreateEnemyTank(); break;
+		case 5: pSoldier = TacticalCreateEnemyJeep(); break;
+		case 6: pSoldier = TacticalCreateEnemyRobot(); break;
 		}
 
 		//Add soldier strategic info, so it doesn't break the counters!
@@ -1213,6 +1227,7 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 				SECTORINFO *pSector = &SectorInfo[ SECTOR( gWorldSectorX, gWorldSectorY ) ];
 				switch( pSoldier->ubSoldierClass )
 				{
+					case SOLDIER_CLASS_NONE:					pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 					case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 					case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
 					case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
@@ -1228,6 +1243,7 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 				{
 					switch( pSoldier->ubSoldierClass )
 					{
+						case SOLDIER_CLASS_NONE:					pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 						case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 						case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
 						case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
@@ -1256,6 +1272,7 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 
 	return( GAME_SCREEN );
 }
+// --
 
 /*void TankBattlefun()
 {
@@ -2185,7 +2202,7 @@ UINT32 UIHandleCMoveMerc( UI_EVENT *pUIEvent )
 					//else
 					if ( pSoldier->EVENT_InternalGetNewSoldierPath( usMapPos, pSoldier->usUIMovementMode, TRUE, FALSE ) )
 					{
-						pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_OK1, BATTLE_SND_LOWER_VOLUME );
+						pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_OK, BATTLE_SND_LOWER_VOLUME );
 					}
 					else
 					{
@@ -2384,7 +2401,7 @@ UINT32 UIHandleCMoveMerc( UI_EVENT *pUIEvent )
 
 					if ( pSoldier->pathing.usPathDataSize > 5 )
 					{
-						pSoldier->DoMercBattleSound( BATTLE_SOUND_OK1 );
+						pSoldier->DoMercBattleSound( BATTLE_SOUND_OK );
 					}
 
 					// HANDLE ANY INTERACTIVE OBJECTS HERE!
@@ -3403,7 +3420,7 @@ BOOLEAN SelectedMercCanAffordAttack( )
 				else
 				{
 					// Play curse....
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 				}
 			}
 		}
@@ -5014,7 +5031,8 @@ BOOLEAN UIMouseOnValidAttackLocation( SOLDIERTYPE *pSoldier )
 		}
 
 		// SANDRO - doctor with medical bag trying to do the surgery
-		if ((NUM_SKILL_TRAITS( pSoldier, DOCTOR_NT ) >= gSkillTraitValues.ubDONumberTraitsNeededForSurgery) && Item[pSoldier->inv[ HANDPOS ].usItem].medicalkit && gGameOptions.fNewTraitSystem
+		if ((NUM_SKILL_TRAITS( pSoldier, DOCTOR_NT ) >= gSkillTraitValues.ubDONumberTraitsNeededForSurgery)
+			&& Item[pSoldier->inv[ HANDPOS ].usItem].medicalkit && gGameOptions.fNewTraitSystem
 			&& (pTSoldier->stats.bLife != pTSoldier->stats.bLifeMax) && (pTSoldier->iHealableInjury >= 100))
 		{
 			// should come a question first if you really want to do the surgery
@@ -5883,7 +5901,7 @@ void EndMultiSoldierSelection( BOOLEAN fAcknowledge )
 				}
 
 				if( !gGameSettings.fOptions[ TOPTION_MUTE_CONFIRMATIONS ] && fAcknowledge )
-					pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_ATTN1, BATTLE_SND_LOWER_VOLUME );
+					pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_ATTN, BATTLE_SND_LOWER_VOLUME );
 
 				if ( pSoldier->flags.fMercAsleep )
 				{
@@ -6078,7 +6096,7 @@ BOOLEAN HandleMultiSelectionMove( INT32 sDestGridNo )
 
 				if ( pSoldier->EVENT_InternalGetNewSoldierPath( sIndividualDestGridNo, pSoldier->usUIMovementMode , TRUE, pSoldier->flags.fNoAPToFinishMove ) )
 				{
-					pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_OK1, BATTLE_SND_LOWER_VOLUME );
+					pSoldier->InternalDoMercBattleSound( BATTLE_SOUND_OK, BATTLE_SND_LOWER_VOLUME );
 				}
 				else
 				{

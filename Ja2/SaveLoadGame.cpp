@@ -2165,7 +2165,7 @@ BOOLEAN SOLDIERTYPE::Load(HWFILE hFile)
 		numBytesRead = ReadFieldByField(hFile, &this->ubProfile, sizeof(ubProfile), sizeof(UINT8), numBytesRead);
 		numBytesRead = ReadFieldByField(hFile, &this->ubQuoteRecord, sizeof(ubQuoteRecord), sizeof(UINT8), numBytesRead);
 		numBytesRead = ReadFieldByField(hFile, &this->ubQuoteActionID, sizeof(ubQuoteActionID), sizeof(UINT8), numBytesRead);
-		numBytesRead = ReadFieldByField(hFile, &this->ubBattleSoundID, sizeof(ubBattleSoundID), sizeof(UINT8), numBytesRead);
+		numBytesRead = ReadFieldByField(hFile, &this->ubBattleSoundTypeID, sizeof(ubBattleSoundTypeID), sizeof(UINT8), numBytesRead);
 		numBytesRead = ReadFieldByField(hFile, &this->ubClosePanelFrame, sizeof(ubClosePanelFrame), sizeof(UINT8), numBytesRead);
 		numBytesRead = ReadFieldByField(hFile, &this->ubDeadPanelFrame, sizeof(ubDeadPanelFrame), sizeof(UINT8), numBytesRead);
 		numBytesRead = ReadFieldByField(hFile, &this->bOpenPanelFrame, sizeof(bOpenPanelFrame), sizeof(INT8), numBytesRead);
@@ -8079,9 +8079,9 @@ BOOLEAN LoadTacticalStatusFromSavedGame( HWFILE hFile )
 		for (int idx = OUR_TEAM; idx <= CIV_TEAM; ++idx) {
 			cntFromFile[ idx ] = gTacticalStatus.Team[ idx ].bLastID - gTacticalStatus.Team[ idx ].bFirstID + 1;
 		}
-		int cntFromIni[] = {gGameExternalOptions.ubGameMaximumNumberOfPlayerMercs + gGameExternalOptions.ubGameMaximumNumberOfPlayerVehicles,
-									  gGameExternalOptions.ubGameMaximumNumberOfEnemies, gGameExternalOptions.ubGameMaximumNumberOfCreatures,
-									  gGameExternalOptions.ubGameMaximumNumberOfRebels, gGameExternalOptions.ubGameMaximumNumberOfCivilians};
+		int cntFromIni[] = { (int)gGameExternalOptions.ubGameMaximumNumberOfPlayerMercs + (int)gGameExternalOptions.ubGameMaximumNumberOfPlayerVehicles,
+									  (int)gGameExternalOptions.ubGameMaximumNumberOfEnemies, (int)gGameExternalOptions.ubGameMaximumNumberOfCreatures,
+									  (int)gGameExternalOptions.ubGameMaximumNumberOfRebels, (int)gGameExternalOptions.ubGameMaximumNumberOfCivilians};
 		
 		CHAR16 *errMsgTxt[] = {L"Mercenary / Vehicle", L"Enemy", L"Creature", L"Militia", L"Civilian"};
 		errMsgTxt[0] = Additional113Text[ERROR_MAX_MERCSVEHICLES];

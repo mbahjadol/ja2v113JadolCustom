@@ -22,3 +22,4 @@ void DropBlood( SOLDIERTYPE * pSoldier, UINT8 ubStrength, INT8 bVisible );
 void UpdateBloodGraphics( INT32 sGridNo, INT8 bLevel );
 void RemoveBlood( INT32 sGridNo, INT8 bLevel );
 void InternalDropBlood( INT32 sGridNo, INT8 bLevel, UINT8 ubType, UINT8 ubStrength, INT8 bVisible );
+UINT8 GetBloodType(SOLDIERTYPE* pSoldier);

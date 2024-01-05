@@ -117,8 +117,10 @@ BOOLEAN InitializeGame(void)
 	ClearAllDebugTopics();
 	//
 	// Now turn on the ones we are interested in watching
-	RegisterJA2DebugTopic( TOPIC_JA2OPPLIST, "Reg" );
-	RegisterJA2DebugTopic( TOPIC_JA2INTERRUPT, "Reg" );
+	//RegisterJA2DebugTopic( TOPIC_JA2OPPLIST, "Reg" );
+	RegisterJA2DebugTopic(TOPIC_JA2INTERRUPT, "Reg" );
+	RegisterJA2DebugTopic(TOPIC_LAGGING_BUGS, "Reg" );
+	RegisterJA2DebugTopic(TOPIC_CREATE_ENTITY, "Reg" );
 
 	// Snap: Read options from an INI file in the default of custom Data directory
 	// Moved this up because some settings are used during other inits
@@ -393,7 +395,7 @@ void GameLoop(void)
 	}
 
 	//DebugMsg (TOPIC_JA2,DBG_LEVEL_3,"GameLoop: screen changed");
-	AssertNotNIL (GameScreens[guiCurrentScreen].HandleScreen);
+	//AssertNotNIL (GameScreens[guiCurrentScreen].HandleScreen); // JADOL -- Very Ugly Assert here !!!
 	uiOldScreen = (*(GameScreens[guiCurrentScreen].HandleScreen))();
 
 	// if the screen has changed

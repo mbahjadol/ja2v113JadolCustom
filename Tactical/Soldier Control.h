@@ -62,6 +62,7 @@ extern UINT16 CivLastNames[MAXCIVLASTNAMES][10];
 #define TAKE_DAMAGE_OBJECT		11
 #define TAKE_DAMAGE_VEHICLE_TRAUMA		12
 #define TAKE_DAMAGE_GAS_NOTFIRE			13
+#define TAKE_DAMAGE_THROWINGKNIVE		14		// this is not manage why vehicle like Tank can be damage with this??
 
 
 #define SOLDIER_UNBLIT_SIZE			(75*75*2)
@@ -246,27 +247,33 @@ enum
 	THROW_TARGET_MERC_CATCH,
 };
 
-// An enumeration for playing battle sounds
+// JADOL -- rename with intuitive name enum, that sound WAV 
+// has multiple sound WAV variation which start with number from eg: 000_HIT1.WAV, 000_HIT2.WAV and soon...
+// This enumeration for playing battle sounds that will randomly use sound that have more than one combination
+// you can check at "Soldier Control.cpp"::InternalDoMercBattleSound() for it's logic that use random
 enum
 {
-	BATTLE_SOUND_OK1,
-	BATTLE_SOUND_COOL1,
-	BATTLE_SOUND_CURSE1,
-	BATTLE_SOUND_HIT1,
-	BATTLE_SOUND_LAUGH1,
-	BATTLE_SOUND_ATTN1,
-	BATTLE_SOUND_DIE1,
+	BATTLE_SOUND_OK,
+	BATTLE_SOUND_COOL,
+	BATTLE_SOUND_CURSE,
+	BATTLE_SOUND_HIT,
+	BATTLE_SOUND_LAUGH,
+	BATTLE_SOUND_ATTN,
+	BATTLE_SOUND_DYING, // JADOL -- restore dying because between die & dying is different
+	BATTLE_SOUND_DIE,
 	BATTLE_SOUND_HUMM,
 	BATTLE_SOUND_NOTHING,
 	BATTLE_SOUND_GOTIT,
-	BATTLE_SOUND_LOWMARALE_OK1,
-	BATTLE_SOUND_LOWMARALE_ATTN1,
+	BATTLE_SOUND_LOWMORALE_OK,
+	BATTLE_SOUND_LOWMORALE_ATTN,
 	BATTLE_SOUND_LOCKED,
 	BATTLE_SOUND_ENEMY,
 	BATTLE_SOUND_PUNCH,				// Flugente: attacking with punch attack
 	BATTLE_SOUND_KNIFE,				// Flugente: attacking with knife attack
 	NUM_MERC_BATTLE_SOUNDS
 };
+// --
+
 
 
 //different kinds of merc
@@ -450,8 +457,8 @@ enum
 
 // -------- added by Flugente: background property flags --------
 // easier than adding 32 differently named variables. DO NOT CHANGE THEM, UNLESS YOU KNOW WHAT YOU ARE DOING!!!
-// a merc's background info reveals data about his previous life, like former regiments. These backgrounds add small abilities/disabilities. Nothing substantial, just small bits do
-// diversify your mercs and add more personality
+// a merc's background info reveals data about his previous life, like former regiments. These backgrounds add small abilities/disabilities.
+// Nothing substantial, just small bits do diversify your mercs and add more personality
 #define BACKGROUND_DRUGUSE						0x0000000000000001	//1				// might use drugs on his own (the 'Larry'-effect)
 #define BACKGROUND_XENOPHOBIC					0x0000000000000002	//2				// arrogant towards others without this background
 #define BACKGROUND_EXP_UNDERGROUND				0x0000000000000004	//4				// extra level in underground sectors
@@ -467,7 +474,15 @@ enum
 #define BACKGROUND_ANIMALFRIEND					0x0000000000000200	//512			// refuses to attack animals
 #define BACKGROUND_CIVGROUPLOYAL				0x0000000000000400	//1024			// refuses to attack members of the same civgroup
 
-#define BACKGROUND_FLAG_MAX	11					// number of flagged backgrounds - keep this updated, or properties will get lost!
+// JADOL -- Add New Background Traits
+#define BACKGROUND_STAT_DMG_RESIST				0x0000000000000800	//2048			// person stat is immune to reduce when receiving damage eg:(wis, lifemax, dex etc...)
+#define BACKGROUND_HTH_GORE_DMG					0x0000000000001000	//4096			// make dead to enemy is deadly gore when attacked with hand to hand etc: head explode, thrown away body, dead in cryo)
+#define BACKGROUND_INCREDIBLE_REGEN_HEALTH		0x0000000000002000	//8192			// 0: using existing system, 1: have incredible regenerative health
+
+
+#define BACKGROUND_FLAG_MAX	12					// number of flagged backgrounds - keep this updated, or properties will get lost!
+// --
+
 
 // some properties are hidden (forbid background in MP creation)
 // corruption property is not relevant in 1.13
@@ -504,8 +519,8 @@ enum
 #define TAUNT_S_CHARGE_HTH							0x0000000000010000	//65536
 #define TAUNT_S_RUN_AWAY							0x0000000000020000	//131072
 #define TAUNT_S_SEEK_NOISE							0x0000000000040000	//262144
-#define TAUNT_S_ALERT								0x0000000000080000	//...
-#define TAUNT_S_SUSPICIOUS							0x0000000000100000
+#define TAUNT_S_ALERT								0x0000000000080000	//524288
+#define TAUNT_S_SUSPICIOUS							0x0000000000100000	//
 #define TAUNT_S_NOTICED_UNSEEN						0x0000000000200000	//
 #define TAUNT_S_SAY_HI								0x0000000000400000	//
 #define	TAUNT_S_INFORM_ABOUT						0x0000000000800000
@@ -774,6 +789,7 @@ public:
 	//temporarily? public
 	std::vector<int>			bNewItemCount;
 	std::vector<int>			bNewItemCycleCount;
+
 private:
 	std::vector<OBJECTTYPE>	inv;
 };
@@ -1323,7 +1339,14 @@ public:
 	UINT8												ubProfile;
 	UINT8												ubQuoteRecord;
 	UINT8												ubQuoteActionID;
-	UINT8												ubBattleSoundID;
+
+	// JADOL -- renamed from ubBattleSoundID to ubBattleSoundTypeID for distinguish ubBattleSoundID from
+	// from enum BATTLE_SOUND_OK__RANDOM to NUM_MERC_BATTLE_SOUNDS
+	// with this soldier property of battle sound, because it is more properly to use name "ubBattleSoundTypeID"
+	// rather than "ubBattleSoundID" because this property is defining the type of battlesound from
+	// their bodytype and civilian group type
+	UINT8												ubBattleSoundTypeID;
+	// --
 
 	UINT8												ubClosePanelFrame;
 	UINT8												ubDeadPanelFrame;
@@ -1334,7 +1357,7 @@ public:
 
 	// QUOTE STUFF
 	INT8												bNumHitsThisTurn;
-	UINT16											usQuoteSaidFlags;
+	UINT16												usQuoteSaidFlags;
 	INT8												bLastSkillCheck;
 	INT8												ubSkillCheckAttempts;
 
@@ -1343,7 +1366,7 @@ public:
 	INT8												bStartFallDir;
 
 	UINT8												ubPendingDirection;
-	UINT32											uiAnimSubFlags;
+	UINT32												uiAnimSubFlags;
 
 	UINT8												bAimShotLocation;
 	UINT8												ubHitLocation;
@@ -1376,7 +1399,6 @@ public:
 	PathStPtr					pMercPath;								//Path Structure
 	UINT16											usMedicalDeposit;		 // is there a medical deposit on merc 
 	UINT16											usLifeInsurance;			// is there life insurance taken out on merc	
-
 
 	//DEF:	Used for the communications
 	UINT32												uiStartMovementTime;				// the time since the merc first started moving 
@@ -1416,7 +1438,7 @@ public:
 	UINT8												ubTargetID;
 	INT8												bAIScheduleProgress;
 	INT32												sOffWorldGridNo;
-	struct TAG_anitile					*pAniTile;	
+	struct TAG_anitile							*pAniTile;	
 	INT8												bCamo;
 	INT32												sAbsoluteFinalDestination;
 	UINT8												ubHiResDirection;
@@ -1663,6 +1685,12 @@ public:
 	// anv: resolve damage with delay, e.g. damage applied mid movement that would cause issues with world data if applied immediately
 	std::function<void()> delayedDamageFunction;
 
+	// JADOL -- to managed duplicate quote in short while, it will be used with combination of DIALOGUE_Q_STRUCT queue
+	// except for snitch dialogue we will ignore it, because snitch dialogue is almost all duplicate
+	UINT8												ubLastQuoteSaidTriggered;
+	UINT32												ubLastQuoteTimeTriggered;
+	// --
+
 public:
 	// CREATION FUNCTIONS
 	BOOLEAN DeleteSoldier( void );
@@ -1670,7 +1698,6 @@ public:
 	BOOLEAN DeleteSoldierLight( void );
 
 	BOOLEAN CreateSoldierCommon( UINT8 ubBodyType, UINT16 usSoldierID, UINT16 usState );
-
 
 	// Soldier Management functions, called by Event Pump.c
 	BOOLEAN EVENT_InitNewSoldierAnim( UINT16 usNewState, UINT16 usStartingAniCode, BOOLEAN fForce );
@@ -1697,6 +1724,7 @@ public:
 	void EVENT_SoldierDefuseTripwire( INT32 sGridNo, INT32 sItem );
 	void EVENT_SoldierEnterVehicle( INT32 sGridNo, UINT8 ubDirection, UINT8 ubSeatIndex = 0 );
 	void EVENT_SoldierBeginGiveItem( void );
+	void EVENT_SoldierBeginGiveItemInStealth( void );
 	void EVENT_SetSoldierPositionAndMaybeFinalDest( FLOAT dNewXPos, FLOAT dNewYPos, BOOLEAN fUpdateFinalDest );
 	void EVENT_SetSoldierPositionForceDelete( FLOAT dNewXPos, FLOAT dNewYPos );
 	void EVENT_SoldierBeginReloadRobot( INT32 sGridNo, UINT8 ubDirection, UINT8 ubMercSlot );
@@ -2110,6 +2138,22 @@ public:
 
 	bool		IsFastMovement();
 	//////////////////////////////////////////////////////////////////////////////
+
+	// JADOL -- Add method to manipulating Stat Soldier eg: loss wisdom, dexterity, lifemax and etc... here !!!
+	// tidying into one single method so wherever they change just call in here!
+	// param:
+	// INT8 statDamagedEnum is enum for DAMAGED_STAT_* eg: DAMAGED_STAT_HEALTH, DAMAGED_STAT_WISDOM, etc...
+	// INT8 amountLoss is amount of loss stat damage, won't receive negative because this method is reducing stat not raising it
+	// UINT16 byWhoID is soldierID that cause this damage, (has default: NOBODY)
+	// INT8 whoIsCallThis is for purposes debugging no need to fill in if you aren't sure, (has default: NULL)
+	void SoldierGotStatDamagedHealable(INT8 statDamagedEnum, INT8 amountLoss, UINT16 byWhoID = NOBODY, INT8 whoIsCallThis = NULL);
+	// --
+
+private:
+	// JADOL -- check and do sub sound if we are a creature, etc, pick a better sound
+	// internaly used from InternalDoMercBattleSound() method, to reorganize the function
+	BOOLEAN InternalDoMercBattleSound_DoSubSound(SOLDIERTYPE* pSoldier, UINT8 ubBattleSoundID);
+	//
 
 }; // SOLDIERTYPE;	
 

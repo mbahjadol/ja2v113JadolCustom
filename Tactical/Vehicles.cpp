@@ -1992,7 +1992,8 @@ void VehicleTakeDamage( UINT8 ubID, UINT8 ubReason, INT16 sDamage, INT32 sGridNo
 	}
 
 	// check if there was in fact damage done to the vehicle
-	if( ( ubReason == TAKE_DAMAGE_HANDTOHAND ) || ( ubReason == TAKE_DAMAGE_GAS_FIRE ) || ( ubReason == TAKE_DAMAGE_GAS_NOTFIRE ) )
+	if( ( ubReason == TAKE_DAMAGE_HANDTOHAND ) || ( ubReason == TAKE_DAMAGE_GAS_FIRE )
+		|| ( ubReason == TAKE_DAMAGE_GAS_NOTFIRE ) || (ubReason == TAKE_DAMAGE_THROWINGKNIVE) )
 	{
 		// nope
 		return;

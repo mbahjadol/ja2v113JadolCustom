@@ -67,7 +67,8 @@ INT8 GetDrunkLevel( SOLDIERTYPE *pSoldier );
 
 // does a merc have a disability/personality, or is he under drugs that simulate this?
 BOOLEAN DoesMercHaveDisability( SOLDIERTYPE *pSoldier, UINT8 aVal );
-BOOLEAN DoesMercHavePersonality( SOLDIERTYPE *pSoldier, UINT8 aVal );
+BOOLEAN DoesMercHavePersonality( SOLDIERTYPE *pSoldier, UINT8 aVal ); // JADOL -- similar with trait
+BOOLEAN DoesMercHaveAttitude( SOLDIERTYPE *pSoldier, UINT8 aVal ); // JADOL -- to check and old vanilla attitude for merc on profile
 
 //void HandleEndTurnDrugAdjustments( SOLDIERTYPE *pSoldier );
 void HandleAPEffectDueToDrugs( SOLDIERTYPE *pSoldier, INT16 *pubPoints );

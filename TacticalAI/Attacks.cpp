@@ -35,6 +35,10 @@
 // anv: for enemy taunts
 #include "Civ Quotes.h"
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif // DEBUGDECISIONS
+
 extern INT16 DirIncrementer[8];
 
 //
@@ -487,6 +491,7 @@ void CalcBestShot(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestShot)
 							for (sAimTime = 0; sAimTime <= sMaxPossibleAimTime; sAimTime++)
 							{
 								sChanceToHit = AICalcChanceToHitGun(pSoldier, sTarget, sAimTime, AIM_SHOT_TORSO, bLevel, STANDING);
+								//ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"AICalcChanceToHitGun(AIM_SHOT_TORSO,STANDING): %d", sChanceToHit);
 								sAimAPCost = CalcAPCostForAiming(pSoldier, sTarget, (INT8)sAimTime);
 								iHitRate = sChanceToHit * (pSoldier->bActionPoints - (sMinAPcost - sRawAPCost)) / (sRawAPCost + sAimAPCost);
 								// sevenfm: take into account CTGT for every stance
@@ -558,6 +563,7 @@ void CalcBestShot(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestShot)
 							for (sAimTime = 0; sAimTime <= sMaxPossibleAimTime; sAimTime++)
 							{
 								sChanceToHit = AICalcChanceToHitGun(pSoldier, sTarget, sAimTime, AIM_SHOT_TORSO, bLevel, CROUCHING);
+								//ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"AICalcChanceToHitGun(AIM_SHOT_TORSO,CROUCHING): %d", sChanceToHit);
 								sAimAPCost = CalcAPCostForAiming(pSoldier, sTarget, (INT8)sAimTime);
 								iHitRate = sChanceToHit * (pSoldier->bActionPoints - (sMinAPcost - sRawAPCost)) / (sRawAPCost + sAimAPCost);
 								// sevenfm: take into account CTGT for every stance
@@ -622,6 +628,7 @@ void CalcBestShot(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestShot)
 							for (sAimTime = 0; sAimTime <= sMaxPossibleAimTime; sAimTime++)
 							{
 								sChanceToHit = AICalcChanceToHitGun(pSoldier, sTarget, sAimTime, AIM_SHOT_TORSO, bLevel, PRONE);
+								//ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"AICalcChanceToHitGun(AIM_SHOT_TORSO,PRONE): %d", sChanceToHit);
 								sAimAPCost = CalcAPCostForAiming(pSoldier, sTarget, (INT8)sAimTime);
 								iHitRate = sChanceToHit * (pSoldier->bActionPoints - (sMinAPcost - sRawAPCost)) / (sRawAPCost + sAimAPCost);
 								// sevenfm: take into account CTGT for every stance

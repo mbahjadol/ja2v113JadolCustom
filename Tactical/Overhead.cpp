@@ -2495,7 +2495,7 @@ BOOLEAN HandleGotoNewGridNo( SOLDIERTYPE *pSoldier, BOOLEAN *pfKeepMoving, BOOLE
                         OKFallDirection( pSoldier, (pSoldier->sGridNo + DirectionInc( pSoldier->ubDirection ) ), pSoldier->pathing.bLevel, pSoldier->ubDirection, pSoldier->usAnimState ) )
                 {
                     // 20% chance of falling over!
-                    pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+                    pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
                     ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[ 37 ], pSoldier->GetName() );
                     SoldierCollapse( pSoldier );
                     if (pSoldier->bActionPoints > 0)
@@ -2508,7 +2508,7 @@ BOOLEAN HandleGotoNewGridNo( SOLDIERTYPE *pSoldier, BOOLEAN *pfKeepMoving, BOOLE
                         OKFallDirection( pSoldier, (pSoldier->sGridNo + DirectionInc( pSoldier->ubDirection ) ), pSoldier->pathing.bLevel, pSoldier->ubDirection, pSoldier->usAnimState ) )
                 {
                     // 20% chance of falling over!
-                    pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+                    pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
                     ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[ 37 ], pSoldier->GetName() );
                     SoldierCollapse( pSoldier );
                     if (pSoldier->bActionPoints > 0)
@@ -2877,7 +2877,7 @@ BOOLEAN HandleAtNewGridNo( SOLDIERTYPE *pSoldier, BOOLEAN *pfKeepMoving )
 		if (MarblesExistAtLocation(pSoldier->sGridNo, 0, &iMarblesIndex))
 		{
 			// Slip on marbles!
-			pSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE1);
+			pSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);
 			if (pSoldier->bTeam == gbPlayerNum)
 			{
 				ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_UI_FEEDBACK, Message[STR_SLIPPED_MARBLES], pSoldier->name);
@@ -3400,7 +3400,7 @@ void InternalSelectSoldier( UINT16 usSoldierID, BOOLEAN fAcknowledge, BOOLEAN fF
     if ( fAcknowledge )
     {
         if( !gGameSettings.fOptions[ TOPTION_MUTE_CONFIRMATIONS ] )
-            pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN1 );
+            pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN );
     }
 
     // Change UI mode to reflact that we are selected
@@ -6282,7 +6282,7 @@ void HandleTeamServices( UINT8 ubTeamNum )
 
                                 if ( !gTacticalStatus.fAutoBandageMode )
                                 {
-                                    pTeamSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE1 ) );
+                                    pTeamSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE ) );
                                 }
                             }
                         }
@@ -6375,7 +6375,7 @@ void HandlePlayerServices( SOLDIERTYPE *pTeamSoldier )
 
                             if ( !gTacticalStatus.fAutoBandageMode )
                             {
-                                pTeamSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE1 ) );
+                                pTeamSoldier->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE ) );
                             }
                         }
                     }
@@ -7818,7 +7818,7 @@ BOOLEAN CheckForEndOfBattle( BOOLEAN fAnEnemyRetreated )
                     }
                     else if ( gfLastMercTalkedAboutKillingID != NOBODY && ( MercPtrs[ gfLastMercTalkedAboutKillingID ]->ubBodyType == BLOODCAT ) )
                     {
-                        SayBattleSoundFromAnyBodyInSector( BATTLE_SOUND_COOL1 );
+                        SayBattleSoundFromAnyBodyInSector( BATTLE_SOUND_COOL );
                     }
                     else
                     {
@@ -10379,7 +10379,7 @@ void DoPOWPathChecks( )
             // put them on any available squad
             pSoldier->aiData.bNeutral = FALSE;
             AddCharacterToAnySquad( pSoldier );
-            pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+            pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 
             // Decrement amount of prisoners
             if (gStrategicStatus.ubNumCapturedForRescue > 0)

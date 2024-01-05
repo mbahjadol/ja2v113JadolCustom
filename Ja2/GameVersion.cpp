@@ -39,7 +39,9 @@
 
 #endif
 
-CHAR8		czVersionString[16]	= { "@Version@" };
-CHAR16		zBuildInformation[256]	= { L"@Build@" };
+//CHAR8		czVersionString[16]	= { "@Version@" };
+//CHAR16		zBuildInformation[256]	= { L"@Build@" };
+CHAR8		czVersionString[16]	= { "JADOL" };
+CHAR16		zBuildInformation[256]	= { L"20231228" };
 
 // SAVE_GAME_VERSION is defined in header, change it there

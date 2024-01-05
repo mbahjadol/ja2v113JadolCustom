@@ -1054,7 +1054,7 @@ UINT32 MiniGame_Handle_Tetris()
 
 									if ( pSoldier )
 									{
-										pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+										pSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 									}
 								}
 								break;
@@ -1138,7 +1138,7 @@ UINT32 MiniGame_Handle_Tetris()
 
 									if ( pSoldier )
 									{
-										pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+										pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 									}
 								}
 							}
@@ -1770,7 +1770,7 @@ UINT32 MiniGame_Handle_Pong()
 
 					if ( pSoldier )
 					{
-						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 					}
 				}
 

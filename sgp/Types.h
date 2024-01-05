@@ -61,7 +61,7 @@ typedef UINT8						BYTE;
 typedef CHAR8						STRING512[512];
 typedef UINT32					HWFILE;
 
-#define SGPFILENAME_LEN 100
+#define SGPFILENAME_LEN 1024			// JADOL -- Increase length for better and longer path from 100 to 1024
 typedef CHAR8 SGPFILENAME[SGPFILENAME_LEN];	
 
 // *** SIR-TECH TYPE DEFINITIONS ***

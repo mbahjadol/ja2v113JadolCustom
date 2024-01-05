@@ -280,7 +280,7 @@ enum AnimationStates
 
 	MINIGIRL_STOCKING,
 
-	GIVE_ITEM,
+	GIVE_ITEM, // 116
 
 	CLIMB_CLIFF, 
 

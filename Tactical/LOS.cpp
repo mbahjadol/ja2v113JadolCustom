@@ -2661,7 +2661,7 @@ BOOLEAN DamageRiotShield_Bullet( SOLDIERTYPE* pSoldier, BULLET* pBullet )
 			ubAmmoType = pFirer->inv[pFirer->ubAttackingHand][0]->data.gun.ubGunAmmoType;
 	}
 
-	INT32 impact_original = max(0, pBullet->iImpact - pBullet->iImpactReduction);
+	INT32 impact_original = max(0, (pBullet->iImpact - pBullet->iImpactReduction)); //JADOL -- Bugs here in using max wrong param
 	
 	FLOAT damagepercentage = (FLOAT)((FLOAT)AmmoTypes[ubAmmoType].armourImpactReductionDivisor / (FLOAT)max( 1, AmmoTypes[ubAmmoType].armourImpactReductionMultiplier ));
 
@@ -3289,9 +3289,11 @@ BOOLEAN BulletHitMerc( BULLET * pBullet, STRUCTURE * pStructure, BOOLEAN fIntend
 	{
 		if(is_client) 
 			SWeaponHit.sDamage=(INT16)(SWeaponHit.sDamage * cDamageMultiplier); // adjust damage from external variable //hayden
-		
-		WeaponHit( SWeaponHit.usSoldierID, SWeaponHit.usWeaponIndex, SWeaponHit.sDamage, SWeaponHit.sBreathLoss, SWeaponHit.usDirection, SWeaponHit.sXPos, SWeaponHit.sYPos, SWeaponHit.sZPos, SWeaponHit.sRange, SWeaponHit.ubAttackerID, SWeaponHit.fHit, SWeaponHit.ubSpecial, SWeaponHit.ubLocation );
-		
+
+		// JADOL -- Manage Zero damage so dont call WeaponHit function
+		if (SWeaponHit.sDamage >0)
+			WeaponHit( SWeaponHit.usSoldierID, SWeaponHit.usWeaponIndex, SWeaponHit.sDamage, SWeaponHit.sBreathLoss, SWeaponHit.usDirection, SWeaponHit.sXPos, SWeaponHit.sYPos, SWeaponHit.sZPos, SWeaponHit.sRange, SWeaponHit.ubAttackerID, SWeaponHit.fHit, SWeaponHit.ubSpecial, SWeaponHit.ubLocation );
+		// --
 		
 		if(is_server || (is_client && SWeaponHit.ubAttackerID <20) ) 
 		{
@@ -3434,7 +3436,7 @@ BOOLEAN BulletHitMerc( BULLET * pBullet, STRUCTURE * pStructure, BOOLEAN fIntend
 		// get a new gridno based on direction it was moving.	Check to see if we're not
 		// going through walls, etc by testing for a path, unless on the roof, in which case it would always
 		// be legal, but the bLevel May change...
-  	sNewGridNo = NewGridNo( pBullet->sGridNo, DirectionInc( gOppositeDirection[ SWeaponHit.usDirection ] ) );
+  		sNewGridNo = NewGridNo( pBullet->sGridNo, DirectionInc( gOppositeDirection[ SWeaponHit.usDirection ] ) );
 
 		bSpewBloodLevel = MercPtrs[ SWeaponHit.usSoldierID ]->pathing.bLevel;
 		fCanSpewBlood	= TRUE;
@@ -7608,6 +7610,24 @@ void MoveBullet( INT32 iBullet )
 									}
 									else
 									{
+										// ****************************************************************************************************************
+										// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+										pTarget = MercPtrs[pStructure->usStructureID];
+										if (pTarget != NULL) {
+											INT16 chanceToEvade = pTarget->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE);
+											if ( pStructure->usStructureID != NOBODY && chanceToEvade > 0 )
+											{										
+												INT16 chanceToHit = (INT16) PreRandom(10000) + 1;
+												if (chanceToHit < chanceToEvade)
+												{
+													RemoveBullet(pBullet->iBullet);
+													BulletMissed(pBullet, pBullet->pFirer);//only if local origin
+													return;
+												}
+											}
+										}
+										// --
+										// ****************************************************************************************************************
 										// hit someone!
 										fStopped = BulletHitMerc( pBullet, pStructure, fIntended );
 										if (fStopped)

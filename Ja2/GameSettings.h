@@ -398,6 +398,7 @@ typedef struct
 	INT8 sEnemyRegularDamageResistance;
 	INT8 sEnemyEliteDamageResistance;
 
+	BOOLEAN fEnemyDiapersArmy;
 	BOOLEAN fAssignTraitsToEnemy;
 	BOOLEAN fAssignTraitsToMilitia;
 	INT8 bAssignedTraitsRarity;
@@ -1447,6 +1448,14 @@ typedef struct
 	BOOLEAN fMercGrowthModifiersEnabled;
 	BOOLEAN fMercRandomGrowthModifiers;
 	INT16 iMercRandomGrowthModifiersRange;
+
+	// JADOL -- if True then every recruited merc will only complain about their gear (armour/gun) only once after join us.
+	BOOLEAN fMercGearComplainOnlyOnce;	
+	// JADOL -- irresistible for recruitment or contract renewal from player, despite poor reputation and number of deaths of merc,
+	// but their quote still complain and whine about it! (so the funny thing still going on, LOL)
+	// off course if you still owe them this irresistible won't work!
+	BOOLEAN fMercIrresistiblePlayer;
+
 
 	BOOLEAN fBobbyRayFastShipments;
 

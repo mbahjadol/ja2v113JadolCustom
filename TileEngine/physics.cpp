@@ -2762,7 +2762,7 @@ void HandleArmedObjectImpact( REAL_OBJECT *pObject )
 
 			if ( pObject->ubOwner != NOBODY && !fGoodStatus )
 			{
-				MercPtrs[ pObject->ubOwner ]->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE1 ) );
+				MercPtrs[ pObject->ubOwner ]->DoMercBattleSound( (INT8)( BATTLE_SOUND_CURSE ) );
 			}
 		}
 	}

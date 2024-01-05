@@ -932,7 +932,7 @@ INT32 SkillCheck( SOLDIERTYPE * pSoldier, INT8 bReason, INT8 bChanceMod )
 					// silent check
 					break;
 				default:
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 					break;
 			}
 		}

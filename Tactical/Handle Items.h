@@ -186,6 +186,7 @@ void HandleSoldierThrowItem( SOLDIERTYPE *pSoldier, INT32 sGridNo );
 BOOLEAN VerifyGiveItem( SOLDIERTYPE *pSoldier, SOLDIERTYPE **ppTargetSoldier );
 void SoldierGiveItemFromAnimation( SOLDIERTYPE *pSoldier );
 void SoldierGiveItem( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pTargetSoldier, OBJECTTYPE *pObject, INT8 bInvPos );
+void SoldierGiveItemInStealth( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pTargetSoldier, OBJECTTYPE *pObject, INT8 bInvPos );
 
 
 void NotifySoldiersToLookforItems( );

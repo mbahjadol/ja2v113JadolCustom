@@ -73,6 +73,11 @@ typedef struct TAG_anitile
 
 	INT8												bFrameCountAfterStart;
 	INT32											lightSprite;
+
+#ifdef JADOLDEBUG
+	BOOLEAN isIgniteExplosion;
+#endif // JADOLDEBUG
+
 } ANITILE;
 
 
@@ -102,6 +107,11 @@ typedef struct TAG_anitile_params
 	UINT8												ubUserData2;
 	UINT32											uiUserData3;
 	INT32											lightSprite;
+
+#ifdef JADOLDEBUG
+	BOOLEAN isIgniteExplosion;
+#endif // JADOLDEBUG
+
 } ANITILE_PARAMS;
 
 

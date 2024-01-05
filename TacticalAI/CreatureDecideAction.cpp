@@ -7,6 +7,10 @@
 	#include "Rotting Corpses.h"
 	#include "soldier add.h"
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif
+
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
 class SOLDIERTYPE;
@@ -1470,28 +1474,28 @@ INT8 CreatureDecideAction( SOLDIERTYPE *pSoldier )
 	{
 		case STATUS_GREEN:
 			#ifdef DEBUGDECISIONS
-				AIPopMessage("AlertStatus = GREEN");
+				AIPopMessage(L"AlertStatus = GREEN");
 			#endif
 			bAction = CreatureDecideActionGreen(pSoldier);
 			break;
 
 		case STATUS_YELLOW:
 			#ifdef DEBUGDECISIONS
-				AIPopMessage("AlertStatus = YELLOW");
+				AIPopMessage(L"AlertStatus = YELLOW");
 			#endif
 			bAction = CreatureDecideActionYellow(pSoldier);
 		break;
 
 		case STATUS_RED:
 			#ifdef DEBUGDECISIONS
-				AIPopMessage("AlertStatus = RED");
+				AIPopMessage(L"AlertStatus = RED");
 			#endif
 			bAction = CreatureDecideActionRed(pSoldier, TRUE);
 			break;
 
 		case STATUS_BLACK:
 			#ifdef DEBUGDECISIONS
-				AIPopMessage("AlertStatus = BLACK");
+				AIPopMessage(L"AlertStatus = BLACK");
 			#endif
 			bAction = CreatureDecideActionBlack(pSoldier);
 			break;

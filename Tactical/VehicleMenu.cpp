@@ -181,7 +181,7 @@ VehicleSelection::Functions( UINT32 aVal  )
 
 			if ( EnoughPoints( pCurrentSoldier, sAPCost, 0, TRUE ) )
 			{
-				pCurrentSoldier->DoMercBattleSound( BATTLE_SOUND_OK1 );
+				pCurrentSoldier->DoMercBattleSound( BATTLE_SOUND_OK );
 
 				// CHECK IF WE ARE AT THIS GRIDNO NOW
 				if ( pCurrentSoldier->sGridNo != sActionGridNo )

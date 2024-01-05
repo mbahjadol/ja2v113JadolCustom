@@ -675,7 +675,7 @@ void	QueryRTLeftButton( UINT32 *puiNewEvent )
 																				pSoldier->flags.uiStatusFlags |= (SOLDIER_MULTI_SELECTED );
 																				// Say Confimation...
 																				if( !gGameSettings.fOptions[ TOPTION_MUTE_CONFIRMATIONS ] )
-																					pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN1 );
+																					pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN );
 
 																				// OK, if we have a selected guy.. make him part too....
 																				if ( gusSelectedSoldier != NOBODY )
@@ -709,7 +709,7 @@ void	QueryRTLeftButton( UINT32 *puiNewEvent )
 																			pSoldier->flags.uiStatusFlags |= (SOLDIER_MULTI_SELECTED );
 																			// Say Confimation...
 																			if( !gGameSettings.fOptions[ TOPTION_MUTE_CONFIRMATIONS ] )
-																				pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN1 );
+																				pSoldier->DoMercBattleSound( BATTLE_SOUND_ATTN );
 																		}
 
 																		// OK, if we have a selected guy.. make him part too....

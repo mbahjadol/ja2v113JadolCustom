@@ -3621,7 +3621,7 @@ void OurTeamSeesSomeone( SOLDIERTYPE * pSoldier, INT8 bNumReRevealed, INT8 bNumN
 				/// Speek up!
 				if ( bNumReRevealed > 0 && bNumNewEnemies == 0 )
 				{
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 				}
 				else
 				{

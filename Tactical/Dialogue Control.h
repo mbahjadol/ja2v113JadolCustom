@@ -98,7 +98,7 @@ enum DialogQuoteIDs
 	QUOTE_KILLED_FACTORY_MANAGER,				// killed Doreen
 	QUOTE_SPOTTED_BLOODCAT,						// used when we spot a bloodcat
 	QUOTE_END_GAME_COMMENT,						// end speech after game is won
-	
+
 	//70
 	QUOTE_ENEMY_RETREATED,						// we won the battle due to enemy retreat
 	QUOTE_GOING_TO_AUTO_SLEEP,					// currently not used
@@ -132,7 +132,7 @@ enum DialogQuoteIDs
 	QUOTE_NON_AIM_BUDDY_5_GOOD = QUOTE_LEARNED_TO_HATE_MERC_ON_TEAM,		// not AIM: compliment buddy 5
 	QUOTE_CONTRACTS_OVER,// = 89,								// tell player that contract is over
 	QUOTE_MERC_QUIT_HATED_3 = QUOTE_CONTRACTS_OVER,				// MERC/RPC: quit because of hated 3
-	
+
 	//90
 	QUOTE_ACCEPT_CONTRACT_RENEWAL, // =90,						// AIM: renew contract
 	QUOTE_MERC_QUIT_HATED_4 = QUOTE_ACCEPT_CONTRACT_RENEWAL,	// MERC/RPC: quit because of hated 4
@@ -185,7 +185,7 @@ enum DialogQuoteIDs
 	QUOTE_HATED_5_ARRIVES,						// AIM: hated 5 arrives
 	QUOTE_AIM_BUDDY_3_GOOD,						// AIM: compliment buddy 3
 	QUOTE_AIM_BUDDY_4_GOOD,						// AIM: compliment buddy 4
-	
+
 	//130
 	QUOTE_AIM_BUDDY_5_GOOD,						// AIM: compliment buddy 5
 	QUOTE_HATED_3_ON_TEAM,						// AIM: played when we refuse to be hired because hated 3 is present and bHatedTime < 24 ( else play QUOTE_HATED_3_ON_TEAM_LONGTIMETOHATE )
@@ -212,27 +212,27 @@ enum DialogQuoteIDs
 #define			DEFAULT_EXTERN_PANEL_Y_POS		40
 
 
-#define			DIALOGUE_TACTICAL_UI						1
+#define			DIALOGUE_TACTICAL_UI					1
 #define			DIALOGUE_CONTACTPAGE_UI					2
-#define			DIALOGUE_NPC_UI									3
-#define			DIALOGUE_SPECK_CONTACT_PAGE_UI	4
-#define	 DIALOGUE_EXTERNAL_NPC_UI				5
+#define			DIALOGUE_NPC_UI							3
+#define			DIALOGUE_SPECK_CONTACT_PAGE_UI			4
+#define			DIALOGUE_EXTERNAL_NPC_UI				5
 #define			DIALOGUE_SHOPKEEPER_UI					6
-#define			DIALOGUE_SNITCH_UI					7	// anv: special handle for snitch dialogue
+#define			DIALOGUE_SNITCH_UI						7	// anv: special handle for snitch dialogue
 
-#define			DIALOGUE_SPECIAL_EVENT_GIVE_ITEM									0x00000001
+#define			DIALOGUE_SPECIAL_EVENT_GIVE_ITEM								0x00000001
 #define			DIALOGUE_SPECIAL_EVENT_TRIGGER_NPC								0x00000002
 #define			DIALOGUE_SPECIAL_EVENT_GOTO_GRIDNO								0x00000004
-#define			DIALOGUE_SPECIAL_EVENT_DO_ACTION									0x00000008
+#define			DIALOGUE_SPECIAL_EVENT_DO_ACTION								0x00000008
 #define			DIALOGUE_SPECIAL_EVENT_CLOSE_PANEL								0x00000010
-#define	 DIALOGUE_SPECIAL_EVENT_PCTRIGGERNPC								0x00000020
-#define	 DIALOGUE_SPECIAL_EVENT_BEGINPREBATTLEINTERFACE		0x00000040
-#define			DIALOGUE_SPECIAL_EVENT_SKYRIDERMAPSCREENEVENT			0x00000080
-#define	 DIALOGUE_SPECIAL_EVENT_SHOW_CONTRACT_MENU		 0x00000100
-#define			DIALOGUE_SPECIAL_EVENT_MINESECTOREVENT						0x00000200	
-#define			DIALOGUE_SPECIAL_EVENT_SHOW_UPDATE_MENU			0x00000400
-#define			DIALOGUE_SPECIAL_EVENT_ENABLE_AI									0x00000800
-#define			DIALOGUE_SPECIAL_EVENT_USE_ALTERNATE_FILES				0x00001000
+#define			DIALOGUE_SPECIAL_EVENT_PCTRIGGERNPC								0x00000020
+#define			DIALOGUE_SPECIAL_EVENT_BEGINPREBATTLEINTERFACE					0x00000040
+#define			DIALOGUE_SPECIAL_EVENT_SKYRIDERMAPSCREENEVENT					0x00000080
+#define			DIALOGUE_SPECIAL_EVENT_SHOW_CONTRACT_MENU						0x00000100
+#define			DIALOGUE_SPECIAL_EVENT_MINESECTOREVENT							0x00000200	
+#define			DIALOGUE_SPECIAL_EVENT_SHOW_UPDATE_MENU							0x00000400
+#define			DIALOGUE_SPECIAL_EVENT_ENABLE_AI								0x00000800
+#define			DIALOGUE_SPECIAL_EVENT_USE_ALTERNATE_FILES						0x00001000
 
 #ifdef JA2UB
 #define			DIALOGUE_SPECIAL_EVENT_JERRY_MILO								  0x00002000
@@ -240,45 +240,47 @@ enum DialogQuoteIDs
 #define			DIALOGUE_SPECIAL_EVENT_CONTINUE_TRAINING_MILITIA	0x00002000
 #endif
 
-#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING						0x00004000
+#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING							0x00004000
 #define			DIALOGUE_SPECIAL_EVENT_MULTIPURPOSE								0x00008000
-#define			DIALOGUE_SPECIAL_EVENT_SLEEP											0x00010000
+#define			DIALOGUE_SPECIAL_EVENT_SLEEP									0x00010000
 #define			DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND							0x00020000
-#define			DIALOGUE_SPECIAL_EVENT_SIGNAL_ITEM_LOCATOR_START	0x00040000
-#define			DIALOGUE_SPECIAL_EVENT_SHOPKEEPER									0x00080000
+#define			DIALOGUE_SPECIAL_EVENT_SIGNAL_ITEM_LOCATOR_START				0x00040000
+#define			DIALOGUE_SPECIAL_EVENT_SHOPKEEPER								0x00080000
 #define			DIALOGUE_SPECIAL_EVENT_SKIP_A_FRAME								0x00100000
-#define			DIALOGUE_SPECIAL_EVENT_EXIT_MAP_SCREEN						0x00200000
-#define			DIALOGUE_SPECIAL_EVENT_DISPLAY_STAT_CHANGE				0x00400000
-#define			DIALOGUE_SPECIAL_EVENT_UNSET_ARRIVES_FLAG					0x00800000
-#define			DIALOGUE_SPECIAL_EVENT_TRIGGERPREBATTLEINTERFACE	0x01000000
-#define			DIALOGUE_ADD_EVENT_FOR_SOLDIER_UPDATE_BOX					0x02000000
-#define			DIALOGUE_SPECIAL_EVENT_ENTER_MAPSCREEN						0x04000000
+#define			DIALOGUE_SPECIAL_EVENT_EXIT_MAP_SCREEN							0x00200000
+#define			DIALOGUE_SPECIAL_EVENT_DISPLAY_STAT_CHANGE						0x00400000
+#define			DIALOGUE_SPECIAL_EVENT_UNSET_ARRIVES_FLAG						0x00800000
+#define			DIALOGUE_SPECIAL_EVENT_TRIGGERPREBATTLEINTERFACE				0x01000000
+#define			DIALOGUE_ADD_EVENT_FOR_SOLDIER_UPDATE_BOX						0x02000000
+#define			DIALOGUE_SPECIAL_EVENT_ENTER_MAPSCREEN							0x04000000
 #define			DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE							0x08000000
-#define			DIALOGUE_SPECIAL_EVENT_REMOVE_EPC									0x10000000
-#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_WANTS_TO_RENEW		0x20000000
-#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_NOGO_TO_RENEW			0x40000000
-#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING_NO_ASK_EQUIP	0x80000000
+#define			DIALOGUE_SPECIAL_EVENT_REMOVE_EPC								0x10000000
+#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_WANTS_TO_RENEW					0x20000000
+#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_NOGO_TO_RENEW					0x40000000
+#define			DIALOGUE_SPECIAL_EVENT_CONTRACT_ENDING_NO_ASK_EQUIP				0x80000000
 
 #ifdef JA2UB
 #define			MULTIPURPOSE_SPECIAL_EVENT_TEAM_MEMBERS_DONE_TALKING	0x20000000
 #define			MULTIPURPOSE_SPECIAL_EVENT_DONE_KILLING_DEIDRANNA			0x10000000
 #else
-#define			MULTIPURPOSE_SPECIAL_EVENT_DONE_KILLING_DEIDRANNA			0x00000001
-#define			MULTIPURPOSE_SPECIAL_EVENT_TEAM_MEMBERS_DONE_TALKING	0x00000002
+#define			MULTIPURPOSE_SPECIAL_EVENT_DONE_KILLING_DEIDRANNA				0x00000001
+#define			MULTIPURPOSE_SPECIAL_EVENT_TEAM_MEMBERS_DONE_TALKING			0x00000002
 #endif
 
-#define			MULTIPURPOSE_SPECIAL_EVENT_SNITCH_DIALOGUE				0x00000004
-#define			MULTIPURPOSE_SPECIAL_EVENT_ADDITIONAL_DIALOGUE			0x00000008
+#define			MULTIPURPOSE_SPECIAL_EVENT_SNITCH_DIALOGUE						0x00000004
+#define			MULTIPURPOSE_SPECIAL_EVENT_ADDITIONAL_DIALOGUE					0x00000008
+
+#define			MULTIPURPOSE_SPECIAL_EVENT_CONTRACT_ENDING_REJECTED_CAUSE_HATE	0x00000010
 
 #ifdef JA2UB
-enum{
-     JERRY_MELO_FACE = 6,
-     NUMBER_OF_EXTERNAL_NPC_FACES,
+enum {
+	JERRY_MELO_FACE = 6,
+	NUMBER_OF_EXTERNAL_NPC_FACES,
 };
 #endif
 
-enum{
-	SKYRIDER_EXTERNAL_FACE =0,
+enum {
+	SKYRIDER_EXTERNAL_FACE = 0,
 	WALDO_EXTERNAL_FACE,
 	//MINER_FRED_EXTERNAL_FACE,
 	//MINER_MATT_EXTERNAL_FACE,
@@ -290,15 +292,15 @@ enum{
 
 
 // soldier up-date box reasons
-enum{
-	UPDATE_BOX_REASON_ADDSOLDIER =0,
+enum {
+	UPDATE_BOX_REASON_ADDSOLDIER = 0,
 	UPDATE_BOX_REASON_SET_REASON,
 	UPDATE_BOX_REASON_SHOW_BOX,
 };
 
 #ifdef JA2UB
-extern UINT32 uiExternalStaticNPCFacesUB[ ];
-extern UINT32 uiExternalFaceProfileIdsUB[ ];
+extern UINT32 uiExternalStaticNPCFacesUB[];
+extern UINT32 uiExternalFaceProfileIdsUB[];
 #endif
 
 //extern UINT32 uiExternalStaticNPCFaces[ ];
@@ -308,31 +310,34 @@ extern std::vector<UINT32> uiExternalStaticNPCFaces;
 // Functions for handling dialogue Q
 BOOLEAN InitalizeDialogueControl();
 void ShutdownDialogueControl();
-void EmptyDialogueQueue( );
-void HandleDialogue( );
-void HandleImportantMercQuote( SOLDIERTYPE * pSoldier, UINT16 usQuoteNumber );
+void EmptyDialogueQueue();
+void HandleDialogue();
+void HandleImportantMercQuote(SOLDIERTYPE* pSoldier, UINT16 usQuoteNumber);
 
 
 
 // Send in a profile number to see if text dialog exists for this guy....
-BOOLEAN DialogueDataFileExistsForProfile( UINT8 ubCharacterNum, UINT16 usQuoteNum, BOOLEAN fWavFile, STR8 *ppStr );
+BOOLEAN DialogueDataFileExistsForProfile(UINT8 ubCharacterNum, UINT16 usQuoteNum, BOOLEAN fWavFile, STR8* ppStr);
 
 // Do special event as well as dialogue!
-BOOLEAN CharacterDialogueWithSpecialEvent( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2 );
+BOOLEAN CharacterDialogueWithSpecialEvent(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2);
 
 // Do special event as well as dialogue!
-BOOLEAN CharacterDialogueWithSpecialEventEx( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2, UINT32 uiData3 );
+BOOLEAN CharacterDialogueWithSpecialEventEx(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2, UINT32 uiData3);
 
 // A higher level function used for tactical quotes
-BOOLEAN TacticalCharacterDialogueWithSpecialEvent( SOLDIERTYPE *pSoldier, UINT16 usQuoteNum, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2 );
+BOOLEAN TacticalCharacterDialogueWithSpecialEvent(SOLDIERTYPE* pSoldier, UINT16 usQuoteNum, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2);
 
 // A higher level function used for tactical quotes
-BOOLEAN TacticalCharacterDialogueWithSpecialEventEx( SOLDIERTYPE *pSoldier, UINT16 usQuoteNum, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2, UINT32 uiData3 );
+BOOLEAN TacticalCharacterDialogueWithSpecialEventEx(SOLDIERTYPE* pSoldier, UINT16 usQuoteNum, UINT32 uiFlag, UINT32 uiData1, UINT32 uiData2, UINT32 uiData3);
 
 // A higher level function used for tactical quotes
-BOOLEAN TacticalCharacterDialogue( SOLDIERTYPE *pSoldier, UINT16 usQuoteNum );
+BOOLEAN TacticalCharacterDialogue(SOLDIERTYPE* pSoldier, UINT16 usQuoteNum);
 
-BOOLEAN SnitchTacticalCharacterDialogue( SOLDIERTYPE *pSoldier, UINT16 usQuoteNum, UINT8 ubEventType, UINT8 ubTargetProfile, UINT8 ubSecondaryTargetProfile );
+// JADOL -- Respond for Hate Quote depend from their personality,traits and others
+void RespondHateQuoteByTheirPersonality(SOLDIERTYPE* pSoldier);
+
+BOOLEAN SnitchTacticalCharacterDialogue(SOLDIERTYPE* pSoldier, UINT16 usQuoteNum, UINT8 ubEventType, UINT8 ubTargetProfile, UINT8 ubSecondaryTargetProfile);
 
 // Flugente: additional dialogue
 enum AdditionalDialogEvents
@@ -369,96 +374,96 @@ enum AdditionalDialogEvents
 // We call this function from several places. It uses the dialogue functions, but calls a Lua script to know whether something, and what, should be said
 // This allows us to call a lot of very specific dialogue for individual mercs without the need to define what exactly should be said in the code -
 // a modder can simply control in Lua what should happen
-BOOLEAN AdditionalTacticalCharacterDialogue_CallsLua( SOLDIERTYPE *pSoldier, UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0 );
+BOOLEAN AdditionalTacticalCharacterDialogue_CallsLua(SOLDIERTYPE* pSoldier, UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0);
 
 // call event for all mercs in a sector
-void AdditionalTacticalCharacterDialogue_AllInCurrentSector( UINT8 ausIgnoreProfile,
-	UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0 );
+void AdditionalTacticalCharacterDialogue_AllInCurrentSector(UINT8 ausIgnoreProfile,
+	UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0);
 
-void AdditionalTacticalCharacterDialogue_AllInSector( INT16 aSectorX, INT16 aSectorY, INT8 aSectorZ, UINT8 ausIgnoreProfile, 
-	UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0 );
+void AdditionalTacticalCharacterDialogue_AllInSector(INT16 aSectorX, INT16 aSectorY, INT8 aSectorZ, UINT8 ausIgnoreProfile,
+	UINT16 usEventNr, UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0);
 
-void AdditionalTacticalCharacterDialogue_AllInSectorRadiusCall( UINT8 ausIgnoreProfile,	UINT16 usEventNr, 
-	UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0 );
+void AdditionalTacticalCharacterDialogue_AllInSectorRadiusCall(UINT8 ausIgnoreProfile, UINT16 usEventNr,
+	UINT32 aData1 = 0, UINT32 aData2 = 0, UINT32 aData3 = 0, INT32 aAroundGridno = -1, INT32 aRadius = 0);
 
 // Flugente: play sound file like normal dialogue or, if someone else is already talking, just play the sound
-void SpecialDialogue( SOLDIERTYPE* pSoldier, STR8 azSoundString, STR16 azTextString );
+void SpecialDialogue(SOLDIERTYPE* pSoldier, STR8 azSoundString, STR16 azTextString);
 
 // Flugente: replace text with other text
-BOOLEAN ReplaceTextWithOtherText( CHAR16 *pFinishedString, CHAR16 compare[32], CHAR16 replace[32] );
+BOOLEAN ReplaceTextWithOtherText(CHAR16* pFinishedString, CHAR16 compare[32], CHAR16 replace[32]);
 
 // A higher level function used for tactical quotes
-BOOLEAN DelayedTacticalCharacterDialogue( SOLDIERTYPE *pSoldier, UINT16 usQuoteNum );
+BOOLEAN DelayedTacticalCharacterDialogue(SOLDIERTYPE* pSoldier, UINT16 usQuoteNum);
 
 // A more general purpose function for processing quotes
-BOOLEAN CharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed );
+BOOLEAN CharacterDialogue(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed);
 
-BOOLEAN SnitchCharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex,
-	UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2, 
-	UINT32 uiSpecialEventData3, UINT32 uiSpecialEventData4, 
-	UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed );
+BOOLEAN SnitchCharacterDialogue(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex,
+	UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2,
+	UINT32 uiSpecialEventData3, UINT32 uiSpecialEventData4,
+	UINT8 bUIHandlerID, BOOLEAN fFromSoldier, BOOLEAN fDelayed);
 
 // A special event can be setup which can be queued with other speech
-BOOLEAN SpecialCharacterDialogueEvent( UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2, UINT32 uiSpecialEventData3, INT32 iFaceIndex, UINT8 bUIHandlerID );
+BOOLEAN SpecialCharacterDialogueEvent(UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2, UINT32 uiSpecialEventData3, INT32 iFaceIndex, UINT8 bUIHandlerID);
 
 // Same as above, for triggers, with extra param to hold approach value
-BOOLEAN SpecialCharacterDialogueEventWithExtraParam( UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2, UINT32 uiSpecialEventData3, UINT32 uiSpecialEventData4, INT32 iFaceIndex, UINT8 bUIHandlerID );
+BOOLEAN SpecialCharacterDialogueEventWithExtraParam(UINT32 uiSpecialEventFlag, UINT32 uiSpecialEventData1, UINT32 uiSpecialEventData2, UINT32 uiSpecialEventData3, UINT32 uiSpecialEventData4, INT32 iFaceIndex, UINT8 bUIHandlerID);
 
 // execute specific character dialogue
-BOOLEAN ExecuteCharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fSoldier );
+BOOLEAN ExecuteCharacterDialogue(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, BOOLEAN fSoldier);
 
-BOOLEAN ExecuteSnitchCharacterDialogue( UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, UINT8 ubSnitchEventType, UINT8 ubSnitchTargetID, UINT8 ubSecondarySnitchTargetID );
+BOOLEAN ExecuteSnitchCharacterDialogue(UINT8 ubCharacterNum, UINT16 usQuoteNum, INT32 iFaceIndex, UINT8 bUIHandlerID, UINT8 ubSnitchEventType, UINT8 ubSnitchTargetID, UINT8 ubSecondarySnitchTargetID);
 
 // Called when a face stops talking...
-void HandleDialogueEnd( FACETYPE *pFace );
+void HandleDialogueEnd(FACETYPE* pFace);
 
 // shut down last quotetext box
-void ShutDownLastQuoteTacticalTextBox( void );
+void ShutDownLastQuoteTacticalTextBox(void);
 
 // Called to advance speech
 // Used for option when no speech sound file
-void DialogueAdvanceSpeech( );
+void DialogueAdvanceSpeech();
 
-BOOLEAN DialogueQueueIsEmpty( );
-BOOLEAN	DialogueQueueIsEmptyOrSomebodyTalkingNow( );
+BOOLEAN DialogueQueueIsEmpty();
+BOOLEAN	DialogueQueueIsEmptyOrSomebodyTalkingNow();
 
 // Adjust the face, etc when switching from panel to extern panel...
-void HandleDialogueUIAdjustments( );
+void HandleDialogueUIAdjustments();
 
 // pause game time during 
-void PauseTimeDuringNextQuote( );
-void UnPauseGameDuringNextQuote( void );
+void PauseTimeDuringNextQuote();
+void UnPauseGameDuringNextQuote(void);
 
 
 // set up and shutdown static external NPC faces
-void InitalizeStaticExternalNPCFaces( void );
-void ShutdownStaticExternalNPCFaces( void );
+void InitalizeStaticExternalNPCFaces(void);
+void ShutdownStaticExternalNPCFaces(void);
 
 
-void SayQuoteFromAnyBodyInSector( UINT16 usQuoteNum );
-void SayQuoteFromAnyBodyInThisSector( INT16 sSectorX, INT16 sSectorY, INT8 bSectorZ, UINT16 usQuoteNum );
-void SayQuoteFromNearbyMercInSector( INT32 sGridNo, INT8 bDistance, UINT16 usQuoteNum );
-void SayQuote58FromNearbyMercInSector( INT32 sGridNo, INT8 bDistance, UINT16 usQuoteNum, INT8 bSex );
+void SayQuoteFromAnyBodyInSector(UINT16 usQuoteNum);
+void SayQuoteFromAnyBodyInThisSector(INT16 sSectorX, INT16 sSectorY, INT8 bSectorZ, UINT16 usQuoteNum);
+void SayQuoteFromNearbyMercInSector(INT32 sGridNo, INT8 bDistance, UINT16 usQuoteNum);
+void SayQuote58FromNearbyMercInSector(INT32 sGridNo, INT8 bDistance, UINT16 usQuoteNum, INT8 bSex);
 
 
-void ExecuteTacticalTextBox( INT16 sLeftPosition, STR16 pString );
+void ExecuteTacticalTextBox(INT16 sLeftPosition, STR16 pString);
 
-void ExecuteTacticalTextBoxForLastQuote( INT16 sLeftPosition, STR16 pString );
+void ExecuteTacticalTextBoxForLastQuote(INT16 sLeftPosition, STR16 pString);
 
-UINT32 FindDelayForString( STR16 sString );
+UINT32 FindDelayForString(STR16 sString);
 
-void BeginLoggingForBleedMeToos( BOOLEAN fStart );
+void BeginLoggingForBleedMeToos(BOOLEAN fStart);
 
-void UnSetEngagedInConvFromPCAction( SOLDIERTYPE *pSoldier );
-void SetEngagedInConvFromPCAction( SOLDIERTYPE *pSoldier );
+void UnSetEngagedInConvFromPCAction(SOLDIERTYPE* pSoldier);
+void SetEngagedInConvFromPCAction(SOLDIERTYPE* pSoldier);
 
 
 extern UINT32 guiDialogueLastQuoteTime;
 extern UINT32 guiDialogueLastQuoteDelay;
 
-void SetStopTimeQuoteCallback( MODAL_HOOK pCallBack );
+void SetStopTimeQuoteCallback(MODAL_HOOK pCallBack);
 
-BOOLEAN DialogueActive( );
+BOOLEAN DialogueActive();
 
 extern INT32 giNPCReferenceCount;
 extern INT32 giNPCSpecialReferenceCount;
@@ -466,24 +471,24 @@ extern INT32 giNPCSpecialReferenceCount;
 
 #define	NUMBER_VALID_MERC_PRECEDENT_QUOTES	13
 
-extern	UINT8	gubMercValidPrecedentQuoteID[ NUMBER_VALID_MERC_PRECEDENT_QUOTES ];
+extern	UINT8	gubMercValidPrecedentQuoteID[NUMBER_VALID_MERC_PRECEDENT_QUOTES];
 
-BOOLEAN ShouldMercSayPrecedentToRepeatOneSelf( UINT8 ubMercID, UINT32 uiQuoteID );
-BOOLEAN GetMercPrecedentQuoteBitStatus( UINT8 ubMercID, UINT8 ubQuoteBit );
-BOOLEAN SetMercPrecedentQuoteBitStatus( UINT8 ubMercID, UINT8 ubBitToSet );
-BOOLEAN IsQuoteInPrecedentArray( UINT32 uiQuoteID );
-UINT8	GetQuoteBitNumberFromQuoteID( UINT32 uiQuoteID );
-void HandleShutDownOfMapScreenWhileExternfaceIsTalking( void );
+BOOLEAN ShouldMercSayPrecedentToRepeatOneSelf(UINT8 ubMercID, UINT32 uiQuoteID);
+BOOLEAN GetMercPrecedentQuoteBitStatus(UINT8 ubMercID, UINT8 ubQuoteBit);
+BOOLEAN SetMercPrecedentQuoteBitStatus(UINT8 ubMercID, UINT8 ubBitToSet);
+BOOLEAN IsQuoteInPrecedentArray(UINT32 uiQuoteID);
+UINT8	GetQuoteBitNumberFromQuoteID(UINT32 uiQuoteID);
+void HandleShutDownOfMapScreenWhileExternfaceIsTalking(void);
 
-void StopAnyCurrentlyTalkingSpeech( );
+void StopAnyCurrentlyTalkingSpeech();
 
 // handle pausing of the dialogue queue
-void PauseDialogueQueue( void );
+void PauseDialogueQueue(void);
 
 // unpause the dialogue queue
-void UnPauseDialogueQueue( void );
+void UnPauseDialogueQueue(void);
 
-void SetExternMapscreenSpeechPanelXY( INT16 sXPos, INT16 sYPos );
+void SetExternMapscreenSpeechPanelXY(INT16 sXPos, INT16 sYPos);
 
 #ifdef JA2UB
 void RemoveJerryMiloBrokenLaptopOverlay();

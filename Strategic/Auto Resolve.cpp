@@ -4823,7 +4823,7 @@ void AttackTarget( SOLDIERCELL *pAttacker, SOLDIERCELL *pTarget )
 		if( pTarget->pSoldier->stats.bLife >= CONSCIOUSNESS || pTarget->uiFlags & CELL_CREATURE )
 		{
 			if( gpAR->fSound )
-				pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_HIT1 );
+				pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_HIT );
 		}
 		if( !(pTarget->uiFlags & CELL_CREATURE) && iNewLife < OKLIFE && pTarget->pSoldier->stats.bLife >= OKLIFE )
 		{
@@ -5060,7 +5060,7 @@ void TargetHitCallback( SOLDIERCELL *pTarget, INT32 index )
 	if( pTarget->pSoldier->stats.bLife >= CONSCIOUSNESS )
 	{
 		if( gpAR->fSound )
-			pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_HIT1 );
+			pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_HIT );
 	}
 
 	if( iNewLife < OKLIFE && pTarget->pSoldier->stats.bLife >= OKLIFE )
@@ -5242,7 +5242,7 @@ void TargetHitCallback( SOLDIERCELL *pTarget, INT32 index )
 				if ( ARMED_VEHICLE( pTarget->pSoldier ) || ENEMYROBOT( pTarget->pSoldier ) )
 					PlayAutoResolveSample( (UINT8)(S_RAID_TB_BOMB), RATE_11025, 50, 1, MIDDLEPAN );
 				else
-					pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+					pTarget->pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 			}
 		}
 		#ifdef INVULNERABILITY
@@ -5367,7 +5367,7 @@ BOOLEAN IsBattleOver()
 			if( iNumInvolvedMercs == 1 && !gpAR->ubAliveCivs )
 			{
 				//Robot is the only one left in battle, so instantly kill him.
-				pRobot->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+				pRobot->DoMercBattleSound( BATTLE_SOUND_DIE );
 				pRobot->stats.bLife = 0;
 				gpAR->ubAliveMercs--;
 				iNumInvolvedMercs = 0;
@@ -5406,7 +5406,7 @@ BOOLEAN IsBattleOver()
 			{
 				if( gpMercs[ i ].uiFlags & CELL_EPC )
 				{
-					gpMercs[ i ].pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE1 );
+					gpMercs[ i ].pSoldier->DoMercBattleSound( BATTLE_SOUND_DIE );
 					gpMercs[ i ].pSoldier->stats.bLife = 0;
 					gpMercs[ i ].pSoldier->iHealableInjury = 0; // added by SANDRO
 					--gpAR->ubAliveMercs;
@@ -5422,7 +5422,7 @@ BOOLEAN IsBattleOver()
 					GetEnemyEncounterCode() != BLOODCAT_ATTACK_CODE &&
 					GetEnemyEncounterCode() != ZOMBIE_ATTACK_CODE )
 				{
-					gpEnemies[ i ].pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH1 );
+					gpEnemies[ i ].pSoldier->DoMercBattleSound( BATTLE_SOUND_LAUGH );
 				}
 				else
 				{

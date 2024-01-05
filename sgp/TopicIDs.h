@@ -3,6 +3,8 @@
 
 const unsigned INVALID_TOPIC = 0xffff;
 
+const unsigned TOPIC_CREATE_ENTITY = 27;
+const unsigned TOPIC_LAGGING_BUGS = 26;
 const unsigned TOPIC_DECISIONS = 25;
 const unsigned TOPIC_MEMORY_MANAGER = 24;
 const unsigned TOPIC_FILE_MANAGER = 23;

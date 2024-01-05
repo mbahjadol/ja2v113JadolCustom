@@ -1030,7 +1030,7 @@ SOLDIERTYPE* TacticalCreateSoldier( SOLDIERCREATE_STRUCT *pCreateStruct, UINT8 *
 		if ( Soldier.ubProfile == NO_PROFILE )
 		{
 			// default (men) badguy battlesound sets 0-5
-			Soldier.ubBattleSoundID = (UINT8)Random( 6 );
+			Soldier.ubBattleSoundTypeID = (UINT8)Random( NPBS_MALE_MAXTYPE );
 		}
 
 		//Set some flags, actions based on what body type we are
@@ -1042,16 +1042,16 @@ SOLDIERTYPE* TacticalCreateSoldier( SOLDIERCREATE_STRUCT *pCreateStruct, UINT8 *
 			case HATKIDCIV:
 			case KIDCIV:
 				// kids have 2 battlesound sets
-				Soldier.ubBattleSoundID = (UINT8)Random( 2 );
+				Soldier.ubBattleSoundTypeID = (UINT8)Random( NPBS_KIDS_MAXTYPE );
 				break;
 
 			case REGFEMALE:
 			case MINICIV:
 			case DRESSCIV:
 
-				// women get badguy battlesound sets 6-11
-				Soldier.ubBattleSoundID = 6 + (UINT8) Random( 6 );
-				Soldier.aiData.bNormalSmell = NORMAL_HUMAN_SMELL_STRENGTH;
+				// women get badguy battlesound sets 6-8
+				Soldier.ubBattleSoundTypeID = NPBS_FEMALE_TYPE6 + (UINT8) Random( NPBS_FEMALE_MAXTYPE - NPBS_FEMALE_TYPE6);
+				Soldier.aiData.bNormalSmell = NORMAL_HUMAN_SMELL_STRENGTH;				
 				break;
 
 			case BLOODCAT:
@@ -1167,6 +1167,56 @@ SOLDIERTYPE* TacticalCreateSoldier( SOLDIERCREATE_STRUCT *pCreateStruct, UINT8 *
 				Soldier.aiData.bNormalSmell = NORMAL_HUMAN_SMELL_STRENGTH;
 				break;
 		}
+
+		// JADOL - Copied from Vengeage Reloaded
+		if (Soldier.ubProfile == NO_PROFILE)
+		{
+			switch (Soldier.ubCivilianGroup)
+			{
+			//case CIA_OPERATIVES_GROUP:
+			//	if (Random(2) == 0)
+			//		Soldier.ubBattleSoundTypeID = 101;
+			//	else
+			//		Soldier.ubBattleSoundTypeID = 112;
+			//	break;
+			//case COCKEYE_THUGS:
+			//	Soldier.ubBattleSoundTypeID = 102;
+			//	break;
+			case HICKS_CIV_GROUP:
+				if (Soldier.ubBodyType == REGFEMALE)
+					Soldier.ubBattleSoundTypeID = 104;
+				else
+					Soldier.ubBattleSoundTypeID = 103;
+				break;
+			case KINGPIN_CIV_GROUP:
+				Soldier.ubBattleSoundTypeID = 105;
+				break;
+			//	// anv: VR - kingpin fort group
+			//case KINGPIN_FORT_CIV_GROUP:
+			//	Soldier.ubBattleSoundTypeID = 105;
+			//	break;
+			//case TRACONA_OPERATIVES_GROUP:
+			//	Soldier.ubBattleSoundTypeID = 108;
+			//	break;
+			case UNNAMED_CIV_GROUP_16:
+				Soldier.ubBattleSoundTypeID = 109;
+				break;
+			case WARDEN_CIV_GROUP:
+				if (Soldier.ubBodyType == REGFEMALE)
+					Soldier.ubBattleSoundTypeID = 111;
+				else
+					Soldier.ubBattleSoundTypeID = 110;
+				break;
+			}
+			if (Soldier.bTeam == MILITIA_TEAM)
+			{
+				if (Soldier.ubBodyType == REGFEMALE)
+					Soldier.ubBattleSoundTypeID = 107;
+				else
+					Soldier.ubBattleSoundTypeID = 106;
+			}
+		}
+
 
 		// Flugente: under certain conditions, we can recruit civilians
 		if ( Soldier.bTeam == CIV_TEAM && Soldier.ubProfile == NO_PROFILE && Soldier.ubCivilianGroup == NON_CIV_GROUP && Soldier.ubBodyType <= DRESSCIV )
@@ -3075,6 +3125,39 @@ SOLDIERTYPE* ReserveTacticalSoldierForAutoresolve( UINT8 ubSoldierClass )
 }
 
 //USED BY STRATEGIC AI and AUTORESOLVE
+SOLDIERTYPE* TacticalCreateNewbie()
+{
+	BASIC_SOLDIERCREATE_STRUCT bp;
+	SOLDIERCREATE_STRUCT pp;
+	UINT8 ubID;
+	SOLDIERTYPE* pSoldier;
+
+	if (guiCurrentScreen == AUTORESOLVE_SCREEN && !gfPersistantPBI)
+	{
+		pSoldier = ReserveTacticalSoldierForAutoresolve(SOLDIER_CLASS_NONE);
+		if (pSoldier) return pSoldier;
+	}
+
+	memset(&bp, 0, sizeof(BASIC_SOLDIERCREATE_STRUCT));
+	RandomizeRelativeLevel(&(bp.bRelativeAttributeLevel), SOLDIER_CLASS_NONE);
+	RandomizeRelativeLevel(&(bp.bRelativeEquipmentLevel), SOLDIER_CLASS_NONE);
+	bp.bTeam = ENEMY_TEAM;
+	bp.bOrders = SEEKENEMY;
+	bp.bAttitude = (INT8)Random(MAXATTITUDES);
+	bp.ubBodyType = -1;
+	bp.ubSoldierClass = SOLDIER_CLASS_NONE;
+	CreateDetailedPlacementGivenBasicPlacementInfo(&pp, &bp);
+	pSoldier = TacticalCreateSoldier(&pp, &ubID);
+	if (pSoldier)
+	{
+		// send soldier to centre of map, roughly
+		pSoldier->aiData.sNoiseGridno = (CENTRAL_GRIDNO + (Random(CENTRAL_RADIUS * 2 + 1) - CENTRAL_RADIUS) + (Random(CENTRAL_RADIUS * 2 + 1) - CENTRAL_RADIUS) * WORLD_COLS);
+		pSoldier->aiData.ubNoiseVolume = MAX_MISC_NOISE_DURATION;
+	}
+	return(pSoldier);
+}
+
+//USED BY STRATEGIC AI and AUTORESOLVE
 SOLDIERTYPE* TacticalCreateAdministrator()
 {
 	BASIC_SOLDIERCREATE_STRUCT bp;
@@ -3129,6 +3212,7 @@ SOLDIERTYPE* TacticalCreateArmyTroop()
 	bp.bAttitude = (INT8) Random( MAXATTITUDES );
 	bp.ubBodyType = -1;
 	bp.ubSoldierClass = SOLDIER_CLASS_ARMY;
+	bp.ubDirection = Random(NUM_WORLD_DIRECTIONS);
 	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 	pSoldier = TacticalCreateSoldier( &pp, &ubID );
 	if ( pSoldier )
@@ -3163,6 +3247,7 @@ SOLDIERTYPE* TacticalCreateEliteEnemy()
 	bp.bAttitude = (INT8) Random( MAXATTITUDES );
 	bp.ubBodyType = -1;
 	bp.ubSoldierClass = SOLDIER_CLASS_ELITE;
+	bp.ubDirection = Random(NUM_WORLD_DIRECTIONS);
 	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 
 	//SPECIAL!	Certain events in the game can cause profiled NPCs to become enemies.	The two cases are
@@ -3207,6 +3292,7 @@ SOLDIERTYPE* TacticalCreateEnemyTank()
 	bp.bAttitude = (INT8) Random( MAXATTITUDES );
 	bp.ubBodyType = TANK_NW;
 	bp.ubSoldierClass = SOLDIER_CLASS_TANK;
+	bp.ubDirection = Random(NUM_WORLD_DIRECTIONS);
 	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 	
 	pSoldier = TacticalCreateSoldier( &pp, &ubID );
@@ -3221,6 +3307,12 @@ SOLDIERTYPE* TacticalCreateEnemyTank()
 		pSoldier->stats.bLife = pSoldier->stats.bLifeMax;
 
 		RebelCommand::ApplyEnemyMechanicalUnitPenalties(pSoldier);
+
+		// JADOL -- heavy weight armored like Tank is always have slow agility
+		if (pSoldier->stats.bAgility > 50)
+			pSoldier->stats.bAgility = PreRandom(49) + 5; // heavy weight armored always have slow agility
+		// --
+
 	}
 
 	return( pSoldier );
@@ -3249,6 +3341,7 @@ SOLDIERTYPE* TacticalCreateEnemyJeep( )
 	bp.bAttitude = (INT8)Random( MAXATTITUDES );
 	bp.ubBodyType = COMBAT_JEEP;
 	bp.ubSoldierClass = SOLDIER_CLASS_JEEP;
+	bp.ubDirection = Random(NUM_WORLD_DIRECTIONS);
 	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 
 	pSoldier = TacticalCreateSoldier( &pp, &ubID );
@@ -3292,6 +3385,7 @@ SOLDIERTYPE* TacticalCreateEnemyRobot()
 	bp.bAttitude = AGGRESSIVE;
 	bp.ubBodyType = ROBOTNOWEAPON;
 	bp.ubSoldierClass = SOLDIER_CLASS_ROBOT;
+	bp.ubDirection = Random(NUM_WORLD_DIRECTIONS);
 	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 
 	pSoldier = TacticalCreateSoldier( &pp, &ubID );

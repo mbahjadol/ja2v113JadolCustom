@@ -284,7 +284,7 @@ void HandleStructChangeFromGridNo( SOLDIERTYPE *pSoldier, INT32 sGridNo )
 					{
 						fDoHumm = FALSE;
 
-						TacticalCharacterDialogueWithSpecialEvent( pSoldier, 0, DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND, BATTLE_SOUND_COOL1 , 500 );
+						TacticalCharacterDialogueWithSpecialEvent( pSoldier, 0, DIALOGUE_SPECIAL_EVENT_DO_BATTLE_SND, BATTLE_SOUND_COOL , 500 );
 
 					}
 				}

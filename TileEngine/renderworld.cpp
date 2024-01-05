@@ -532,6 +532,11 @@ UINT8 RenderFXStartIndex[] =
 	TOPMOST_START_INDEX,	// DYNAMIC TOPMOST
 };
 
+#ifdef JADOLDEBUG
+BOOLEAN isRenderDynamicWorld = FALSE;
+#endif // JADOLDEBUG
+
+
 
 //INT16 gsCoordArray[ 500 ][ 500 ][ 4 ];
 //INT16 gsCoordArrayX;
@@ -1430,6 +1435,15 @@ void RenderTiles(UINT32 uiFlags, INT32 iStartPointX_M, INT32 iStartPointY_M, INT
 
 							uiLevelNodeFlags = pNode->uiFlags;
 
+#ifdef JADOLDEBUG
+							if (isRenderDynamicWorld && (pNode->pAniTile != NULL)) {
+								if (pNode->pAniTile->isIgniteExplosion == TRUE) {
+									uiLevelNodeFlags = pNode->uiFlags; // buat DEBUGGING AJA MAS BROO
+								}
+							}
+#endif // JADOLDEBUG
+
+
 							if (fCheckForRedundency)
 							{
 								if ((gpWorldLevelData[uiTileIndex].uiFlags & MAPELEMENT_REDUNDENT))
@@ -2166,7 +2180,13 @@ void RenderTiles(UINT32 uiFlags, INT32 iStartPointX_M, INT32 iStartPointY_M, INT
 								if ((gGameSettings.fOptions[TOPTION_USE_LOGICAL_BODYTYPES] == TRUE)
 									&& (uiRowFlags == TILES_DYNAMIC_MERCS || uiRowFlags == TILES_DYNAMIC_HIGHMERCS || uiRowFlags == TILES_DYNAMIC_STRUCT_MERCS))
 								{
-									bt = bodyTypeDB->Find(pSoldier);
+									if (pSoldier != NULL) {
+										// JADOL -- LBOT anim still have issue with 2 of these anim type so we skip for now
+										if ((pSoldier->usAnimState != JFK_HITDEATH) && (pSoldier->usAnimState != NINJA_PUNCH) ) 
+											bt = bodyTypeDB->Find(pSoldier);
+										else
+											int z = 0;
+									}
 								}
 								UINT16 * pDefaultShadeTable = pShadeTable;
 								RECT backRect; // Actually only needed if uiFlags & TILES_DIRTY, but must be initialized with values that make sense for the comparisons.
@@ -3702,7 +3722,13 @@ void RenderDynamicWorld(  )
 		ubNumLevels = 9;
 	}
 
+#ifdef JADOLDEBUG
+	isRenderDynamicWorld = TRUE;
+#endif // JADOLDEBUG
 	RenderTiles(TILES_DIRTY, gsStartPointX_M, gsStartPointY_M, gsStartPointX_S, gsStartPointY_S, gsEndXS, gsEndYS, ubNumLevels, uiLevelFlags, sLevelIDs );
+#ifdef JADOLDEBUG
+	isRenderDynamicWorld = FALSE;
+#endif // JADOLDEBUG
 
 	#ifdef JA2EDITOR
 	if( !gfEditMode && !gfAniEditMode )

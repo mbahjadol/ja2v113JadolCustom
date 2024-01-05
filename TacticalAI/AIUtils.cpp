@@ -28,6 +28,11 @@
 
 #include "GameInitOptionsScreen.h"
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif // DEBUGDECISIONS
+
+
 //////////////////////////////////////////////////////////////////////////////
 // SANDRO - In this file, all APBPConstants[AP_CROUCH] and APBPConstants[AP_PRONE] were changed to GetAPsCrouch() and GetAPsProne()
 //			On the bottom here, there are these functions made
@@ -3184,26 +3189,28 @@ BOOLEAN ArmySeesOpponents( void )
 }
 
 #ifdef DEBUGDECISIONS
-void AIPopMessage ( STR16 str )
+static void AIPopMessage ( STR16 str )
 {
-	DebugAI(str);
+	std::wstring your_wchar_in_ws(str);
+	std::string your_wchar_in_str(your_wchar_in_ws.begin(), your_wchar_in_ws.end());
+	DebugAI(const_cast<char*>(your_wchar_in_str.c_str()));
 }
 
-void AIPopMessage ( const STR8	str )
+static void AIPopMessage ( const STR8	str )
 {
 	STR tempstr;
 	sprintf( tempstr,"%s", str);
 	DebugAI(tempstr);
 }
 
-void AINumMessage(const STR8	str, INT32 num)
+static void AINumMessage(const STR8	str, INT32 num)
 {
 	STR tempstr;
 	sprintf( tempstr,"%s %d", str, num);
 	DebugAI(tempstr);
 }
 
-void AINameMessage(SOLDIERTYPE * pSoldier,const STR8	str,INT32 num)
+static void AINameMessage(SOLDIERTYPE * pSoldier,const STR8	str,INT32 num)
 {
 	STR tempstr;
 	sprintf( tempstr,"%d %s %d",pSoldier->GetName() , str, num);
@@ -3303,7 +3310,7 @@ INT16 AssessTacticalSituation( INT8 bTeam )
 */
 
 // HEADROCK: Function to check whether a team can see the specified soldier.
-BOOLEAN TeamSeesOpponent( INT8 bTeam, SOLDIERTYPE * pOpponent )
+static BOOLEAN TeamSeesOpponent( INT8 bTeam, SOLDIERTYPE * pOpponent )
 {
 	SOLDIERTYPE * pSoldier;
 	UINT16 cnt;
@@ -3373,7 +3380,7 @@ BOOLEAN TeamSeesOpponent( INT8 bTeam, SOLDIERTYPE * pOpponent )
 }
 
 // HEADROCK: Function to assess an enemy's threat value without "me" argument.
-INT32 CalcStraightThreatValue( SOLDIERTYPE *pEnemy )
+static INT32 CalcStraightThreatValue( SOLDIERTYPE *pEnemy )
 {
 	INT32	iThreatValue = 0;
 

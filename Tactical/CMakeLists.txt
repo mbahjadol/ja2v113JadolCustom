@@ -88,6 +88,7 @@ set(TacticalSrc
 "${CMAKE_CURRENT_SOURCE_DIR}/Tactical Turns.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/TeamTurns.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Turn Based Input.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/Turn Based Input_GKI_Handler.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/UI Cursors.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Vehicles.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/VehicleMenu.cpp"

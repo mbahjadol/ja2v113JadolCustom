@@ -9122,12 +9122,17 @@ BOOLEAN HandleItemPointerClick( INT32 usMapPos )
 	UINT16	  usItem;
 	INT16			sAPCost;
 	SOLDIERTYPE		*pSoldier=NULL;
+	SOLDIERTYPE		*pTargetSoldier=NULL;
 	UINT8			ubThrowActionCode=0;
 	UINT32		uiThrowActionData=0;
 	INT16			sEndZ = 0;
 	BOOLEAN		fGiveItem = FALSE;
+	BOOLEAN		fStealthGiveItem = FALSE;
 	INT32			sGridNo;
 	INT16			sDist;
+
+	INT32 sActionGridNo, sAdjustedGridNo;
+
 
 	if ( gfUIFullTargetFound )
 	{
@@ -9154,11 +9159,24 @@ BOOLEAN HandleItemPointerClick( INT32 usMapPos )
 		}
 	}
 
-	// SEE IF WE ARE OVER A TALKABLE GUY!
-	if ( IsValidTalkableNPCFromMouse( &ubSoldierID, TRUE, FALSE, TRUE ) )
-	{
-		fGiveItem = TRUE;
+
+	// JADOL -- STEALTH GIVE ITEM CHECK: Check If We Give Item in STEALTH MODE, So we insist on giving items to the target without them realizing and refusing
+	if (!gpItemPointerSoldier->bStealthMode) {
+		// SEE IF WE ARE OVER A TALKABLE GUY!
+		if (IsValidTalkableNPCFromMouse(&ubSoldierID, TRUE, FALSE, TRUE))
+		{
+			fGiveItem = TRUE;
+		}
 	}
+	else
+	{
+		if (gfUIFullTargetFound) {
+			ubSoldierID = (UINT8)gusUIFullTargetID;
+			fStealthGiveItem = TRUE;
+		}
+	}
+	// End Of -- STEALTH GIVE ITEM CHECK
+
 
 	// WANNE: Prevent duplication of items cheat-bug:
 	// You need two mercenaries. You place required item to first mercenary's inventory, 
@@ -9197,27 +9215,6 @@ BOOLEAN HandleItemPointerClick( INT32 usMapPos )
 		//	back in the stack we took it from.  The item in the cursor should be recognized as a seperate stack at this point.
 		// Place it back in our hands!
 		gTempObject = *gpItemPointer;
-
-//		if ( gbItemPointerSrcSlot != NO_SLOT )
-//		{
-//			PlaceObject( gpItemPointerSoldier, gbItemPointerSrcSlot, gpItemPointer );
-//			fInterfacePanelDirty = DIRTYLEVEL2;
-//		}
-/*
-		//if the user just clicked on an arms dealer
-		if( IsMercADealer( MercPtrs[ ubSoldierID ]->ubProfile ) )
-		{
-			if ( EnoughPoints( gpItemPointerSoldier, sAPCost, 0, TRUE ) )
-			{
-				//Enter the shopkeeper interface
-				EnterShopKeeperInterfaceScreen( MercPtrs[ ubSoldierID ]->ubProfile );
-
-				EndItemPointer( );
-			}
-
-			return( TRUE );
-		}
-*/
 
 		if ( EnoughPoints( gpItemPointerSoldier, sAPCost, 0, TRUE ) )
 		{
@@ -9299,6 +9296,182 @@ BOOLEAN HandleItemPointerClick( INT32 usMapPos )
 
 		return( TRUE );
 	}
+
+	// JADOL -- Stealth Give Item to Target
+	if ( fStealthGiveItem )
+	{
+		//ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, L"--- STEALTH GIVE ITEM Triggered---");
+		//INT32 res = DoMessageBox(MSG_BOX_BASIC_STYLE, L"Passing item in stealth mode?", GAME_SCREEN,
+		//	(UINT8)MSG_BOX_FLAG_YESNO, NULL, NULL);
+		//if (res == MSG_BOX_RETURN_NO)
+		//	return(FALSE);
+
+		usItem = gpItemPointer->usItem;
+
+		// If the target is a robot,
+		if ( MercPtrs[ ubSoldierID ]->flags.uiStatusFlags & SOLDIER_ROBOT )
+		{
+			// Charge APs to reload robot!
+			sAPCost = GetAPsToReloadRobot( gpItemPointerSoldier,  MercPtrs[ ubSoldierID ] );
+		}
+		else
+		{
+			// Calculate action point costs!
+			sAPCost = GetAPsToGiveItem( gpItemPointerSoldier, usMapPos );
+		}
+
+		//CHRISL: This doesn't make sense to me.  If we take an item out of a stack and then click on something, why would we first attempt to put the item
+		//	back in the stack we took it from.  The item in the cursor should be recognized as a seperate stack at this point.
+		// Place it back in our hands!
+		gTempObject = *gpItemPointer;
+
+		if (EnoughPoints(gpItemPointerSoldier, sAPCost, 0, TRUE))
+		{
+			// If we are a robot, check if this is proper item to reload!
+			if (MercPtrs[ubSoldierID]->flags.uiStatusFlags & SOLDIER_ROBOT)
+			{
+				// Check if we can reload robot....
+				if (IsValidAmmoToReloadRobot(MercPtrs[ubSoldierID], &gTempObject))
+				{
+					INT32 sActionGridNo;
+					UINT8	ubDirection;
+					INT32 sAdjustedGridNo;
+
+					// Walk up to him and reload!
+					// See if we can get there to stab
+					sActionGridNo = FindAdjacentGridEx(gpItemPointerSoldier, MercPtrs[ubSoldierID]->sGridNo, &ubDirection, &sAdjustedGridNo, TRUE, FALSE);
+
+					if (sActionGridNo != -1 && gbItemPointerSrcSlot != NO_SLOT)
+					{
+						// Make a temp object for ammo...
+						OBJECTTYPE::CopyToOrCreateAt(&gpItemPointerSoldier->pTempObject, &gTempObject);
+
+						// Remove from soldier's inv...
+						gpItemPointerSoldier->inv[gbItemPointerSrcSlot].RemoveObjectsFromStack(1);
+
+						gpItemPointerSoldier->aiData.sPendingActionData2 = sAdjustedGridNo;
+						gpItemPointerSoldier->aiData.uiPendingActionData1 = gbItemPointerSrcSlot;
+						gpItemPointerSoldier->aiData.bPendingActionData3 = ubDirection;
+						gpItemPointerSoldier->aiData.ubPendingActionAnimCount = 0;
+
+						// CHECK IF WE ARE AT THIS GRIDNO NOW
+						if (gpItemPointerSoldier->sGridNo != sActionGridNo)
+						{
+							// SEND PENDING ACTION
+							gpItemPointerSoldier->aiData.ubPendingAction = MERC_RELOADROBOT;
+
+							// WALK UP TO DEST FIRST
+							gpItemPointerSoldier->EVENT_InternalGetNewSoldierPath(sActionGridNo, gpItemPointerSoldier->usUIMovementMode, FALSE, FALSE);
+						}
+						else
+						{
+							gpItemPointerSoldier->EVENT_SoldierBeginReloadRobot(sAdjustedGridNo, ubDirection, gbItemPointerSrcSlot);
+						}
+
+						// OK, set UI
+						SetUIBusy(gpItemPointerSoldier->ubID);
+					}
+
+				}
+
+				gfDontChargeAPsToPickup = FALSE;
+				EndItemPointer();
+			}
+			else
+			{
+				// It Stealthy Forcing Pass Item to Target!!!
+
+				pTargetSoldier = MercPtrs[gusUIFullTargetID];
+				sActionGridNo = FindAdjacentGridEx(gpItemPointerSoldier, pTargetSoldier->sGridNo, &ubDirection, &sAdjustedGridNo, TRUE, FALSE);
+				if (sActionGridNo != -1)
+				{
+					// CHECK IF WE ARE AT THIS GRIDNO NOW
+					if (gpItemPointerSoldier->sGridNo != sActionGridNo)
+					{
+						// WALK UP TO DEST FIRST
+						gpItemPointerSoldier->EVENT_InternalGetNewSoldierPath(sActionGridNo, gpItemPointerSoldier->usUIMovementMode, FALSE, TRUE);
+						return(FALSE);
+					}
+					else
+					{
+						// And added this one instead:
+						if ((sDist <= PASSING_ITEM_DISTANCE_OKLIFE && gfUIFullTargetFound
+								//&& MercPtrs[gusUIFullTargetID]->bTeam == gbPlayerNum		// Allowed to passing item to any team number in silent
+								//&& !AM_AN_EPC(MercPtrs[gusUIFullTargetID])				// Allowed to passing item to any living thing in silent
+								)
+								// Allowed to passing item to any vehicle in silent
+								//&&!((!gGameExternalOptions.fVehicleInventory) && (MercPtrs[gusUIFullTargetID]->flags.uiStatusFlags & SOLDIER_VEHICLE))
+							)
+						{
+							// OK, do the transfer...
+							{
+								pTargetSoldier = MercPtrs[gusUIFullTargetID];
+
+								{
+									// Change to inventory....
+									//gfSwitchPanel = TRUE;
+									//gbNewPanel = SM_PANEL;
+									//gubNewPanelParam = (UINT8)pSoldierTarget->ubID;
+
+									//usItem = gpItemPointer->usItem;
+
+									if (gpItemPointer->exists() == false)
+									{
+										EndItemPointer();
+										return(FALSE);
+									}
+
+									// try to auto place object....
+									if (AutoPlaceObject(pTargetSoldier, gpItemPointer, TRUE))
+									{
+										ScreenMsg(FONT_MCOLOR_LTGREEN, MSG_INTERFACE, pMessageStrings[MSG_ITEM_PASSED_TO_MERC], ShortItemNames[usItem], pTargetSoldier->name);
+
+										// Check if it's the same now!
+										if (gpItemPointer->exists() == false)
+										{
+											gpItemPointerSoldier->DoMercBattleSound(BATTLE_SOUND_COOL);
+											EndItemPointer();
+										}
+
+										// NO, Animation here because we give item in stealth mode
+										return(TRUE);
+									}
+									else
+									{
+										ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, pMessageStrings[MSG_NO_ROOM_TO_PASS_ITEM], ShortItemNames[usItem], pTargetSoldier->name);
+										gpItemPointerSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);
+										return(FALSE);
+									}
+								}
+							}
+						}
+						else
+						{
+							// FAILED
+							pTargetSoldier = MercPtrs[gusUIFullTargetID];
+							ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, pMessageStrings[MSG_NO_ROOM_TO_PASS_ITEM], ShortItemNames[usItem], pTargetSoldier->name);
+							gpItemPointerSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);							
+							return(FALSE);
+						}
+
+						gfDontChargeAPsToPickup = FALSE;
+					}
+
+				}
+				else
+				{
+
+					pTargetSoldier = MercPtrs[gusUIFullTargetID];
+					ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, pMessageStrings[MSG_NO_ROOM_TO_PASS_ITEM], ShortItemNames[usItem], pTargetSoldier->name);
+					gpItemPointerSoldier->DoMercBattleSound(BATTLE_SOUND_CURSE);
+					return(FALSE);
+				}
+
+			}
+		}
+
+	}
+	// --- End of STEALTH GIVE ITEM
 
 	// CHECK IF WE ARE NOT ON THE SAME GRIDNO
 	if ( sDist <= 1 && !( gfUIFullTargetFound && gusUIFullTargetID != gpItemPointerSoldier->ubID ) )
@@ -9419,42 +9592,6 @@ BOOLEAN HandleItemPointerClick( INT32 usMapPos )
 						{
 							EndItemPointer( );
 						}
-
-	    			// OK, make guys turn towards each other and do animation...
-			  		{
-						  UINT8	ubFacingDirection;
-
-						  // Get direction to face.....
-						  ubFacingDirection = (UINT8)GetDirectionFromGridNo( gpItemPointerSoldier->sGridNo, pSoldier );
-
-						  // Stop merc first....
-						  pSoldier->EVENT_StopMerc( pSoldier->sGridNo, pSoldier->ubDirection );
-
-						  // WANNE: Also turn merc if he is crouched and he passes an item
-						  if ( !pSoldier->MercInWater( ) )
-						  {
-							  // Turn to face, then do animation....
-							  pSoldier->EVENT_SetSoldierDesiredDirection( ubFacingDirection );
-							  pSoldier->flags.fTurningUntilDone	 = TRUE;
-
-							 if (gAnimControl[ pSoldier->usAnimState ].ubEndHeight == ANIM_STAND)
-							 {
-							  pSoldier->usPendingAnimation = PASS_OBJECT;
-              }
-						 }
-
-						  // WANNE: Also turn merc if he is crouched and he received the passed item
-						  if ( !gpItemPointerSoldier->MercInWater(  ) )
-						  {
-							  gpItemPointerSoldier->EVENT_SetSoldierDesiredDirection( gOppositeDirection[ ubFacingDirection ] );
-							  gpItemPointerSoldier->flags.fTurningUntilDone	 = TRUE;
-
-							  if (gAnimControl[ gpItemPointerSoldier->usAnimState ].ubEndHeight == ANIM_STAND)
-							  {
-							  gpItemPointerSoldier->usPendingAnimation = PASS_OBJECT;
-						  }
-					  }
-					  }
 
 						return( TRUE );
 					}
@@ -13865,7 +14002,7 @@ void BombInventoryMessageBoxCallBack( UINT8 ubExitValue )
 			}
 			else
 			{
-				gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+				gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 
 				ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"Arming of bomb failed. Resulting explosion damages %s's inventory and health", gpItemDescSoldier->name );
 
@@ -14025,7 +14162,7 @@ void BombInventoryDisArmMessageBoxCallBack( UINT8 ubExitValue )
 				StatChange( gpItemDescSoldier, EXPLODEAMT, gain, FALSE );
 
 			// have merc say this is good
-			gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_COOL1 );
+			gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_COOL );
 
 			(*gpItemDescObject)[0]->data.ubWireNetworkFlag = 0;
 			(*gpItemDescObject)[0]->data.bDefuseFrequency = 0;
@@ -14043,7 +14180,7 @@ void BombInventoryDisArmMessageBoxCallBack( UINT8 ubExitValue )
 		else
 		{
 			// oops! trap goes off
-			gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+			gpItemDescSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 
 			// beartraps don't explode...
 			if ( HasItemFlag( gpItemDescObject->usItem, BEARTRAP ) )

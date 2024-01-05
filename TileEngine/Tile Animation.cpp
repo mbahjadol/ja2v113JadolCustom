@@ -27,7 +27,7 @@ ANITILE *CreateAnimationTile( ANITILE_PARAMS *pAniParams )
 	INT32 sGridNo;
 	UINT8			ubLevel;
 	INT16			usTileType;
-	INT16			usTileIndex;
+	UINT16			usTileIndex; // JADOL -- Who write INT16 ????
 	INT16			sDelay;
 	INT16			sStartFrame=-1;
 	UINT32		uiFlags;
@@ -281,6 +281,10 @@ ANITILE *CreateAnimationTile( ANITILE_PARAMS *pAniParams )
 
 	//Set head
 	pAniTileHead = pNewAniNode;
+
+#ifdef JADOLDEBUG
+	pNewAniNode->isIgniteExplosion = pAniParams->isIgniteExplosion;
+#endif // JADOLDEBUG
 
 	// Set some special stuff
 	return( pNewAniNode );

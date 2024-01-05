@@ -1018,9 +1018,10 @@ void HandleShadingOfLinesForMilitiaControlMenu( void )
 			UnShadeStringInBox( ghMilitiaControlBox, MILCON_MENU_CROUCH );
 			UnShadeStringInBox( ghMilitiaControlBox, MILCON_MENU_TAKE_COVER );
 
-			if ((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT))
-				ShadeStringInBox(ghMilitiaControlBox, MILCON_MENU_MOVE_TO);
-			else
+			// JADOL -- Can Command Militia to Move in Turnbase Combat or Not
+			//if ((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT))
+			//	ShadeStringInBox(ghMilitiaControlBox, MILCON_MENU_MOVE_TO);
+			//else
 				UnShadeStringInBox(ghMilitiaControlBox, MILCON_MENU_MOVE_TO);
 		}
 		else
@@ -1398,7 +1399,8 @@ void MilitiaControlMenuBtnCallBack( MOUSE_REGION * pRegion, INT32 iReason )
 					break;
 
 				case( MILCON_MENU_MOVE_TO ):
-					if (!((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT)))
+					// JADOL - Can Command Militia to Move in Turnbase Combat or Not
+					//if (!((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT)))
 					{
 						// sevenfm: stop any AI
 						pTMilitiaSoldier->EVENT_StopMerc(pTMilitiaSoldier->sGridNo, pTMilitiaSoldier->ubDirection);

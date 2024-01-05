@@ -10,6 +10,10 @@
 
 #include "Queen Command.h"
 
+#ifdef DEBUGDECISIONS
+#include "AIUtils.h"
+#endif // DEBUGDECISIONS
+
 void MakeClosestEnemyChosenOne()
 {
 	UINT32				cnt;
@@ -252,7 +256,7 @@ INT8 PanicAI(SOLDIERTYPE *pSoldier, UINT8 ubCanMove)
 	INT32	sPanicTriggerGridNo;
 	UINT16	usMovementMode;
 #ifdef DEBUGDECISIONS
-	STR16 tempstr;
+	STR8 tempstr;
 #endif
 
 	DebugAI(AI_MSG_TOPIC, pSoldier, String("[Panic AI]"));

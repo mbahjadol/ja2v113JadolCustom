@@ -1443,7 +1443,7 @@ BOOLEAN CheckForGunJam( SOLDIERTYPE * pSoldier )
 					}
 					else
 					{
-						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 					}
 
 					return( TRUE ); 
@@ -2664,7 +2664,7 @@ BOOLEAN UseGunNCTH( SOLDIERTYPE *pSoldier , INT32 sTargetGridNo )
 				// curse!
 				if ( pSoldier->bTeam == OUR_TEAM )
 				{
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 
 					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[ 46 ], pSoldier->GetName() );
 				}
@@ -3457,7 +3457,7 @@ BOOLEAN UseGun( SOLDIERTYPE *pSoldier , INT32 sTargetGridNo )
 				// curse!
 				if ( pSoldier->bTeam == OUR_TEAM )
 				{
-					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 
 					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[ 46 ], pSoldier->GetName() );
 				}
@@ -3485,7 +3485,7 @@ BOOLEAN UseGun( SOLDIERTYPE *pSoldier , INT32 sTargetGridNo )
 	// WDS 07/06/2008 fix randoms
 	//fGonnaHit = uiDiceRoll <= uiHitChance;
 	fGonnaHit = uiDiceRoll < uiHitChance;
-	if(uiDiceRoll == uiHitChance)//dnl ch60 011109 Fix uiDiceRoll==uiHitChance which always result in hit regard fGonnaHit is FALSE
+	if (uiDiceRoll == uiHitChance)//dnl ch60 011109 Fix uiDiceRoll==uiHitChance which always result in hit regard fGonnaHit is FALSE
 		++uiDiceRoll;
 
 	// GET TARGET XY VALUES
@@ -3988,7 +3988,9 @@ BOOLEAN UseBlade( SOLDIERTYPE *pSoldier , INT32 sTargetGridNo )
 		pSoldier->ubOppNum = pTargetSoldier->ubID;
 
 		// CHECK IF BUDDY KNOWS ABOUT US
-		if ( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed )
+		if (( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed )
+			&& (pTargetSoldier->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) == 0)
+			&& (pSoldier->bTeam != pTargetSoldier->bTeam))
 		{
 			iHitChance = 100;
 			fSurpriseAttack = TRUE;
@@ -4177,7 +4179,7 @@ BOOLEAN UseBlade( SOLDIERTYPE *pSoldier , INT32 sTargetGridNo )
 BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStealing )
 {
 	SOLDIERTYPE				*	pTargetSoldier;
-	INT32								iHitChance, iDiceRoll;
+	INT32								iHitChance = 0, iDiceRoll = 0; // fill initiate number so not null
 	INT16								sXMapPos, sYMapPos;
 	INT16								sAPCost;
 	EV_S_WEAPONHIT			SWeaponHit;
@@ -4219,54 +4221,89 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 
 		if (fStealing)
 		{
-			// Calculate the possible chance to steal!
-			// Flugente: if we are on the same team, allow guaranteed full access
-			if ( AllowedToStealFromTeamMate(pSoldier->ubID, pTargetSoldier->ubID) )
+			// ****************************************************************************************************************
+			// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+			if (AllowedToStealFromTeamMate(pSoldier->ubID, pTargetSoldier->ubID))
 			{
 				iHitChance = 100;
-			}
-			else if ( AM_A_ROBOT( pTargetSoldier ) || ENEMYROBOT( pTargetSoldier ) || ARMED_VEHICLE( pTargetSoldier ) || CREATURE_OR_BLOODCAT( pTargetSoldier ) || (SOLDIER_CLASS_MILITIA( pTargetSoldier->ubSoldierClass ) && (gGameExternalOptions.ubMilitiaDropEquipment != 2)) ) // added militia here - SANDRO
-			{
-				iHitChance = 0;
-			}
-			// sevenfm: use sneak attack code
-			//else if ( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN )
-			else if (pTargetSoldier->usSoldierFlagMask2 & SOLDIER_SNEAK_ATTACK)
-			{
-				// give bonus for surprise, but not so much as struggle would still occur
-				iHitChance = CalcChanceToSteal( pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime ) + 20;
-			}
-			else if ( pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed )
-			{
-				iHitChance = 100;
-				fSoldierCollapsed = TRUE;
 			}
 			else
 			{
-				iHitChance = CalcChanceToSteal( pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime );
+				if (pTargetSoldier->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) > 0)
+				{
+					// because use 4 digit in xml background, so we will divide to percent in here
+					INT32 chanceToEvadeInHundred = (INT32)(pTargetSoldier->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100);
+					if (pTargetSoldier->exists() && chanceToEvadeInHundred > 0)
+						iHitChance = 100 - chanceToEvadeInHundred;
+				}
+				else
+				{
+					// Calculate the possible chance to steal!
+					// Flugente: if we are on the same team, allow guaranteed full access
+					if (AllowedToStealFromTeamMate(pSoldier->ubID, pTargetSoldier->ubID))
+					{
+						iHitChance = 100;
+					}
+					//else if ( AM_A_ROBOT( pTargetSoldier ) || ENEMYROBOT( pTargetSoldier ) || ARMED_VEHICLE( pTargetSoldier ) || CREATURE_OR_BLOODCAT( pTargetSoldier ) || (SOLDIER_CLASS_MILITIA( pTargetSoldier->ubSoldierClass ) && (gGameExternalOptions.ubMilitiaDropEquipment != 2)) ) // added militia here - SANDRO
+					else if (AM_A_ROBOT(pTargetSoldier) || ENEMYROBOT(pTargetSoldier) || ARMED_VEHICLE(pTargetSoldier) || CREATURE_OR_BLOODCAT(pTargetSoldier)) // militia allowed to be steal here - JADOL
+					{
+						iHitChance = 0;
+					}
+					// sevenfm: use sneak attack code
+					//else if ( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN )
+					else if (pTargetSoldier->usSoldierFlagMask2 & SOLDIER_SNEAK_ATTACK)
+					{
+						// give bonus for surprise, but not so much as struggle would still occur
+						iHitChance = CalcChanceToSteal(pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime) + 20;
+					}
+					else if (pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed)
+					{
+						iHitChance = 100;
+						fSoldierCollapsed = TRUE;
+					}
+					else
+					{
+						iHitChance = CalcChanceToSteal(pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime);
+					}
+				}
 			}
+			// --
+			// ****************************************************************************************************************
+
 		}
 		else
 		{
-			// sevenfm: use sneak attack code
-			//if ( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed )
-			if (pTargetSoldier->usSoldierFlagMask2 & SOLDIER_SNEAK_ATTACK || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed)
+			// ****************************************************************************************************************
+			// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+			INT32 chanceToEvadeInHundred = (INT32)(pTargetSoldier->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100);
+			if (pTargetSoldier->exists() && (chanceToEvadeInHundred > 0))
 			{
-				iHitChance = 100;
+				iHitChance = 100 - chanceToEvadeInHundred;
 			}
+			// --
+			// ****************************************************************************************************************
 			else
 			{
-				iHitChance = CalcChanceToPunch( pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime );
-
-				// sevenfm: bonus for boxers for attack from the back
-				if (iHitChance < 100 &&
-					(pSoldier->flags.uiStatusFlags & SOLDIER_BOXER) &&
-					!pSoldier->bBlindedCounter &&
-					gAnimControl[pTargetSoldier->usAnimState].ubEndHeight > ANIM_PRONE &&
-					(pTargetSoldier->flags.uiStatusFlags & SOLDIER_BOXER) &&
-					pTargetSoldier->usSoldierFlagMask2 & SOLDIER_BACK_ATTACK)
+				// sevenfm: use sneak attack code
+				//if ( pTargetSoldier->aiData.bOppList[ pSoldier->ubID ] == NOT_HEARD_OR_SEEN || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed )
+				if (pTargetSoldier->usSoldierFlagMask2 & SOLDIER_SNEAK_ATTACK || pTargetSoldier->stats.bLife < OKLIFE || pTargetSoldier->bCollapsed)
 				{
-					iHitChance += (100 - iHitChance) / 2;
+					iHitChance = 100;
+				}
+				else
+				{
+					iHitChance = CalcChanceToPunch(pSoldier, pTargetSoldier, pSoldier->aiData.bAimTime);
+
+					// sevenfm: bonus for boxers for attack from the back
+					if (iHitChance < 100 &&
+						(pSoldier->flags.uiStatusFlags & SOLDIER_BOXER) &&
+						!pSoldier->bBlindedCounter &&
+						gAnimControl[pTargetSoldier->usAnimState].ubEndHeight > ANIM_PRONE &&
+						(pTargetSoldier->flags.uiStatusFlags & SOLDIER_BOXER) &&
+						pTargetSoldier->usSoldierFlagMask2 & SOLDIER_BACK_ATTACK)
+					{
+						iHitChance += (100 - iHitChance) / 2;
+					}
 				}
 			}
 		}
@@ -4290,13 +4327,14 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 		// -----------------------------------
 		if (fStealing )
 		{
-			// SANDRO - unable to steal from militia if they are not allowed to drop equipment
-			if (SOLDIER_CLASS_MILITIA(pTargetSoldier->ubSoldierClass) && (gGameExternalOptions.ubMilitiaDropEquipment != 2) )
-			{
-				DeductPoints( pSoldier, (APBPConstants[AP_STEAL_ITEM] / 5), 0, AFTERACTION_INTERRUPT );
-				pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
-				return ( TRUE );
-			}
+			// JADOL -- Allowed to steal from militia
+			//// SANDRO - unable to steal from militia if they are not allowed to drop equipment
+			//if (SOLDIER_CLASS_MILITIA(pTargetSoldier->ubSoldierClass) && (gGameExternalOptions.ubMilitiaDropEquipment != 2) )
+			//{
+			//	DeductPoints( pSoldier, (APBPConstants[AP_STEAL_ITEM] / 5), 0, AFTERACTION_INTERRUPT );
+			//	pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+			//	return ( TRUE );
+			//}
 
 			fFailure=FALSE;
 
@@ -4333,7 +4371,7 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 				ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szCovertTextStr[STR_COVERT_UNCOVERED], pTargetSoldier->GetName(), pSoldier->GetName()  );
 			}
 
-						// WDS 07/19/2008 - Random number use fix
+			// WDS 07/19/2008 - Random number use fix
 			// Do we have the chance to steal more than 1 item?
 			// SANDRO - taking items from collapsed soldiers is treated differently
 			// Flugente: if we are on the same team, allow guaranteed full access
@@ -4473,7 +4511,7 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 					{
 						if ( pSoldier->bTeam == gbPlayerNum )
 						{
-							pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+							pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 						}
 						if (pTargetSoldier->inv[HANDPOS].MoveThisObjectTo(gTempObject, 1) == 0) 
 						{
@@ -4560,7 +4598,7 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 
 					if ( pSoldier->bTeam == gbPlayerNum )
 					{
-						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+						pSoldier->DoMercBattleSound( BATTLE_SOUND_CURSE );
 					}
 				}
 				else
@@ -4855,6 +4893,7 @@ BOOLEAN UseHandToHand( SOLDIERTYPE *pSoldier, INT32 sTargetGridNo, BOOLEAN fStea
 				SWeaponHit.ubAttackerID			= pSoldier->ubID;
 				SWeaponHit.fHit							= TRUE;
 				SWeaponHit.ubSpecial				= FIRE_WEAPON_NO_SPECIAL;
+				SWeaponHit.ubLocation = pSoldier->bAimMeleeLocation;
 				AddGameEvent( S_WEAPONHIT, (UINT16) 20, &SWeaponHit );
 
 				// anv: enemy taunts on hit
@@ -5505,11 +5544,15 @@ void WeaponHit( UINT16 usSoldierID, UINT16 usWeaponIndex, INT16 sDamage, INT16 s
 	{
 		ubAmmoType = (*pObj)[0]->data.gun.ubGunAmmoType;
 	}
-	else
+	else if (Item[usWeaponIndex].usItemClass & IC_GRENADE)
 	{
-		// Must be a fragment.
+		// Must be a fragment. // Why you judging this always fragment bombs? it can be any simple gun !!!!
+		// so DON'T CHANGE the usWeaponIndex as you wish!!!!
 		ubAmmoType = Explosive[Item[usWeaponIndex].ubClassIndex].ubFragType;
-		usWeaponIndex = 1; // Set to default gun.
+		usWeaponIndex = 1; // Set to default gun. // STUPID !!!!!!!!!!!! BY JADOL
+	}
+	else {
+		// let usWeaponIndex as is don't change it!!!
 	}
 	
 	if ( EXPLOSIVE_GUN( usWeaponIndex ) || AmmoTypes[ubAmmoType].explosionSize > 1)
@@ -5680,7 +5723,8 @@ void StructureHit( INT32 iBullet, UINT16 usWeaponIndex, INT16 bWeaponStatus, UIN
 
 		UINT8 usDirection = DIRECTION_IRRELEVANT;
 		if ( pSoldier )
-			usDirection = (UINT8)GetDirectionToGridNoFromGridNo( pSoldier->sGridNo, sGridNo );
+			//usDirection = (UINT8)GetDirectionToGridNoFromGridNo( sGridNo, pSoldier->sGridNo); // JADOL -- SUPER BUG STUPID DIRECTION!!!!
+			usDirection = (UINT8)GetDirectionToGridNoFromGridNo( pSoldier->sGridNo, sGridNo ); // JADOL -- SUPER BUG STUPID DIRECTION!!!!
 
                  // marke added one 'or' to get this working with HE ammo
 		if ( Item[usWeaponIndex].rocketlauncher || (pObj && AmmoTypes[ (*pObj)[0]->data.gun.ubGunAmmoType].explosionSize > 1 ))
@@ -5692,17 +5736,28 @@ void StructureHit( INT32 iBullet, UINT16 usWeaponIndex, INT16 bWeaponStatus, UIN
 			if ( pBullet->fFragment == false)
 			{
 				INT16 sX, sY;
-				ConvertGridNoToCenterCellXY(pSoldier->sGridNo, &sX, &sY);
+				//ConvertGridNoToCenterCellXY(pSoldier->sGridNo, &sX, &sY); // JADOL -- it is REVERSED
+				ConvertGridNoToCenterCellXY(sGridNo, &sX, &sY); // JADOL -- using target sGridNo instead!!
 
 				if ( Item[usWeaponIndex].singleshotrocketlauncher )
 				{
+					//// JADOL -- DEBUGGING
+					//ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, L"a:%d ,a:%d ,c:%d, d:%d",
+					//	pSoldier->sGridNo, sX, sY, sGridNo);
+					////--
+
+
 					if ( Item[usWeaponIndex].usBuddyItem != 0 && Item[Item[usWeaponIndex].usBuddyItem].usItemClass & IC_EXPLOSV )
 					{
 						IgniteExplosion( ubAttackerID, sX, sY, 0, sGridNo, Item[usWeaponIndex].usBuddyItem, bLevel, usDirection );
 					}
 					else
 					{
-						IgniteExplosion( ubAttackerID, sX, sY, 0, sGridNo, C1, bLevel, usDirection );
+						IgniteExplosion( ubAttackerID, sX, sY, 0, sGridNo, C1, bLevel, usDirection, NULL
+#ifdef JADOLDEBUG
+							, 1
+#endif // JADOLDEBUG
+						);
 					}
 				}
 				// changed too to use 2 flag to determine
@@ -5783,7 +5838,7 @@ void StructureHit( INT32 iBullet, UINT16 usWeaponIndex, INT16 bWeaponStatus, UIN
 					{
 						if ( Random( 40 ) == 0 )
 						{
-							MercPtrs[ ubAttackerID ]->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+							MercPtrs[ ubAttackerID ]->DoMercBattleSound( BATTLE_SOUND_CURSE );
 						}
 					}
 				}
@@ -6605,6 +6660,22 @@ UINT32 CalcNewChanceToHitGun(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTi
 	fFinalChance = __min(fFinalChance, min(100, gGameExternalOptions.ubMaximumCTH + (UINT8)(pSoldier->GetBackgroundValue(BG_PERC_CTH_MAX))) );
 	fFinalChance = __max(fFinalChance, gGameExternalOptions.ubMinimumCTH);
 	
+	// ****************************************************************************************************************
+	// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+	pTarget = SimpleFindSoldier(sGridNo, pSoldier->bTargetLevel); // Target Pointer
+	if (pTarget != NULL)
+	{
+		if (pTarget->ubTargetID != NOBODY)
+		{
+			UINT16 chanceToEvadeInHundred = (UINT16)pTarget->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100;
+			if (pTarget->exists() && chanceToEvadeInHundred > 0)
+			{
+				fFinalChance = (FLOAT) 100 - chanceToEvadeInHundred;
+			}
+		}
+	}
+	// --
+	// ****************************************************************************************************************
 
 	return ((INT32)fFinalChance);
 }
@@ -7042,6 +7113,7 @@ UINT32 CalcChanceToHitGun(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTime,
 			iPenalty = iCoverRange / CELL_X_SIZE;
 			iChance -= iPenalty;
 		}
+
 	}
 	else if ( ARMED_VEHICLE( pSoldier ) && iRange < MIN_TANK_RANGE )
 	{
@@ -7632,6 +7704,24 @@ UINT32 CalcChanceToHitGun(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTime,
 		iChance =  min(iChance, min(100, gGameExternalOptions.ubMaximumCTH + (UINT8)(pSoldier->GetBackgroundValue(BG_PERC_CTH_MAX))) );
 	}
 	/////////////////////////////////////////////////////////////////////////////////////
+
+	// ****************************************************************************************************************
+	// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+	pTarget = SimpleFindSoldier(sGridNo, pSoldier->bTargetLevel);
+	if (pTarget != NULL)
+	{
+		if (pTarget->ubTargetID != NOBODY)
+		{
+			INT32 chanceToEvadeInHundred = (INT32)pTarget->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100;
+			if (pTarget->exists() && chanceToEvadeInHundred > 0)
+			{
+				iChance = 100 - chanceToEvadeInHundred;
+			}
+		}
+	}
+	// --
+	// ****************************************************************************************************************
+
 	
    DebugMsg(TOPIC_JA2,DBG_LEVEL_3,String("CalcChanceToHitGun: ichance = %d",iChance));
    return (iChance);
@@ -7819,6 +7909,23 @@ UINT32 AICalcChanceToHitGun(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTim
 			uiChance = (UINT32)(uiChance / iDivisor);
 		}
 	}
+
+	// ****************************************************************************************************************
+	// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+	SOLDIERTYPE* pTarget = SimpleFindSoldier(sGridNo, pSoldier->bTargetLevel);
+	if (pTarget != NULL)
+	{
+		if (pTarget->ubTargetID != NOBODY)
+		{
+			UINT32 chanceToEvadeInHundred = (UINT32)pTarget->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100;
+			if (pTarget->exists() && chanceToEvadeInHundred > 0)
+			{
+				return (100 - chanceToEvadeInHundred);
+			}
+		}
+	}
+	// --
+	// ****************************************************************************************************************
 
 	if (gGameExternalOptions.fAIExtraSuppression)
 	{
@@ -8517,7 +8624,7 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 			// SANDRO - with new traits, the chance for stat loss is higher as we are now able to repair it
 			if ((PreRandom( uiCritChance ) + 1) > (UINT8)(gGameOptions.fNewTraitSystem ? gSkillTraitValues.ubDamageNeededToLoseStats : CRITICAL_HIT_THRESHOLD))
 			{
-				bStatLoss = (INT8) PreRandom( iImpactForCrits / 2 ) + 1;
+				bStatLoss = (INT8)PreRandom(iImpactForCrits / 2) + 1;		
 				// SANDRO - malicious hit
 				if ( fMaliciousHit && Chance( max( 15, uiCritChance )) && ( ubHitLocation == AIM_SHOT_TORSO || ubHitLocation == AIM_SHOT_LEGS ) && 
 					( sHitBy >= 20 ) && ( pTarget->ubBodyType <= STOCKYMALE ) && ( gAnimControl[ pTarget->usAnimState ].ubHeight != ANIM_PRONE ) )
@@ -8544,35 +8651,18 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 							{
 								bStatLoss = pTarget->stats.bWisdom - 1;
 							}
-							if ( bStatLoss > 0 )
-							{
-								pTarget->stats.bWisdom -= bStatLoss;
-								// SANDRO - added this for healing lost stats feature
-								pTarget->ubCriticalStatDamage[DAMAGED_STAT_WISDOM] += bStatLoss;
 
-								if (pTarget->ubProfile != NO_PROFILE)
-								{
-									gMercProfiles[ pTarget->ubProfile ].bWisdom = pTarget->stats.bWisdom;
-								}
+							if ( bStatLoss > 0)
+							{
+								// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+								// BulletImpact::ImpactForCrits::AIM_SHOT_HEAD::ReductStat_WISDOM
+								pTarget->SoldierGotStatDamagedHealable(DAMAGED_STAT_WISDOM, bStatLoss, pFirer->ubID, 1);
+								OutputDebugString(String("Weapons.cpp_BulletImpact::ImpactForCrits::AIM_SHOT_HEAD::WISDOM\n"));
+								// --
 
 								// Flugente: disease
-								HandlePossibleInfection( pTarget, pFirer, INFECTION_TYPE_WOUND_WIS );
+								HandlePossibleInfection(pTarget, pFirer, INFECTION_TYPE_WOUND_WIS);
 
-								if (pTarget->name[0] && pTarget->bVisible == TRUE)
-								{
-									// make stat RED for a while...
-									pTarget->timeChanges.uiChangeWisdomTime = GetJA2Clock();
-									pTarget->usValueGoneUp &= ~( WIS_INCREASE );
-
-									if (bStatLoss == 1)
-									{
-										ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_1_WISDOM], pTarget->GetName() );
-									}
-									else
-									{
-										ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_WISDOM], pTarget->GetName(), bStatLoss );
-									}
-								}
 							}
 							else if ( pTarget->bNumPelletsHitBy == 0 )
 							{
@@ -8598,38 +8688,22 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 								{
 									bStatLoss = pTarget->stats.bLifeMax - OKLIFE - 1;
 								}
+
 								if ( bStatLoss > iImpact)
 								{
 									bStatLoss = iImpact;
 								}
-								if ( bStatLoss > 0 )
+
+								if ( bStatLoss > 0)
 								{
-									pTarget->stats.bLifeMax -= bStatLoss;
-									pTarget->bBleeding -= bStatLoss;
-									// SANDRO - added this for healing lost stats feature
-									pTarget->ubCriticalStatDamage[DAMAGED_STAT_HEALTH] += bStatLoss;
+									// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+									// BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::ReductStat_LIFEMAX
+									pTarget->SoldierGotStatDamagedHealable(DAMAGED_STAT_HEALTH, bStatLoss, pFirer->ubID, 2);
+									OutputDebugString(String("Weapons.cpp_BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::HEALTH\n"));
+									//--
 
-									if (pTarget->ubProfile != NO_PROFILE)
-									{
-										gMercProfiles[ pTarget->ubProfile ].bLifeMax = pTarget->stats.bLifeMax;
-									}
-
-									if (pTarget->name[0] && pTarget->bVisible == TRUE)
-									{
-										// make stat RED for a while...
-										pTarget->timeChanges.uiChangeHealthTime = GetJA2Clock();
-										pTarget->usValueGoneUp &= ~( HEALTH_INCREASE );
-
-										if (bStatLoss == 1)
-										{
-											ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_LOSES_ONE_POINT_MAX_HEALTH], pTarget->GetName() );
-										}
-										else
-										{
-											ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, New113Message[MSG113_LOSES_X_POINTS_MAX_HEALTH], pTarget->GetName(), bStatLoss );
-										}
-									}
 								}
+								
 							}
 							else
 							{
@@ -8640,36 +8714,19 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 									{
 										bStatLoss = pTarget->stats.bDexterity - 1;
 									}
-									if ( bStatLoss > 0 )
+									
+									if ( bStatLoss > 0)
 									{
-										pTarget->stats.bDexterity -= bStatLoss;
-										// SANDRO - added this for healing lost stats feature
-										pTarget->ubCriticalStatDamage[DAMAGED_STAT_DEXTERITY] += bStatLoss;
-
-										if (pTarget->ubProfile != NO_PROFILE)
-										{
-											gMercProfiles[ pTarget->ubProfile ].bDexterity = pTarget->stats.bDexterity;
-										}
+										// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+										// BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::ReductStat_DEXTERITY
+										pTarget->SoldierGotStatDamagedHealable(DAMAGED_STAT_DEXTERITY, bStatLoss, pFirer->ubID, 3);
+										OutputDebugString(String("Weapons.cpp_BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::DEXTERITY\n"));
+										// --
 
 										// Flugente: disease
-										HandlePossibleInfection( pTarget, pFirer, INFECTION_TYPE_WOUND_DEX );
-
-										if (pTarget->name[0] && pTarget->bVisible == TRUE)
-										{
-											// make stat RED for a while...
-											pTarget->timeChanges.uiChangeDexterityTime = GetJA2Clock();
-											pTarget->usValueGoneUp &= ~( DEX_INCREASE );
-
-											if (bStatLoss == 1)
-											{
-												ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_1_DEX], pTarget->GetName() );
-											}
-											else
-											{
-												ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_DEX], pTarget->GetName(), bStatLoss );
-											}
-										}
+										HandlePossibleInfection(pTarget, pFirer, INFECTION_TYPE_WOUND_DEX);
 									}
+									
 								}
 								else
 								{
@@ -8677,36 +8734,20 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 									{
 										bStatLoss = pTarget->stats.bStrength - 1;
 									}
-									if ( bStatLoss > 0 )
+									
+									if ( bStatLoss > 0)
 									{
-										pTarget->stats.bStrength -= bStatLoss;
-										// SANDRO - added this for healing lost stats feature
-										pTarget->ubCriticalStatDamage[DAMAGED_STAT_STRENGTH] += bStatLoss;
-
-										if (pTarget->ubProfile != NO_PROFILE)
-										{
-											gMercProfiles[ pTarget->ubProfile ].bStrength = pTarget->stats.bStrength;
-										}
-
+										// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+										// BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::ReductStat_STRENGTH
+										pTarget->SoldierGotStatDamagedHealable(DAMAGED_STAT_STRENGTH, bStatLoss, pFirer->ubID, 4);
+										OutputDebugString(String("Weapons.cpp_BulletImpact::ImpactForCrits::AIM_SHOT_TORSO::STRENGTH\n"));
+										// --
+										
 										// Flugente: disease
-										HandlePossibleInfection( pTarget, pFirer, INFECTION_TYPE_WOUND_STR );
+										HandlePossibleInfection(pTarget, pFirer, INFECTION_TYPE_WOUND_STR);
 
-										if (pTarget->name[0] && pTarget->bVisible == TRUE)
-										{
-											// make stat RED for a while...
-											pTarget->timeChanges.uiChangeStrengthTime = GetJA2Clock();
-											pTarget->usValueGoneUp &= ~( STRENGTH_INCREASE );
-
-											if (bStatLoss == 1)
-											{
-												ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_1_STRENGTH], pTarget->GetName() );
-											}
-											else
-											{
-												ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_STRENGTH], pTarget->GetName(), bStatLoss );
-											}
-										}
 									}
+									
 								}
 							}
 							break;
@@ -8715,36 +8756,19 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 							{
 								bStatLoss = pTarget->stats.bAgility - 1;
 							}
+							
 							if ( bStatLoss > 0 )
 							{
-								pTarget->stats.bAgility -= bStatLoss;
-								// SANDRO - added this for healing lost stats feature
-								pTarget->ubCriticalStatDamage[DAMAGED_STAT_AGILITY] += bStatLoss;
-
-								if (pTarget->ubProfile != NO_PROFILE)
-								{
-									gMercProfiles[ pTarget->ubProfile ].bAgility = pTarget->stats.bAgility;
-								}
-
 								// Flugente: disease
-								HandlePossibleInfection( pTarget, pFirer, INFECTION_TYPE_WOUND_AGI );
+								HandlePossibleInfection(pTarget, pFirer, INFECTION_TYPE_WOUND_AGI);
 
-								if (pTarget->name[0] && pTarget->bVisible == TRUE)
-								{
-									// make stat RED for a while...
-									pTarget->timeChanges.uiChangeAgilityTime = GetJA2Clock();
-									pTarget->usValueGoneUp &= ~( AGIL_INCREASE );
-
-									if (bStatLoss == 1)
-									{
-										ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_1_AGIL], pTarget->GetName() );
-									}
-									else
-									{
-										ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, Message[STR_LOSES_AGIL], pTarget->GetName(), bStatLoss );
-									}
-								}
+								// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+								// BulletImpact::ImpactForCrits::AIM_SHOT_LEGS::ReductStat_AGILITY
+								pTarget->SoldierGotStatDamagedHealable(DAMAGED_STAT_AGILITY, bStatLoss, pFirer->ubID, 5);
+								OutputDebugString(String("Weapons.cpp_BulletImpact::ImpactForCrits::AIM_SHOT_LEGS::AGILITY\n"));
+								// --
 							}
+							
 							break;
 					}
 
@@ -8754,9 +8778,14 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 						HandleMoraleEvent( pFirer, MORALE_MALICIOUS_HIT, pFirer->sSectorX, pFirer->sSectorY, pFirer->bSectorZ );
 					}
 
-					// SANDRO - new merc records - times stat damaged
-					if ( bStatLoss > 0 && pTarget->ubProfile != NO_PROFILE )
-						gMercProfiles[ pTarget->ubProfile ].records.usTimesStatDamaged++;
+					// JADOL -- Check if target have background stat resist <tc_stat_damage_resist>
+					if (!pTarget->HasBackgroundFlag(BACKGROUND_STAT_DMG_RESIST))
+					{
+						// SANDRO - new merc records - times stat damaged
+						if (bStatLoss > 0 && pTarget->ubProfile != NO_PROFILE)
+							gMercProfiles[pTarget->ubProfile].records.usTimesStatDamaged++;
+					}
+					// --
 				}
 			}
 			else if ( ubHitLocation == AIM_SHOT_HEAD && pTarget->bNumPelletsHitBy == 0 )
@@ -9093,7 +9122,7 @@ void ShotMiss( UINT8 ubAttackerID, INT32 iBullet )
 			{
 				if ( Random(40) == 0 )
 				{
-					MercPtrs[ ubAttackerID ]->DoMercBattleSound( BATTLE_SOUND_CURSE1 );
+					MercPtrs[ ubAttackerID ]->DoMercBattleSound( BATTLE_SOUND_CURSE );
 				}
 			}
 			fDoMissForGun = TRUE;
@@ -9799,6 +9828,23 @@ UINT32 CalcChanceHTH( SOLDIERTYPE * pAttacker,SOLDIERTYPE *pDefender, INT16 ubAi
 	iChance = min(iChance, gGameExternalOptions.ubMaximumCTH);
 
 	//NumMessage("ChanceToStab = ",chance);
+
+
+	// ****************************************************************************************************************
+	// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+	if (pDefender != NULL)
+	{
+		if (pDefender->ubTargetID != NOBODY)
+		{
+			INT32 chanceToEvadeInHundred = (INT32)pDefender->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100;
+			if (pDefender->exists() && chanceToEvadeInHundred > 0)
+			{
+				iChance = 100 - chanceToEvadeInHundred;
+			}
+		}
+	}
+	// --
+	// ****************************************************************************************************************
 
 	return (iChance);
 }
@@ -10539,6 +10585,24 @@ UINT32 CalcThrownChanceToHit(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTi
 
 
 	//NumMessage("ThrownChanceToHit = ",iChance);
+
+	// ****************************************************************************************************************
+	// JADOL -- Manage Chance Receive Hit -- <tc_evade_hit_chance>
+	SOLDIERTYPE* pTarget = SimpleFindSoldier(sGridNo, pSoldier->bTargetLevel);
+	if (pTarget != NULL) {
+		if (pTarget->ubTargetID != NOBODY)
+		{
+			INT32 chanceToEvadeInHundred = (INT32)pTarget->GetBackgroundValue(BG_TC_EVADE_HIT_CHANCE) / 100;
+			if (pTarget->exists() && chanceToEvadeInHundred > 0)
+			{
+				iChance = 100 - chanceToEvadeInHundred;
+			}
+		}
+	}
+	// --
+	// ****************************************************************************************************************
+
+
 	return (iChance);
 }
 
