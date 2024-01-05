@@ -1,5 +1,5 @@
 
-# JA2 v1.13
+# JA2 v1.13 Jadol Custom
 
 <br />
 <br />
@@ -20,8 +20,10 @@ Jagged Alliance 2 v1.13 is a modification for the Jagged Alliance 2 game.
 
 Original development was done through SVN, this however ended abruptly in 2022, to keep the development going the step to Github has been made.
 
-Feel free to participate in the development!
-  
+And this one is my own custom fork, for my own purpose.
+
+You can free to participate in the development in main project [https://github.com/1dot3](https://github.com/1dot13/source) !
+
   
 For more information you can visit the following locations:
 - [The Bear's Pit Forum](https://thepit.ja-galaxy-forum.com) 
