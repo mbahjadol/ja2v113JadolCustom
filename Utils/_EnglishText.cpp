@@ -9246,6 +9246,8 @@ STR16		szBackgroundText_Flags[]=
 
 	L" refuses to attack animals\n",
 	L" refuses to attack members of the same group\n",
+
+	L" *** The Chosen One ***\n",
 };
 
 STR16	szBackgroundText_Value[]=
@@ -9336,6 +9338,10 @@ STR16	szBackgroundText_Value[]=
 	L" %s%d%% burial speed\n",
 	L" %s%d%% administration effectiveness\n",
 	L" %s%d%% exploration effectiveness\n",
+
+	L" %s%d%% (the chosen one) damage reduction\n",
+	L" %s%d%% (the chosen one) evade hit chance\n",
+	//L" %s%d%% (the chosen one) resist hit chance\n",
 };
 
 STR16		szBackgroundTitleText[] =
@@ -9492,6 +9498,7 @@ STR16		szNationalityText[]=
 	L"Welsh",
 	L"Yazidi",
 	L"Zimbabwean", // 75
+	L"Indonesian", // 76
 };
 
 STR16		szNationalityTextAdjective[] =
@@ -9574,6 +9581,7 @@ STR16		szNationalityTextAdjective[] =
 	L"welshs",
 	L"yazidis",
 	L"zimbabweans", // 75
+	L"indonesians", // 76
 };
 
 // special text used if we do not hate any nation (value of -1)
@@ -10306,7 +10314,7 @@ STR16	szPMCWebSite[] =
 	// text on the main page
 	L"Kerberus is a well known international private military contractor. Founded in 1983, we provide security and armed forces training around the world.",
 	L"Our extensively trained personnel provides security for over 30 governments around the world. This includes several conflict zones.",
-	L"We have several training centres around the globe, including in Indonesia, Colombia, Katar, South Africa and Romania. As a result, we can usually fulfil your contract requirements within 24 hours.",
+	L"We have several training centres around the globe, including in Indonesia, Colombia, Qatar, South Africa and Romania. As a result, we can usually fulfil your contract requirements within 24 hours.",
 	L"Under 'Individual Contracts', we offer individual contracts with experienced veterans in the field of security.",
 	L"You can also hire an entire security team. In the 'Team Contracts' page, you can select how many of our personnel you want to hire, and where you require their services. Due to regrettable incidents in the past, we have to insist that the landing zone be under your control prior to debarkation.",
 	L"Our team can deploy by air, in which case, of course, an airport is required. Depending on the country our services are required in, insertion via harbours or border posts is also possible.",
