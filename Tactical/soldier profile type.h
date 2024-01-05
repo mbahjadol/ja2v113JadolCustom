@@ -319,6 +319,7 @@ typedef enum
 	WELSH_NAT,
 	YAZIDI_NAT,
 	ZIMBABWEAN_NAT, // 75
+	INDONESIAN_NAT, // 76 // JADOL -- Adding INDONESIA
 
 	NUM_NATIONALITIES
 } Nationalities;
