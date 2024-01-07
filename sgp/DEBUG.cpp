@@ -1,3 +1,4 @@
+#include "DEBUG.H"
 
 // JA2
 
@@ -657,3 +658,23 @@ const char* sgp::Exception::what() const
 }
 
 
+// JADOL -- This profiling to find nasty bugs in realtime
+UINT32 PROFILINGID = 0;
+void PROFILING(UINT32 ifMoreThan, UINT32 profilingID)
+{
+	if (profilingID == 0)
+		guiProfileStart = GetTickCount();
+	else
+	{
+		guiProfileTime = (GetTickCount() - guiProfileStart);
+		if (guiProfileTime > ifMoreThan)
+		{
+			_RPT3(_CRT_WARN, "*** PROFILING ID: %d executions took %dms .\n",
+				PROFILINGID, guiProfileTime);
+		}
+
+		PROFILINGID = profilingID;
+		guiProfileStart = GetTickCount();
+	}
+}
+// --

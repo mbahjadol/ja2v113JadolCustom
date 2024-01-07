@@ -279,6 +279,10 @@ namespace sgp
 void _ExceptionMessage( sgp::Exception &ex );
 void _ExceptionMessage( vfs::Exception &ex );
 
+// JADOL -- This profiling to find nasty bugs in realtime
+void PROFILING(UINT32 ifMoreThan, UINT32 profilingID);
+// --
+
 /*
 #ifdef __cplusplus
 }
