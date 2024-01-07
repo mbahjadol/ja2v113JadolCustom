@@ -1,4 +1,4 @@
-	#include "Screens.h"
+#include "Screens.h"
 
 int iResolution;		// INI file
 int iPlayIntro;
@@ -6,7 +6,7 @@ int iDisableMouseScrolling;
 int iUseWinFonts;
 float fTooltipScaleFactor;
 /* WANNE, Sgt.Kolja
- * INI file (Windowed or Fullscreen) 
+ * INI file (Windowed or Fullscreen)
  * REPLACE all defines WINDOWED_MODE with this variable
  * this is the LAST occurence of WINDOWED_MODE !
  * If (and only if) optionally set, we got a preset of
@@ -35,43 +35,43 @@ BOOLEAN fDisplayOverheadMap;
 
 Screens GameScreens[MAX_SCREENS] =
 {
-	{ EditScreenInit,							EditScreenHandle,							EditScreenShutdown					}, 
-	{ SavingScreenInitialize,	 SavingScreenHandle,						SavingScreenShutdown				}, // Title Screen
-	{ LoadingScreenInitialize,	LoadingScreenHandle,					LoadingScreenShutdown				}, // Title Screen
-	{ ErrorScreenInitialize,		ErrorScreenHandle,						ErrorScreenShutdown					}, // Title Screen
-	{ InitScreenInitialize,		InitScreenHandle,							InitScreenShutdown					}, // Title Screen
-	{ MainGameScreenInit,					MainGameScreenHandle,					MainGameScreenShutdown			},
-	{ AniEditScreenInit,					AniEditScreenHandle,					AniEditScreenShutdown				},
-	{ PalEditScreenInit,					PalEditScreenHandle,					PalEditScreenShutdown				},
-	{ DebugScreenInit,						DebugScreenHandle,						DebugScreenShutdown					},
-	{ MapScreenInit,							MapScreenHandle,							MapScreenShutdown						},
-	{ LaptopScreenInit,						LaptopScreenHandle,						LaptopScreenShutdown				},
-	{ LoadSaveScreenInit,					LoadSaveScreenHandle,					LoadSaveScreenShutdown			},
-	{ MapUtilScreenInit,					MapUtilScreenHandle,					MapUtilScreenShutdown				},
-	{ FadeScreenInit,							FadeScreenHandle,							FadeScreenShutdown					},
-	{ MessageBoxScreenInit,				MessageBoxScreenHandle,				MessageBoxScreenShutdown		},
-	{ MainMenuScreenInit,					MainMenuScreenHandle,					MainMenuScreenShutdown			},
-	{ AutoResolveScreenInit,			AutoResolveScreenHandle,			AutoResolveScreenShutdown		},
-	{ SaveLoadScreenInit,					SaveLoadScreenHandle,					SaveLoadScreenShutdown			},
-	{ OptionsScreenInit,					OptionsScreenHandle,					OptionsScreenShutdown				},
-	{ ShopKeeperScreenInit,				ShopKeeperScreenHandle,				ShopKeeperScreenShutdown		},
-	{ SexScreenInit,							SexScreenHandle,							SexScreenShutdown						},
-	{ GameInitOptionsScreenInit,	GameInitOptionsScreenHandle,	GameInitOptionsScreenShutdown		},
-	{ DemoExitScreenInit,					DemoExitScreenHandle,					DemoExitScreenShutdown			},
-	{ IntroScreenInit,						IntroScreenHandle,						IntroScreenShutdown					},
-	{ CreditScreenInit,						CreditScreenHandle,						CreditScreenShutdown				},
-	{ MPJoinScreenInit,						MPJoinScreenHandle,						MPJoinScreenShutdown				}, // OJW - 20081129
-	{ MPHostScreenInit,						MPHostScreenHandle,						MPHostScreenShutdown				},
-	{ MPScoreScreenInit,					MPScoreScreenHandle,					MPScoreScreenShutdown				}, // OJW - 20081222
-	{ MPChatScreenInit,					MPChatScreenHandle,					MPChatScreenShutdown				}, // OJW - 20090314
-	{ MPConnectScreenInit,					MPConnectScreenHandle,					MPConnectScreenShutdown				}, // OJW - 20090422
+	{ EditScreenInit,						EditScreenHandle,							EditScreenShutdown					},
+	{ SavingScreenInitialize,				SavingScreenHandle,							SavingScreenShutdown				}, // Title Screen
+	{ LoadingScreenInitialize,				LoadingScreenHandle,						LoadingScreenShutdown				}, // Title Screen
+	{ ErrorScreenInitialize,				ErrorScreenHandle,							ErrorScreenShutdown					}, // Title Screen
+	{ InitScreenInitialize,					InitScreenHandle,							InitScreenShutdown					}, // Title Screen
+	{ MainGameScreenInit,					MainGameScreenHandle,						MainGameScreenShutdown				},
+	{ AniEditScreenInit,					AniEditScreenHandle,						AniEditScreenShutdown				},
+	{ PalEditScreenInit,					PalEditScreenHandle,						PalEditScreenShutdown				},
+	{ DebugScreenInit,						DebugScreenHandle,							DebugScreenShutdown					},
+	{ MapScreenInit,						MapScreenHandle,							MapScreenShutdown					},
+	{ LaptopScreenInit,						LaptopScreenHandle,							LaptopScreenShutdown				},
+	{ LoadSaveScreenInit,					LoadSaveScreenHandle,						LoadSaveScreenShutdown				},
+	{ MapUtilScreenInit,					MapUtilScreenHandle,						MapUtilScreenShutdown				},
+	{ FadeScreenInit,						FadeScreenHandle,							FadeScreenShutdown					},
+	{ MessageBoxScreenInit,					MessageBoxScreenHandle,						MessageBoxScreenShutdown			},
+	{ MainMenuScreenInit,					MainMenuScreenHandle,						MainMenuScreenShutdown				},
+	{ AutoResolveScreenInit,				AutoResolveScreenHandle,					AutoResolveScreenShutdown			},
+	{ SaveLoadScreenInit,					SaveLoadScreenHandle,						SaveLoadScreenShutdown				},
+	{ OptionsScreenInit,					OptionsScreenHandle,						OptionsScreenShutdown				},
+	{ ShopKeeperScreenInit,					ShopKeeperScreenHandle,						ShopKeeperScreenShutdown			},
+	{ SexScreenInit,						SexScreenHandle,							SexScreenShutdown					},
+	{ GameInitOptionsScreenInit,			GameInitOptionsScreenHandle,				GameInitOptionsScreenShutdown		},
+	{ DemoExitScreenInit,					DemoExitScreenHandle,						DemoExitScreenShutdown				},
+	{ IntroScreenInit,						IntroScreenHandle,							IntroScreenShutdown					},
+	{ CreditScreenInit,						CreditScreenHandle,							CreditScreenShutdown				},
+	{ MPJoinScreenInit,						MPJoinScreenHandle,							MPJoinScreenShutdown				}, // OJW - 20081129
+	{ MPHostScreenInit,						MPHostScreenHandle,							MPHostScreenShutdown				},
+	{ MPScoreScreenInit,					MPScoreScreenHandle,						MPScoreScreenShutdown				}, // OJW - 20081222
+	{ MPChatScreenInit,						MPChatScreenHandle,							MPChatScreenShutdown				}, // OJW - 20090314
+	{ MPConnectScreenInit,					MPConnectScreenHandle,						MPConnectScreenShutdown				}, // OJW - 20090422
 
-	{ MiniGameScreenInit,					MiniGameScreenHandle,					MiniGameScreenShutdown				},	// added by Flugente
-	{ FeaturesScreen::Init,					FeaturesScreen::Handle,					FeaturesScreen::Shutdown			}, //rftr
+	{ MiniGameScreenInit,					MiniGameScreenHandle,						MiniGameScreenShutdown				},	// added by Flugente
+	{ FeaturesScreen::Init,					FeaturesScreen::Handle,						FeaturesScreen::Shutdown			}, //rftr
 
 #ifdef JA2BETAVERSION
-	{ AIViewerScreenInit,					AIViewerScreenHandle,			AIViewerScreenShutdown			},
+	{ AIViewerScreenInit,					AIViewerScreenHandle,						AIViewerScreenShutdown				},
 #endif
 
-	{ QuestDebugScreenInit,				QuestDebugScreenHandle,		QuestDebugScreenShutdown		}
+	{ QuestDebugScreenInit,					QuestDebugScreenHandle,						QuestDebugScreenShutdown			}
 };
