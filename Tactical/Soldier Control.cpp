@@ -6380,7 +6380,7 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 		this->EVENT_InitNewSoldierAnim(CROW_DIE, 0, FALSE);
 		return;
 
-		//case FATCIV:
+	case FATCIV: // JADOL -- I don't know who, prior to this someone has commented this one? 
 	case MANCIV:
 	case MINICIV:
 	case DRESSCIV:
