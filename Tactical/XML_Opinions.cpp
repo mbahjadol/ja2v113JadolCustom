@@ -125,11 +125,11 @@ opinionEndElementHandle(void *userData, const XML_Char *name)
 
 			if(pData->curIndex < pData->maxArraySize)
 			{
-
-				// Write data into a temporary array that holds profiles. We will later copy data from that
-				// temp array into the REAL profile array, one item at a time, replacing PROF.DAT data.
-				memcpy( &(tempProfiles[pData->curIndex].bMercOpinion), &(pData->curProfile.bMercOpinion), NUMBER_OF_OPINIONS * sizeof(INT8) );
-
+				// JADOL -- Too slow with this
+				//// Write data into a temporary array that holds profiles. We will later copy data from that
+				//// temp array into the REAL profile array, one item at a time, replacing PROF.DAT data.
+				////memcpy( &(tempProfiles[pData->curIndex].bMercOpinion), &(pData->curProfile.bMercOpinion), NUMBER_OF_OPINIONS * sizeof(INT8) );
+				// --
 			}
 		}
 
@@ -151,20 +151,33 @@ opinionEndElementHandle(void *userData, const XML_Char *name)
 
 		else
 		{
-			for(UINT8 i = 0; i < NUMBER_OF_OPINIONS; ++i)
-			{
-				XML_Char bla[12];
-				sprintf(bla, "Opinion%d", i);
-				
-				if(strcmp(name, bla) == 0)
-				{
-					pData->curElement = ELEMENT;
-
-					pData->curProfile.bMercOpinion[i] = (INT8) atol(pData->szCharData);
-
-					break;
-				}
+			// JADOL -- Change direct assign to target memory without memcpy anymore...
+			XML_Char opinion_node_name[8];
+			sprintf(opinion_node_name, "Opinion");
+			if (strncmp(opinion_node_name, name, strlen(opinion_node_name)-1) == 0) {
+				std::string s = name;
+				std::string subNum = s.substr(strlen(opinion_node_name));
+				UINT8 index = (UINT8)std::stoi(subNum);
+				INT8 v = (INT8)atol(pData->szCharData);
+				tempProfiles[pData->curIndex].bMercOpinion[index] = v;
 			}
+
+			//for(UINT8 i = 0; i < NUMBER_OF_OPINIONS; ++i)
+			//{
+			//	XML_Char bla[12];
+			//	sprintf(bla, "Opinion%d", i);
+			//	
+			//	if(strcmp(name, bla) == 0)
+			//	{
+			//		pData->curElement = ELEMENT;
+
+			//		pData->curProfile.bMercOpinion[i] = (INT8) atol(pData->szCharData);
+
+			//		break;
+			//	}
+			//}
+			
+			// --
 		}
 		
 		pData->maxReadDepth--;
