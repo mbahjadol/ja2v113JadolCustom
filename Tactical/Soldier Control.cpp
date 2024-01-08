@@ -6226,47 +6226,50 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 
 		// ************************************************************************************************************
 		// JADOL -- Adding splash bloody gore if enemy target is punched to dead with merc with background --  <tc_hand2hand_gore_dead_to_enemy>
-		SOLDIERTYPE* pAttackerSoldier = NULL;
-		pAttackerSoldier = MercPtrs[ubAttackerID];
-		if (pAttackerSoldier->HasBackgroundFlag(BACKGROUND_HTH_GORE_DMG) &&
-			(gMercProfiles[pAttackerSoldier->ubProfile].Type == PROFILETYPE_IMP) &&
-			(this->stats.bLife <= 0))
+		if (ubReason == TAKE_DAMAGE_HANDTOHAND)
 		{
-			PlayJA2Sample(HEADSPLAT_1, RATE_11025, SoundVolume(HIGHVOLUME, this->sGridNo), 1, SoundDir(this->sGridNo));
-			ScreenMsg(FONT_MCOLOR_LTRED, MSG_INTERFACE, L"Sound: HEADSPLAT_1");
+			SOLDIERTYPE* pAttackerSoldier = NULL;
+			pAttackerSoldier = MercPtrs[ubAttackerID];
+			if (pAttackerSoldier->HasBackgroundFlag(BACKGROUND_HTH_GORE_DMG) &&
+				(gMercProfiles[pAttackerSoldier->ubProfile].Type == PROFILETYPE_IMP) &&
+				(this->stats.bLife <= 0))
+			{
+				PlayJA2Sample(HEADSPLAT_1, RATE_11025, SoundVolume(HIGHVOLUME, this->sGridNo), 1, SoundDir(this->sGridNo));
+				ScreenMsg(FONT_MCOLOR_LTRED, MSG_INTERFACE, L"Sound: HEADSPLAT_1");
 
-			// Add explosion
-			ANITILE_PARAMS		AniParams;
-			memset(&AniParams, 0, sizeof(ANITILE_PARAMS));
-			AniParams.sGridNo = this->sGridNo;
+				// Add explosion
+				ANITILE_PARAMS		AniParams;
+				memset(&AniParams, 0, sizeof(ANITILE_PARAMS));
+				AniParams.sGridNo = this->sGridNo;
 
-			// Check if on roof or not...
-			if (this->pathing.bLevel == 0)
-				AniParams.ubLevelID = ANI_STRUCT_LEVEL;
-			else
-				AniParams.ubLevelID = ANI_ONROOF_LEVEL;
+				// Check if on roof or not...
+				if (this->pathing.bLevel == 0)
+					AniParams.ubLevelID = ANI_STRUCT_LEVEL;
+				else
+					AniParams.ubLevelID = ANI_ONROOF_LEVEL;
 
-			AniParams.sDelay = (INT16)(80);
-			AniParams.sStartFrame = 0;
-			AniParams.uiFlags = ANITILE_CACHEDTILE | ANITILE_FORWARD;
-			ConvertGridNoToCenterCellXY(this->sGridNo, &AniParams.sX, &AniParams.sY);
-			AniParams.sZ = (INT16)this->sZLevel;
+				AniParams.sDelay = (INT16)(80);
+				AniParams.sStartFrame = 0;
+				AniParams.uiFlags = ANITILE_CACHEDTILE | ANITILE_FORWARD;
+				ConvertGridNoToCenterCellXY(this->sGridNo, &AniParams.sX, &AniParams.sY);
+				AniParams.sZ = (INT16)this->sZLevel;
 
-			strcpy(AniParams.zCachedFile, "TILECACHE\\GEN_BLOW.STI");
-			CreateAnimationTile(&AniParams);
+				strcpy(AniParams.zCachedFile, "TILECACHE\\GEN_BLOW.STI");
+				CreateAnimationTile(&AniParams);
 
-			SpreadEffect(this->sGridNo, 4, 0, NOBODY, BLOOD_SPREAD_EFFECT, this->pathing.bLevel, -1);
+				SpreadEffect(this->sGridNo, 4, 0, NOBODY, BLOOD_SPREAD_EFFECT, this->pathing.bLevel, -1);
 
-			// Flugente: dynamic opinions
-			if (gGameExternalOptions.fDynamicOpinions && ubAttackerID != NOBODY)
-				HandleDynamicOpinionChange(MercPtrs[ubAttackerID], OPINIONEVENT_BRUTAL_GOOD, TRUE, TRUE);
+				// Flugente: dynamic opinions
+				if (gGameExternalOptions.fDynamicOpinions && ubAttackerID != NOBODY)
+					HandleDynamicOpinionChange(MercPtrs[ubAttackerID], OPINIONEVENT_BRUTAL_GOOD, TRUE, TRUE);
 
-			SayQuoteFromNearbyMercInSector(this->sGridNo, 30, QUOTE_HEADSHOT);
+				SayQuoteFromNearbyMercInSector(this->sGridNo, 30, QUOTE_HEADSHOT);
 
 
-			//ROTTING_CORPSE* pCorpse = &(gRottingCorpse[this->tempCorpseID]);
-			//pCorpse->def.ubType = ROTTING_STAGE2;
+				//ROTTING_CORPSE* pCorpse = &(gRottingCorpse[this->tempCorpseID]);
+				//pCorpse->def.ubType = ROTTING_STAGE2;
 
+			}
 		}
 		// --
 		// ************************************************************************************************************
@@ -6390,17 +6393,24 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 		// OK, if life is 0 and not set as dead ( this is a death hit... )
 		if (!(this->flags.uiStatusFlags & SOLDIER_DEAD) && this->stats.bLife == 0)
 		{
-			// Randomize death!
-			if (Random(2))
-			{
-				this->EVENT_InitNewSoldierAnim(CIV_DIE2, 0, FALSE);
-				return;
-			}
+			//// Randomize death!
+			//if (Random(2))
+			//{
+			//	this->EVENT_InitNewSoldierAnim(CIV_DIE2, 0, FALSE);
+			//	return;
+			//}
+		}
+		else
+		{
+			// IF here, go generic hit ALWAYS.....
+			this->EVENT_InitNewSoldierAnim(GENERIC_HIT_STAND, 0, FALSE);
+			this->SetSoldierCowerState(TRUE);
 		}
 
-		// IF here, go generic hit ALWAYS.....
-		this->EVENT_InitNewSoldierAnim(GENERIC_HIT_STAND, 0, FALSE);
-		return;
+		//// IF here, go generic hit ALWAYS.....
+		//this->EVENT_InitNewSoldierAnim(GENERIC_HIT_STAND, 0, FALSE);
+		//this->SetSoldierCowerState(TRUE);
+		//return;
 		break;
 	}
 
