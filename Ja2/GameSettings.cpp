@@ -45,6 +45,8 @@
 #include <vfs/Core/vfs_file_raii.h>
 #include <vfs/Core/File/vfs_file.h>
 
+#include "Cheats.h"
+
 #define				GAME_SETTINGS_FILE				"Ja2_Settings.INI"
 
 #define				FEATURE_FLAGS_FILE				"Ja2_Features.ini"
@@ -4676,6 +4678,37 @@ void DisplayGameSettings( )
 
 	if (!is_networked)
 		ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, gzLateLocalizedString[58], CurrentPlayerProgressPercentage(), HighestPlayerProgressPercentage() );
+
+	// JADOL -- Add all strategic status
+	if (CHEATER_CHEAT_LEVEL())
+	{
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"------------ player strategic status --------------");
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"ubMercDeaths: %d", gStrategicStatus.ubMercDeaths);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"ubBadReputation: %d", gStrategicStatus.ubBadReputation);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"usPlayerKills: %d", gStrategicStatus.usPlayerKills);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"ubUnhiredMercDeaths: %d", gStrategicStatus.ubUnhiredMercDeaths);
+
+		extern void AddStrategicAIResources(UINT8 aType, INT32 aAmount);
+		extern INT32 GetStrategicAIResourceCount(UINT8 aType);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"------------ queen's asd resouces  --------------");
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"money: %d", GetStrategicAIResourceCount(ASD_MONEY));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"fuel: %d", GetStrategicAIResourceCount(ASD_FUEL));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"robot: %d", GetStrategicAIResourceCount(ASD_ROBOT));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"jeep: %d", GetStrategicAIResourceCount(ASD_JEEP));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"tank: %d", GetStrategicAIResourceCount(ASD_TANK));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"heli: %d", GetStrategicAIResourceCount(ASD_HELI));
+
+		extern INT32 GetStrategicAIResource_OrderedCount(UINT8 aType);
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"------------ queen's asd resouces ordered --------------");
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"money: %d", GetStrategicAIResource_OrderedCount(ASD_MONEY));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"fuel: %d", GetStrategicAIResource_OrderedCount(ASD_FUEL));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"robot: %d", GetStrategicAIResource_OrderedCount(ASD_ROBOT));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"jeep: %d", GetStrategicAIResource_OrderedCount(ASD_JEEP));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"tank: %d", GetStrategicAIResource_OrderedCount(ASD_TANK));
+		ScreenMsg(FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, L"heli: %d", GetStrategicAIResource_OrderedCount(ASD_HELI));
+
+	}
+	// --
 
 //#ifdef _DEBUG
 //	// WDS - Add debug output here
