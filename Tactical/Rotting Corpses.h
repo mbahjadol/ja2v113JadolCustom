@@ -70,6 +70,9 @@ enum RottingCorpseDefines
 	EXPLODE_DEAD,
 	CRYO_CORPSE,
 
+	H_DEADJFK,														// JADOL -- Adding enum for Hat Kid JFK Corpse
+	K_DEADJFK,														// JADOL -- Adding enum for Hat Kid JFK Corpse
+
 	NUM_CORPSES,
 
 } ;
