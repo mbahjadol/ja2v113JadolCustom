@@ -6096,7 +6096,9 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 	// If anything other than on a squad or guard, make them guard....
 	if (this->bTeam == gbPlayerNum)
 	{
-		if (this->bAssignment >= ON_DUTY && this->bAssignment != ASSIGNMENT_POW && this->bAssignment != ASSIGNMENT_MINIEVENT && this->bAssignment != ASSIGNMENT_REBELCOMMAND)
+		if (this->bAssignment >= ON_DUTY && this->bAssignment != ASSIGNMENT_POW
+			&& this->bAssignment != ASSIGNMENT_MINIEVENT
+			&& this->bAssignment != ASSIGNMENT_REBELCOMMAND)
 		{
 			if (this->flags.fMercAsleep)
 			{
@@ -6148,7 +6150,7 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 		}
 		else
 		{
-			// ATE: This is to disallow large amounts of smaples being played which is load!
+			// ATE: This is to disallow large amounts of samples being played which is load!
 			if (this->flags.fGettingHit && this->usAniCode != STANDING_BURST_HIT)
 			{
 
@@ -6390,15 +6392,17 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 	case HATKIDCIV:
 	case KIDCIV:
 
+		// JADOL -- Civilians has right to have different animation and other eg: sounds effect
+		
 		// OK, if life is 0 and not set as dead ( this is a death hit... )
 		if (!(this->flags.uiStatusFlags & SOLDIER_DEAD) && this->stats.bLife == 0)
 		{
-			//// Randomize death!
-			//if (Random(2))
-			//{
-			//	this->EVENT_InitNewSoldierAnim(CIV_DIE2, 0, FALSE);
-			//	return;
-			//}
+			// Randomize death!
+//			if (Random(2))
+			{
+//				this->EVENT_InitNewSoldierAnim(CIV_DIE2, 0, FALSE);
+//				return;
+			}
 		}
 		else
 		{
@@ -6411,6 +6415,8 @@ void SOLDIERTYPE::EVENT_SoldierGotHit(UINT16 usWeaponIndex, INT16 sDamage, INT16
 		//this->EVENT_InitNewSoldierAnim(GENERIC_HIT_STAND, 0, FALSE);
 		//this->SetSoldierCowerState(TRUE);
 		//return;
+		
+		// -- 
 		break;
 	}
 

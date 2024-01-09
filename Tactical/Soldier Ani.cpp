@@ -2985,9 +2985,9 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
 				break;
 
 			case 724:
-
+				// JADOL -- why ass scratch sound is disabled?, we try to enabling now!
 				// Play ass scratch
-				// PlaySoldierJA2Sample( pSoldier->ubID, (UINT8)( IDLE_SCRATCH ), RATE_11025, SoundVolume( HIGHVOLUME, pSoldier->sGridNo ), 1, SoundDir( pSoldier->sGridNo ), TRUE );
+				PlaySoldierJA2Sample( pSoldier->ubID, (UINT8)( IDLE_SCRATCH ), RATE_11025, SoundVolume( HIGHVOLUME, pSoldier->sGridNo ), 1, SoundDir( pSoldier->sGridNo ), TRUE );
 				break;
 
 			case 725:
@@ -4250,7 +4250,7 @@ BOOLEAN HandleSoldierDeath( SOLDIERTYPE *pSoldier , BOOLEAN *pfMadeCorpse )
 				pSoldier->ubProfile, pKillerSoldier ? pKillerSoldier->ubProfile : NO_PROFILE, pSoldier->ubBodyType );
 		}
 
-		// Remove mad as target, one he has died!
+		// Remove man as target, one he has died!
 		RemoveManAsTarget( pSoldier );
 
 		// Re-evaluate visiblitiy for the team!
