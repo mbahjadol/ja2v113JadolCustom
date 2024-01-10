@@ -10,7 +10,7 @@
 
 typedef struct
 {
-	UINT16	*usCachedSurfaces;
+	UINT16		*usCachedSurfaces;
 	INT16		*sCacheHits;
 	UINT8		ubCacheSize;
 

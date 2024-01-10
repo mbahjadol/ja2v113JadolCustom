@@ -8,88 +8,88 @@
 // Defines
 // #######################################################
 #define MAX_ANIMATIONS									400 //!!!!!ddd added 30 new animations // SANDRO - added 50 more
-#define MAX_FRAMES_PER_ANIM							100
-#define	MAX_RANDOM_ANIMS_PER_BODYTYPE		10
+#define MAX_FRAMES_PER_ANIM								100
+#define	MAX_RANDOM_ANIMS_PER_BODYTYPE					10
 
-#define	RANDOM_ANIM_NOTHINGINHAND			0
-#define	RANDOM_ANIM_RIFLEINHAND				1
-#define	RANDOM_ANIM_IRRELEVENTINHAND		2
+#define	RANDOM_ANIM_NOTHINGINHAND						0
+#define	RANDOM_ANIM_RIFLEINHAND							1
+#define	RANDOM_ANIM_IRRELEVENTINHAND					2
 
 
-#define	RANDOM_ANIM_SOUND												250
+#define	RANDOM_ANIM_SOUND								250
 
-#define	RANDOM_ANIM_CASUAL							0x01
-#define	RANDOM_ANIM_SECONDBIGMERC				0x02
-#define	RANDOM_ANIM_FIRSTBIGMERC				0x04
-#define	RANDOM_ANIM_INJURED							0x08
+#define	RANDOM_ANIM_CASUAL								0x01
+#define	RANDOM_ANIM_SECONDBIGMERC						0x02
+#define	RANDOM_ANIM_FIRSTBIGMERC						0x04
+#define	RANDOM_ANIM_INJURED								0x08
 #define	RANDOM_ANIM_DRUNK								0x10
 #define	RANDOM_ANIM_LOOKAROUND							0x20
-#define	RANDOM_ANIM_SHOWOFF							0x40
+#define	RANDOM_ANIM_SHOWOFF								0x40
 
 
-#define	INJURED_CHANGE_THREASHOLD			30
+#define	INJURED_CHANGE_THREASHOLD						30
 
 
-#define USESTATS								0
-#define	FAST_TURN_ANIM_SPEED		30
+#define USESTATS										0
+#define	FAST_TURN_ANIM_SPEED							30
 
-#define	INVALID_ANIMATION_SURFACE	32000
+#define	INVALID_ANIMATION_SURFACE						32000
 
 // FLAG DEFINES
-#define	ANIM_IGNORE_AUTOSTANCE			0x00000001
-#define	ANIM_OK_CHARGE_AP_FOR_TURN	0x00000002
-#define ANIM_STATIONARY							0x00000004
-#define ANIM_MOVING									0x00000008
-#define ANIM_TURNING								0x00000010
-#define ANIM_FASTTURN								0x00000020
-#define	ANIM_FIREREADY							0x00000040
-#define	ANIM_NONINTERRUPT						0x00000080
-#define ANIM_HITFINISH							0x00000100
-#define ANIM_HITSTART								0x00000200
-#define ANIM_HITWHENDOWN						0x00000400
-#define ANIM_NOSHOW_MARKER					0x00000800
-#define ANIM_NOMOVE_MARKER					0x00001000
-#define ANIM_NORESTART							0x00002000
-#define ANIM_HITSTOP								0x00004000
-#define ANIM_SPECIALMOVE						0x00008000
-#define ANIM_MERCIDLE								0x00010000
-#define ANIM_STANCECHANGEANIM				0x00020000
-#define	ANIM_LOWER_WEAPON						0x00040000
-#define	ANIM_RAISE_WEAPON						0x00080000
-#define	ANIM_NOCHANGE_WEAPON				0x00100000
-#define	ANIM_NOCHANGE_PENDINGCOUNT	0x00200000
+#define	ANIM_IGNORE_AUTOSTANCE							0x00000001
+#define	ANIM_OK_CHARGE_AP_FOR_TURN						0x00000002
+#define ANIM_STATIONARY									0x00000004
+#define ANIM_MOVING										0x00000008
+#define ANIM_TURNING									0x00000010
+#define ANIM_FASTTURN									0x00000020
+#define	ANIM_FIREREADY									0x00000040
+#define	ANIM_NONINTERRUPT								0x00000080
+#define ANIM_HITFINISH									0x00000100
+#define ANIM_HITSTART									0x00000200
+#define ANIM_HITWHENDOWN								0x00000400
+#define ANIM_NOSHOW_MARKER								0x00000800
+#define ANIM_NOMOVE_MARKER								0x00001000
+#define ANIM_NORESTART									0x00002000
+#define ANIM_HITSTOP									0x00004000
+#define ANIM_SPECIALMOVE								0x00008000
+#define ANIM_MERCIDLE									0x00010000
+#define ANIM_STANCECHANGEANIM							0x00020000
+#define	ANIM_LOWER_WEAPON								0x00040000
+#define	ANIM_RAISE_WEAPON								0x00080000
+#define	ANIM_NOCHANGE_WEAPON							0x00100000
+#define	ANIM_NOCHANGE_PENDINGCOUNT						0x00200000
 // I'm commandeering the effort flags.	I do not expect to see multiple efforts for the same tasks, so I'm turning them into a 2-bit
 // level instead.	So there :P
-#define	ANIM_NO_EFFORT							0x00000000
-#define	ANIM_MIN_EFFORT							0x00400000
-#define	ANIM_LIGHT_EFFORT						0x00800000
-#define	ANIM_MODERATE_EFFORT				0x00C00000
+#define	ANIM_NO_EFFORT									0x00000000
+#define	ANIM_MIN_EFFORT									0x00400000
+#define	ANIM_LIGHT_EFFORT								0x00800000
+#define	ANIM_MODERATE_EFFORT							0x00C00000
 
 // Return a number between 0 and 4 to indicate effort.	4 means variable
 #define EFFORT(flags) (((flags) & ANIM_VARIABLE_EFFORT) ? 4 : ((flags) & 0x00C00000) >> 22)
 
 // Now I have room for a new flag.	And there's still room for one more!
-#define ANIM_ATTACK						 0x01000000
-#define ANIM_FREEFORUSE					 0x02000000
+#define ANIM_ATTACK										0x01000000
+#define ANIM_FREEFORUSE									0x02000000
 
-#define	ANIM_RT_NONINTERRUPT				0x04000000
-#define	ANIM_VARIABLE_EFFORT				0x08000000
-#define	ANIM_UPDATEMOVEMENTMODE			0x10000000
+#define	ANIM_RT_NONINTERRUPT							0x04000000
+#define	ANIM_VARIABLE_EFFORT							0x08000000
+#define	ANIM_UPDATEMOVEMENTMODE							0x10000000
 #define	ANIM_FIRE										0x20000000
-#define ANIM_BREATH									0x40000000
+#define ANIM_BREATH										0x40000000
 // SANDRO - this flag is not assigned to any animation, so I am taking it for the hip fire feature
-//#define ANIM_IGNOREHITFINISH				0x80000000
-#define ANIM_ALT_WEAPON_HOLDING				0x80000000
+//#define ANIM_IGNOREHITFINISH							0x80000000
+#define ANIM_ALT_WEAPON_HOLDING							0x80000000
 
 //ANIMATION HEIGHT VALUES
-#define ANIM_STAND						6
-#define ANIM_CROUCH						3
-#define ANIM_PRONE						1
+#define ANIM_STAND										6
+#define ANIM_CROUCH										3
+#define ANIM_PRONE										1
 
-#define INVALID_ANIMATION						0xFFF0
-#define FOUND_INVALID_ANIMATION			0xFFF1
+#define INVALID_ANIMATION								0xFFF0
+#define FOUND_INVALID_ANIMATION							0xFFF1
 
-#define MAX_ANIM_STR_SIZE			35 //30 1 byte overflow! (jonathanl)
+#define MAX_ANIM_STR_SIZE								35 //30 1 byte overflow! (jonathanl)
 
 
 
@@ -123,13 +123,13 @@ typedef struct
 
 typedef struct
 {
-	UINT8		ubHandRestriction;
-	INT16		sAnimID;
-	UINT8		ubStartRoll;
-	UINT8		ubEndRoll;
-	UINT8		ubFlags;
-	UINT8		ubAnimHeight;
-	CHAR8		zSoundFile[ 64 ];
+	UINT8			ubHandRestriction;
+	INT16			sAnimID;
+	UINT8			ubStartRoll;
+	UINT8			ubEndRoll;
+	UINT8			ubFlags;
+	UINT8			ubAnimHeight;
+	CHAR8			zSoundFile[ 64 ];
 
 } RANDOM_ANI_DEF;
 
@@ -627,8 +627,8 @@ enum AnimationStates
  
 
 
-extern UINT16						gusAnimInst[ MAX_ANIMATIONS ][ MAX_FRAMES_PER_ANIM ];
-extern ANIMCONTROLTYPE		gAnimControl[ NUMANIMATIONSTATES ];
+extern UINT16 gusAnimInst[ MAX_ANIMATIONS ][ MAX_FRAMES_PER_ANIM ];
+extern ANIMCONTROLTYPE gAnimControl[ NUMANIMATIONSTATES ];
 
 extern ANI_SPEED_DEF gubAnimWalkSpeeds[ TOTALBODYTYPES ];
 extern ANI_SPEED_DEF gubAnimRunSpeeds[ TOTALBODYTYPES ];
@@ -638,7 +638,7 @@ extern INT16 gubMaxActionPoints[ TOTALBODYTYPES ];
 
 
 // OK, this array contains definitions for random animations based on bodytype, total # allowed, and what is in their hand....
-extern RANDOM_ANI_DEF	gRandomAnimDefs[ TOTALBODYTYPES ][ MAX_RANDOM_ANIMS_PER_BODYTYPE ];
+extern RANDOM_ANI_DEF gRandomAnimDefs[ TOTALBODYTYPES ][ MAX_RANDOM_ANIMS_PER_BODYTYPE ];
 
 // Corpse Defines
 extern UINT16 gubAnimSurfaceCorpseID[ TOTALBODYTYPES ][ NUMANIMATIONSTATES ];

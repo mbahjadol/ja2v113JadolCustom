@@ -14,7 +14,7 @@ typedef struct
 	INT16		sSectorY;
 	INT16		sSectorZ;
 	INT8		bIntensity;
-	UINT32	uiFlags;
+	UINT32		uiFlags;
 	UINT8		ubNumMinsFromCurrentTime;
 	UINT8		ubFiller[8];
 
