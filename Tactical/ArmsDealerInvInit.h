@@ -8,14 +8,14 @@
 #define		NO_DEALER_ITEM						0
 
 // item suitability categories for dealer inventory initialization, virtual customer sales, and re-ordering
-#define	ITEM_SUITABILITY_NONE			0
-#define ITEM_SUITABILITY_LOW			1
-#define ITEM_SUITABILITY_MEDIUM		2
-#define ITEM_SUITABILITY_HIGH			3
-#define ITEM_SUITABILITY_ALWAYS		4
+#define	ITEM_SUITABILITY_NONE					0
+#define ITEM_SUITABILITY_LOW					1
+#define ITEM_SUITABILITY_MEDIUM					2
+#define ITEM_SUITABILITY_HIGH					3
+#define ITEM_SUITABILITY_ALWAYS					4
 
-#define DEALER_BUYING			0
-#define DEALER_SELLING		1
+#define DEALER_BUYING							0
+#define DEALER_SELLING							1
 
 
 
@@ -31,17 +31,17 @@ typedef struct
 typedef struct
 {
 	UINT32		uiItemClass;
-	UINT8			ubWeaponClass;
+	UINT8		ubWeaponClass;
 	BOOLEAN		fAllowUsed;
 } ITEM_SORT_ENTRY;
 
 
 
-INT8	GetDealersMaxItemAmount( UINT8 ubDealerID, UINT16 usItemIndex );
+INT8 GetDealersMaxItemAmount( UINT8 ubDealerID, UINT16 usItemIndex );
 
 DEALER_POSSIBLE_INV *GetPointerToDealersPossibleInventory( UINT16 ubArmsDealerID );
 
-UINT8 GetCurrentSuitabilityForItem( INT8 bArmsDealer, UINT16 usItemIndex );
+UINT8 GetCurrentSuitabilityForItem( INT8 bArmsDealer, UINT16 usItemIndex, BOOLEAN fUsed);
 UINT8 ChanceOfItemTransaction( INT8 bArmsDealer, UINT16 usItemIndex, BOOLEAN fDealerSelling, BOOLEAN fUsed );
 BOOLEAN ItemTransactionOccurs( INT8 bArmsDealer, UINT16 usItemIndex, BOOLEAN fDealerSelling, BOOLEAN fUsed );
 UINT8 DetermineInitialInvItems( INT8 bArmsDealerID, UINT16 usItemIndex, UINT8 ubChances, BOOLEAN fUsed);
