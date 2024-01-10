@@ -224,7 +224,7 @@ public:
 class OLD_SPECIAL_ITEM_INFO_101
 {
 public:
-	UINT16	usAttachment[OLD_MAX_ATTACHMENTS_101];		// item index of any attachments on the item
+	UINT16		usAttachment[OLD_MAX_ATTACHMENTS_101];		// item index of any attachments on the item
 
 	INT8		bItemCondition;				// if 0, no item is stored
 																// from 1 to 100 indicates an item with that status
@@ -244,15 +244,15 @@ public:
 	// Individual "special" items are stored here as needed, *one* per slot
 	// An item is special if it is used (status < 100), has been imprinted, or has a permanent attachment
 
-	OLD_SPECIAL_ITEM_INFO_101 oldInfo;
+	OLD_SPECIAL_ITEM_INFO_101			oldInfo;
 
-	UINT32	uiRepairDoneTime;			// If the item is in for repairs, this holds the time when it will be repaired (in min)
+	UINT32								uiRepairDoneTime;			// If the item is in for repairs, this holds the time when it will be repaired (in min)
 
-	BOOLEAN fActive;							// TRUE means an item is stored here (empty elements may not always be freed immediately)
+	BOOLEAN								fActive;							// TRUE means an item is stored here (empty elements may not always be freed immediately)
 
-	UINT8		ubOwnerProfileId;			// stores which merc previously owned an item being repaired
+	UINT8								ubOwnerProfileId;			// stores which merc previously owned an item being repaired
 
-	UINT8		ubPadding[6];					// filler
+	UINT8								ubPadding[6];					// filler
 
 };
 
@@ -263,18 +263,18 @@ public:
 	// Items being repaired are also stored here, with a negative condition.
 	// NOTE: special item elements may remain allocated long after item has been removed, to reduce memory fragmentation!!!
 
-	UINT8		ubTotalItems;					// sum of all the items (all perfect ones + all special ones)
-	UINT8		ubPerfectItems;				// non-special (perfect) items held by dealer
-	UINT8		ubStrayAmmo;					// partially-depleted ammo mags are stored here as #bullets, and can be converted to full packs
+	UINT8								ubTotalItems;					// sum of all the items (all perfect ones + all special ones)
+	UINT8								ubPerfectItems;				// non-special (perfect) items held by dealer
+	UINT8								ubStrayAmmo;					// partially-depleted ammo mags are stored here as #bullets, and can be converted to full packs
 
-	UINT8		ubElementsAlloced;		// number of DEALER_SPECIAL_ITEM array elements alloced for the special item array
-	OLD_DEALER_SPECIAL_ITEM_101 *SpecialItem;	// dynamic array of special items with this same item index
+	UINT8								ubElementsAlloced;		// number of DEALER_SPECIAL_ITEM array elements alloced for the special item array
+	OLD_DEALER_SPECIAL_ITEM_101			*SpecialItem;	// dynamic array of special items with this same item index
 
-	UINT32	uiOrderArrivalTime;		// Day the items ordered will arrive on.	It's UINT32 in case we change this to minutes.
-	UINT8		ubQtyOnOrder;					// The number of items currently on order
-	BOOLEAN	fPreviouslyEligible;	// whether or not dealer has been eligible to sell this item in days prior to today
+	UINT32								uiOrderArrivalTime;		// Day the items ordered will arrive on.	It's UINT32 in case we change this to minutes.
+	UINT8								ubQtyOnOrder;					// The number of items currently on order
+	BOOLEAN								fPreviouslyEligible;	// whether or not dealer has been eligible to sell this item in days prior to today
 
-	UINT8		ubPadding[2];					// filler
+	UINT8								ubPadding[2];					// filler
 
 };
 
@@ -294,21 +294,21 @@ public:
 	bool	ItemIsInInventory() {return (this->object.exists() == true && this->IsBeingOrdered() == false);};
 
 	//data from OLD_SPECIAL_ITEM_INFO_101
-	//UINT8		ubImprintID;				// imprint ID for imprinted items (during repair!)
-	INT16		bItemCondition;				// if 0, no item is stored
+	//UINT8								ubImprintID;				// imprint ID for imprinted items (during repair!)
+	INT16								bItemCondition;				// if 0, no item is stored
 											// from 1 to 100 indicates an item with that status
 											// -1 to -100 means the item is in for repairs, flip sign for the actual status
 
 
 	//data from OLD_DEALER_SPECIAL_ITEM_101
-	UINT32		uiRepairDoneTime;			// If the item is in for repairs, this holds the time when it will be repaired (in min)
-	//BOOLEAN		fActive;					// TRUE means an item is stored here (empty elements may not always be freed immediately)
-	UINT8		ubOwnerProfileId;			// stores which merc previously owned an item being repaired
+	UINT32								uiRepairDoneTime;			// If the item is in for repairs, this holds the time when it will be repaired (in min)
+	//BOOLEAN							fActive;					// TRUE means an item is stored here (empty elements may not always be freed immediately)
+	UINT8								ubOwnerProfileId;			// stores which merc previously owned an item being repaired
 
 
 	//data from OLD_DEALER_ITEM_HEADER_101
-	UINT32		uiOrderArrivalTime;			// Day the items ordered will arrive on.	It's UINT32 in case we change this to minutes.
-	UINT8		ubQtyOnOrder;				// The number of items currently on order
+	UINT32								uiOrderArrivalTime;			// Day the items ordered will arrive on.	It's UINT32 in case we change this to minutes.
+	UINT8								ubQtyOnOrder;				// The number of items currently on order
 
 	char		endOfPod;
 	OBJECTTYPE	object;
@@ -330,33 +330,33 @@ void AddTexsVideosToBettysInventory();
 #endif
 
 
-void		InitAllArmsDealers();
-void		ShutDownArmsDealers();
-void		InitializeOneArmsDealer( UINT8 ubArmsDealer );
+void InitAllArmsDealers();
+void ShutDownArmsDealers();
+void InitializeOneArmsDealer( UINT8 ubArmsDealer );
 
-bool	ItemIsSpecial(DEALER_SPECIAL_ITEM& item);
+bool ItemIsSpecial(DEALER_SPECIAL_ITEM& item);
 UINT32	GetArmsDealerItemTypeFromItemNumber( UINT16 usItem );
 
 //Count every single item the dealer has in stock
 //UINT32	CountTotalItemsInArmsDealersInventory( UINT8 ubArmsDealer );
 //Count only the # of "distinct" item types (for shopkeeper purposes)
-int			CountTotalItemsRepairDealerHasInForRepairs( UINT8 ubArmsDealer );
+int CountTotalItemsRepairDealerHasInForRepairs( UINT8 ubArmsDealer );
 
-void		AddObjectToArmsDealerInventory( UINT8 ubArmsDealer, OBJECTTYPE *pObject );
+void AddObjectToArmsDealerInventory( UINT8 ubArmsDealer, OBJECTTYPE *pObject );
 
-void		RemoveItemFromArmsDealerInventory( UINT8 ubArmsDealer, UINT16 usItemIndex, UINT8 ubHowMany, OBJECTTYPE *pObj = NULL );
+void RemoveItemFromArmsDealerInventory( UINT8 ubArmsDealer, UINT16 usItemIndex, UINT8 ubHowMany, OBJECTTYPE *pObj = NULL );
 
 BOOLEAN IsMercADealer( UINT8 ubMercID );
-INT8		GetArmsDealerIDFromMercID( UINT8 ubMercID );
+INT8 GetArmsDealerIDFromMercID( UINT8 ubMercID );
 
 // Flugente: update possible intel data
 void HandlePossibleArmsDealerIntelRefresh(BOOLEAN aForceReread);
 
 BOOLEAN SaveArmsDealerInventoryToSaveGameFile( HWFILE hFile );
 
-void		DailyUpdateOfArmsDealersInventory();
+void DailyUpdateOfArmsDealersInventory();
 
-UINT8		GetTypeOfArmsDealer( UINT8 ubDealerID );
+UINT8 GetTypeOfArmsDealer( UINT8 ubDealerID );
 
 BOOLEAN	DoesDealerDoRepairs( UINT8 ubArmsDealer );
 BOOLEAN RepairmanIsFixingItemsButNoneAreDoneYet( UINT8 ubProfileID );
@@ -368,11 +368,11 @@ BOOLEAN CanDealerRepairItem( UINT8 ubArmsDealer, UINT16 usItemIndex );
 
 BOOLEAN AddDeadArmsDealerItemsToWorld( UINT8 usProfileID, UINT8 aMercID );
 
-void		MakeObjectOutOfDealerItems( DEALER_SPECIAL_ITEM *pSpclItemInfo, OBJECTTYPE *pObject );
-void		CreateObjectForDealer( int usItem, int status, int numObjects, OBJECTTYPE *pObject );
+void MakeObjectOutOfDealerItems( DEALER_SPECIAL_ITEM *pSpclItemInfo, OBJECTTYPE *pObject );
+void CreateObjectForDealer( int usItem, int status, int numObjects, OBJECTTYPE *pObject );
 
-void		GiveObjectToArmsDealerForRepair( UINT8 ubArmsDealer, OBJECTTYPE *pObject, UINT8 ubOwnerProfileId );
-void		GiveItemToArmsDealerforRepair( UINT8 ubArmsDealer, OBJECTTYPE* pObject, UINT8 ubOwnerProfileId );
+void GiveObjectToArmsDealerForRepair( UINT8 ubArmsDealer, OBJECTTYPE *pObject, UINT8 ubOwnerProfileId );
+void GiveItemToArmsDealerforRepair( UINT8 ubArmsDealer, OBJECTTYPE* pObject, UINT8 ubOwnerProfileId );
 UINT32	WhenWillRepairmanBeAllDoneRepairing( UINT8 ubArmsDealer );
 
 UINT32 CalculateObjectItemRepairTime( UINT8 ubArmsDealer, OBJECTTYPE *pItemObject );
@@ -389,8 +389,8 @@ UINT32 CalculateMinutesClosedBetween( UINT8 ubArmsDealer, UINT32 uiStartTime, UI
 #ifdef JA2UB
 extern void DailyCheckOnItemQuantities( BOOLEAN fInstallyHaveItemsAppear ); //Ja25 UB
 #endif
-extern void		GuaranteeAtLeastXItemsOfIndex( UINT8 ubArmsDealer, UINT16 usItemIndex, UINT8 ubHowMany );
-extern void		GuaranteeAtMostNumOfItemsForItem( UINT8 ubArmsDealer, INT16 sItemIndex, UINT8 ubAtMostNumItems );
+extern void GuaranteeAtLeastXItemsOfIndex( UINT8 ubArmsDealer, UINT16 usItemIndex, UINT8 ubHowMany );
+extern void GuaranteeAtMostNumOfItemsForItem( UINT8 ubArmsDealer, INT16 sItemIndex, UINT8 ubAtMostNumItems );
 
 
 #endif
