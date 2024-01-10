@@ -27,66 +27,66 @@ void PointsPath(int sx1, int sy1, int ex2, int ey2) ;
 typedef struct
 {
 	//afp-start this structure keeps tracers points
-	LEVELNODE* pNodes[BULLET_TRACER_MAX_LENGTH];
+	LEVELNODE				*pNodes[BULLET_TRACER_MAX_LENGTH];
 	//afp-end
-	INT32		iBullet;
-	UINT8		ubFirerID;
-	UINT8		ubTargetID;
-	INT8		bStartCubesAboveLevelZ;
-	INT8		bEndCubesAboveLevelZ;
-	INT32	sGridNo;
-	INT16		sUnused;
-	UINT16	usLastStructureHit;
-	FIXEDPT	qCurrX;
-	FIXEDPT	qCurrY;
-	FIXEDPT	qCurrZ;
-	FIXEDPT	qIncrX;
-	FIXEDPT	qIncrY;
-	FIXEDPT	qIncrZ;
-	DOUBLE	ddHorizAngle;
-	INT32		iCurrTileX;
-	INT32		iCurrTileY;
-	INT8		bLOSIndexX;
-	INT8		bLOSIndexY;
-	BOOLEAN	fCheckForRoof;
-	INT32		iCurrCubesZ;
-	INT32		iLoop;
-	BOOLEAN	fAllocated;
-	BOOLEAN	fToDelete;
-	BOOLEAN	fLocated;
-	BOOLEAN fReal;
-	BOOLEAN	fAimed;
-	UINT32	uiLastUpdate;
-	UINT8		ubTilesPerUpdate;
-	UINT16	usClockTicksPerUpdate;
-	SOLDIERTYPE		*pFirer;			// Flugente: WARNING! We cannot assume this will be valid. Check wether ubFirerID is NOBODY first
-	INT32	sOrigGridNo;	// HEADROCK HAM 5.1: Original tile does not necessarily have to be the pFirer's tile
-	INT32	sTargetGridNo;
-	INT16		sHitBy;
-	INT32		iImpact;
-	INT32		iImpactReduction;
-	INT32		iRange;
-	INT32		iDistanceLimit;
-	UINT16	usFlags;
-	ANITILE			*pAniTile;
-	ANITILE			*pShadowAniTile;
-	UINT16		ubItemStatus;
-	UINT16	fromItem;
-	INT32 flash;
+	INT32					iBullet;
+	UINT8					ubFirerID;
+	UINT8					ubTargetID;
+	INT8					bStartCubesAboveLevelZ;
+	INT8					bEndCubesAboveLevelZ;
+	INT32					sGridNo;
+	INT16					sUnused;
+	UINT16					usLastStructureHit;
+	FIXEDPT					qCurrX;
+	FIXEDPT					qCurrY;
+	FIXEDPT					qCurrZ;
+	FIXEDPT					qIncrX;
+	FIXEDPT					qIncrY;
+	FIXEDPT					qIncrZ;
+	DOUBLE					ddHorizAngle;
+	INT32					iCurrTileX;
+	INT32					iCurrTileY;
+	INT8					bLOSIndexX;
+	INT8					bLOSIndexY;
+	BOOLEAN					fCheckForRoof;
+	INT32					iCurrCubesZ;
+	INT32					iLoop;
+	BOOLEAN					fAllocated;
+	BOOLEAN					fToDelete;
+	BOOLEAN					fLocated;
+	BOOLEAN					fReal;
+	BOOLEAN					fAimed;
+	UINT32					uiLastUpdate;
+	UINT8					ubTilesPerUpdate;
+	UINT16					usClockTicksPerUpdate;
+	SOLDIERTYPE				*pFirer;			// Flugente: WARNING! We cannot assume this will be valid. Check wether ubFirerID is NOBODY first
+	INT32					sOrigGridNo;	// HEADROCK HAM 5.1: Original tile does not necessarily have to be the pFirer's tile
+	INT32					sTargetGridNo;
+	INT16					sHitBy;
+	INT32					iImpact;
+	INT32					iImpactReduction;
+	INT32					iRange;
+	INT32					iDistanceLimit;
+	UINT16					usFlags;
+	ANITILE					*pAniTile;
+	ANITILE					*pShadowAniTile;
+	UINT16					ubItemStatus;
+	UINT16					fromItem;
+	INT32					flash;
 	// HEADROCK HAM B2.5: Experimental bullet tracer info. If the new tracer system is activated, this flag tells
 	// the bullet animation functions to create a lightpath for this bullet. This means now all bullets in a tracer
 	// magazine will cause a lightshow (that's the intended result).
-	BOOLEAN fTracer;
+	BOOLEAN					fTracer;
 	// HEADROCK HAM 5: Fragments. They are handled slightly differently by the bullet functions.
-	BOOLEAN fFragment;
+	BOOLEAN					fFragment;
 } BULLET;
 
 extern UINT32 guiNumBullets;
 
-INT32	CreateBullet( UINT8 ubFirer, BOOLEAN fFake, UINT16 usFlags,UINT16 fromItem );
-void	RemoveBullet( INT32 iBullet );
-void	StopBullet( INT32 iBullet );
-void	UpdateBullets( );
+INT32 CreateBullet( UINT8 ubFirer, BOOLEAN fFake, UINT16 usFlags,UINT16 fromItem );
+void RemoveBullet( INT32 iBullet );
+void StopBullet( INT32 iBullet );
+void UpdateBullets( );
 BULLET *GetBulletPtr( INT32 iBullet );
 INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget, UINT8 ubHitLocation, INT32 iImpact, INT16 sHitBy, UINT8 * pubSpecial );
 
