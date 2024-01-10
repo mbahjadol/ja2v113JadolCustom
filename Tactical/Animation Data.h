@@ -9,10 +9,10 @@
 
 
 // DEFINES FOR ANIMATION PROFILES
-#define		TILE_FLAG_FEET					0x0001
-#define		TILE_FLAG_MID						0x0002
-#define		TILE_FLAG_HEAD					0x0004
-#define		TILE_FLAG_CANMOVE				0x0008
+#define		TILE_FLAG_FEET				0x0001
+#define		TILE_FLAG_MID				0x0002
+#define		TILE_FLAG_HEAD				0x0004
+#define		TILE_FLAG_CANMOVE			0x0008
 #define		TILE_FLAG_NORTH_HALF		0x0010
 #define		TILE_FLAG_SOUTH_HALF		0x0020
 #define		TILE_FLAG_WEST_HALF			0x0040
@@ -20,7 +20,7 @@
 #define		TILE_FLAG_TOP_HALF			0x0100
 #define		TILE_FLAG_BOTTOM_HALF		0x0200
 
-#define		ANIM_DATA_FLAG_NOFRAMES	0x01
+#define		ANIM_DATA_FLAG_NOFRAMES		0x01
 
 // ENUMERATIONS
 
@@ -682,13 +682,13 @@ enum
 // Struct for animation 'surface' information
 typedef struct
 {
-	UINT16								ubName;
+	UINT16										ubName;
 	CHAR8										Filename[ 50 ];
 	CHAR8										bStructDataType; 
 	UINT8										ubFlags;
-	UINT32									uiNumDirections;
-	UINT32									uiNumFramesPerDir;
-	HVOBJECT								hVideoObject;
+	UINT32										uiNumDirections;
+	UINT32										uiNumFramesPerDir;
+	HVOBJECT									hVideoObject;
 	void										*Unused;
 	INT8										bUsageCount;
 	INT8										bProfile;
@@ -699,7 +699,7 @@ typedef struct
 typedef struct
 {
 	CHAR8										Filename[ 50 ];
-	STRUCTURE_FILE_REF *		pStructureFileRef;
+	STRUCTURE_FILE_REF *						pStructureFileRef;
 
 } AnimationStructureType;
  
@@ -723,8 +723,8 @@ STRUCTURE_FILE_REF	*GetAnimationStructureRef( UINT8 usSoldierID, UINT16 usSurfac
 STRUCTURE_FILE_REF	*GetDefaultStructureRef( UINT8 usSoldierID );
 
 // Profile data
-extern ANIM_PROF	*gpAnimProfiles;
-extern UINT8		gubNumAnimProfiles;
+extern ANIM_PROF								*gpAnimProfiles;
+extern UINT8									gubNumAnimProfiles;
 
 void ZeroAnimSurfaceCounts( );
 
