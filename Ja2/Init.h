@@ -18,6 +18,11 @@ void ShutdownJA2( );
 
 BOOLEAN LoadExternalGameplayData(STR directoryName, BOOLEAN isMultiplayer);
 void SetupMaxActionPointsAnimation();
+
+// JADOL -- Load all animation surface database into memory at game initialization,
+// so we will not load and reload animation files each time it's needed
+void LoadAllAnimSurfaceDatabaseIntoMemory();
+// --
  
 //This is an enum to reference to array of ints that holds the values for all these constants.  Gotthard 1/18/07
 

@@ -187,6 +187,91 @@ void ResetEmptyRPCFaceSlots()
 	}
 }
 
+void LoadAllAnimSurfaceDatabaseIntoMemory()
+{
+	for (UINT16 usSurfaceIndex = 0; usSurfaceIndex < NUMANIMATIONSURFACETYPES; usSurfaceIndex++)
+	{
+		if (gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject != NULL)
+			continue;
+
+		AuxObjectData* pAuxData;
+
+		// Load into memory
+		VOBJECT_DESC					VObjectDesc;
+		HVOBJECT						hVObject;
+		HIMAGE							hImage;
+		CHAR8							sFilename[48];
+		STRUCTURE_FILE_REF* pStructureFileRef;
+
+		// Create video object
+		FilenameForBPP(gAnimSurfaceDatabase[usSurfaceIndex].Filename, sFilename);
+		hImage = CreateImage(/*gAnimSurfaceDatabase[ usSurfaceIndex ].Filename*/sFilename, IMAGE_ALLDATA);
+
+		//		AnimDebugMsg(String("Surface Database: Loading %d, file: %s", usSurfaceIndex, gAnimSurfaceDatabase[usSurfaceIndex].Filename));
+
+		if (hImage == NULL)
+		{
+			//SET_ERROR("Error: Could not load animation file %s", sFilename);
+			AnimDebugMsg(String("Error: hImage is NULL Could not load animation file %s", sFilename));
+			if (hImage != NULL) DestroyImage(hImage);
+			continue;
+		}
+
+		VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMHIMAGE;
+		VObjectDesc.hImage = hImage;
+
+		hVObject = CreateVideoObject(&VObjectDesc);
+
+		if (hVObject == NULL)
+		{
+			// Report error
+			//SET_ERROR("Could not load animation file: %s", gAnimSurfaceDatabase[usSurfaceIndex].Filename);
+			AnimDebugMsg(String("Error: hVObject is NULL Could not load animation file %s", gAnimSurfaceDatabase[usSurfaceIndex].Filename));
+			// Video Object will set error conition.]
+			if (hImage != NULL) DestroyImage(hImage);
+			continue;
+		}
+
+		// Get aux data
+		if (hImage->uiAppDataSize == hVObject->usNumberOfObjects * sizeof(AuxObjectData))
+		{
+			// Valid auxiliary data, so get # od frames from data
+			pAuxData = (AuxObjectData*)hImage->pAppData;
+
+			gAnimSurfaceDatabase[usSurfaceIndex].uiNumFramesPerDir = pAuxData->ubNumberOfFrames;
+
+		}
+		else
+		{
+			// Report error
+			//SET_ERROR("Invalid # of animations given");
+			AnimDebugMsg(String("Error: Invalid # of animations given, file %s", gAnimSurfaceDatabase[usSurfaceIndex].Filename));
+			if (hImage != NULL) DestroyImage(hImage);
+			continue;
+		}
+
+
+		// the hImage is no longer needed
+		DestroyImage(hImage);
+
+		// Set video object index
+		gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject = hVObject;
+
+		// Determine if we have a problem with #frames + directions ( ie mismatch )
+		if ((gAnimSurfaceDatabase[usSurfaceIndex].uiNumDirections * gAnimSurfaceDatabase[usSurfaceIndex].uiNumFramesPerDir) != gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject->usNumberOfObjects)
+		{
+			AnimDebugMsg(String("Surface Database: WARNING!!! Surface %d has #frames mismatch for animation file: %s.", usSurfaceIndex, gAnimSurfaceDatabase[usSurfaceIndex].Filename));
+			continue;
+		}
+
+		//AnimDebugMsg(String("Surface Database: Loading %d, file: %s", usSurfaceIndex, gAnimSurfaceDatabase[usSurfaceIndex].Filename));
+
+	}
+
+	AnimDebugMsg(String("LoadAllAnimSurfaceDatabaseIntoMemory() DONE."));
+}
+
+
 BOOLEAN LoadExternalGameplayData(STR directoryName, BOOLEAN isMultiplayer)
 {
 	char fileName[MAX_PATH];
@@ -445,6 +530,13 @@ BOOLEAN LoadExternalGameplayData(STR directoryName, BOOLEAN isMultiplayer)
 			SGP_THROW_IFFALSE(BodyTypeDB::Instance().LoadFromFile(directoryName, LBT_BODYTYPESFILENAME), LBT_BODYTYPESFILENAME);
 		}
 	}
+
+	// JADOL -- Load all animation surface database into memory at game initialization,
+	// so we will not load and reload animation files each time it's needed
+	PROFILING(100, 1);
+	LoadAllAnimSurfaceDatabaseIntoMemory();
+	PROFILING(100, 2);
+	// --
 
 #ifndef ENGLISH
 	AddLanguagePrefix(fileName);

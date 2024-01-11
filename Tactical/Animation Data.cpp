@@ -1102,19 +1102,19 @@ BOOLEAN UnLoadAnimationSurface(UINT16 usSoldierID, UINT16 usSurfaceIndex)
 		gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount = 0;
 	}
 
+	// JADOL --  animation surface database will be persistent loading at game initialization
+	// so we will not load and reload animation files continously
+	//// Check if count has reached zero and delet if so
+	//if (gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount == 0)
+	//{
+	//	AnimDebugMsg(String("Surface Database: Unloading Surface: %d", usSurfaceIndex));
 
+	//	CHECKF(gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject != NULL)
 
-
-	// Check if count has reached zero and delet if so
-	if (gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount == 0)
-	{
-		AnimDebugMsg(String("Surface Database: Unloading Surface: %d", usSurfaceIndex));
-
-		CHECKF(gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject != NULL)
-
-			DeleteVideoObject(gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject);
-		gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject = NULL;
-	}
+	//	DeleteVideoObject(gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject);
+	//	gAnimSurfaceDatabase[usSurfaceIndex].hVideoObject = NULL;
+	//}
+	// --
 
 	return(TRUE);
 
@@ -1250,7 +1250,9 @@ void ZeroAnimSurfaceCounts()
 	for (cnt = 0; cnt < NUMANIMATIONSURFACETYPES; cnt++)
 	{
 		gAnimSurfaceDatabase[cnt].bUsageCount = 0;
-		gAnimSurfaceDatabase[cnt].hVideoObject = NULL;
+		// JADOL -- animation surface database will not be nulled, because it already load in the beginning game initialization
+		//gAnimSurfaceDatabase[cnt].hVideoObject = NULL;
+		// -- 
 	}
 
 	memset(gbAnimUsageHistory, 0, sizeof(gbAnimUsageHistory));
