@@ -1094,7 +1094,7 @@ BOOLEAN UnLoadAnimationSurface(UINT16 usSoldierID, UINT16 usSurfaceIndex)
 		return(FALSE);
 	}
 
-	AnimDebugMsg(String("Surface Database: MercUsage: %d, Global Uasage: %d", gbAnimUsageHistory[usSurfaceIndex][usSoldierID], gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount));
+	AnimDebugMsg(String("Surface Database: MercUsage: %d, Global Usage: %d", gbAnimUsageHistory[usSurfaceIndex][usSoldierID], gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount));
 
 	// Check for < 0
 	if (gAnimSurfaceDatabase[usSurfaceIndex].bUsageCount < 0)
