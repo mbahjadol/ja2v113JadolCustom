@@ -21,7 +21,8 @@
 #define TRLE_FILE_READER				0x8
 #define PNG_FILE_READER					0x10
 #define JPC_FILE_READER					0x20
-#define UNKNOWN_FILE_READER			0x200
+#define SEVENZ_FILE_READER				0x40	// JADOL -- Add 7z compression into file type
+#define UNKNOWN_FILE_READER				0x200
 
 // Defines for buffer bit depth
 #define BUFFER_8BPP							0x1

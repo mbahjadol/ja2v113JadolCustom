@@ -57,11 +57,12 @@ namespace ImageFileType
 		static bool inited = false;
 		if(!inited)
 		{
-			_ext_map["pcx"]    = PCX_FILE_READER;
-			_ext_map["tga"]    = TGA_FILE_READER;
-			_ext_map["sti"]    = STCI_FILE_READER;
-			_ext_map["png"]    = PNG_FILE_READER;
-			_ext_map["jpc.7z"] = JPC_FILE_READER;
+			_ext_map["pcx"]		= PCX_FILE_READER;
+			_ext_map["tga"]		= TGA_FILE_READER;
+			_ext_map["sti"]		= STCI_FILE_READER;
+			_ext_map["png"]		= PNG_FILE_READER;
+			_ext_map["jpc.7z"]	= JPC_FILE_READER;			// JADOL -- this map will never be picked if called once! because it use filename.find_last_of(".")
+			_ext_map["7z"]		= SEVENZ_FILE_READER;		// JADOL -- this map would usable
 			inited = true;
 		}
 		ExtMap_t::const_iterator cit = _ext_map.find(ext);
@@ -82,7 +83,18 @@ namespace ImageFileType
 			filename += ".pcx";
 		}
 		int reader_type = map(ext);
-
+		if (reader_type == SEVENZ_FILE_READER)
+		{
+			std::string haveSecondExt = filename.substr(0, pos);
+			pos = haveSecondExt.find_last_of(".");
+			std::string secondExt = haveSecondExt.substr(pos + 1, std::string::npos);
+			if (!secondExt.empty())
+			{
+				ext = secondExt + "." + ext;
+				reader_type = map(ext);
+			}
+		}
+		
 		/*
 		 * if DEFAULT, then just check existance of file
 		 * if not STI, then there is no different load order, just continue as usual
