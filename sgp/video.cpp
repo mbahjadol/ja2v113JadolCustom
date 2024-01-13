@@ -1949,7 +1949,7 @@ void RefreshScreen(void *DummyVariable)
 		try
 		{
 			vfs::COpenWriteFile wfile(FileName,true,true);
-			char head[] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, LOBYTE(SCREEN_WIDTH), HIBYTE(SCREEN_WIDTH), LOBYTE(SCREEN_HEIGHT), HIBYTE(SCREEN_HEIGHT), 0x10, 0};
+			char head[] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, (char)LOBYTE(SCREEN_WIDTH), (char)HIBYTE(SCREEN_WIDTH), (char)LOBYTE(SCREEN_HEIGHT), (char)HIBYTE(SCREEN_HEIGHT), 0x10, 0};
 			SGP_TRYCATCH_RETHROW(wfile->write(head,18), L"");
 
 			//

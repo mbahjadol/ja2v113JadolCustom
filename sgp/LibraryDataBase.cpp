@@ -548,7 +548,7 @@ INT CompareFileNames( CHAR8 *arg1[], FileHeaderStruct **arg2 )
 
 	TempFileHeader = ( FileHeaderStruct * ) arg2;
 
-	sprintf( sSearchKey, "%s", arg1); // FIXME: arg1 must be a string pointer
+	sprintf( sSearchKey, "%s", (char *) arg1); // FIXME: arg1 must be a string pointer
 
 	sprintf( sFileNameWithPath, "%s%s", gFileDataBase.pLibraries[ gsCurrentLibrary ].sLibraryPath, TempFileHeader->pFileName );
 
@@ -1090,7 +1090,7 @@ INT32 CompareDirEntryFileNames( CHAR8 *arg1[], DIRENTRY **arg2 )
 
 	TempDirEntry = ( DIRENTRY * ) arg2;
 
-	sprintf( sSearchKey, "%s", arg1); // FIXME: arg1 must be a string pointer
+	sprintf(sSearchKey, "%s", (char*)arg1); // FIXME: arg1 must be a string pointer
 
 	sprintf( sFileNameWithPath, "%s", TempDirEntry->sFileName );
 

@@ -738,11 +738,8 @@ BOOLEAN WillMercRenew(SOLDIERTYPE* pSoldier, BOOLEAN fSayQuote)
 			// --
 		}
 	}
-	else
-	{
-		// happy, no problem
-		return(TRUE);
-	}
+	// happy, no problem
+	return(TRUE);
 }
 
 void HandleBuddiesReactionToFiringMerc(SOLDIERTYPE* pFiredSoldier, INT8 bMoraleEvent)

@@ -138,11 +138,19 @@ typedef enum
 
 typedef struct INTERACTIVE_STRUCTURE {
 	INTERACTIVE_STRUCTURE()
-	: sector( -1 ), sectorlevel( -1 ), sLevel( -1 ), sActionType( INTERACTIVE_STRUCTURE_NO_ACTION ), difficulty( 0 ), luaactionid( -1 ) {}
+	: sector( -1 ), sectorlevel( -1 ), sLevel(-1), sActionType(INTERACTIVE_STRUCTURE_NO_ACTION), difficulty(0), luaactionid(-1)
+	{
+		memset(szTileSetName, 0, sizeof(szTileSetName)); // initialize the array to zeros
+	}
 		
 	INT16	sector;
 	INT8	sectorlevel;						// whether this is on the surface (0) or below (1-3)
+// JADOL -- Suppressing stupid false positive visual studio warning about C26495
+#pragma warning(push)
+#pragma warning(disable: 26495)
 	char	szTileSetName[20];					// name of the tileset
+#pragma warning(pop)
+// --
 	std::vector<UINT16>	tileindexvector;		// possible indizes in tileset
 
 	// We can either specify a specific location, or simply leave this empty
