@@ -2983,7 +2983,7 @@ void StripEnemyDetailedPlacementsIfSectorWasPlayerLiberated()
 
 void AddSoldierInitListMilitiaOnEdge( UINT8 ubStrategicInsertionCode, UINT8 ubNumGreen, UINT8 ubNumReg, UINT8 ubNumElites )
 {
-	SOLDIERTYPE *pSoldier;
+	SOLDIERTYPE *pSoldier = NULL;
 	MAPEDGEPOINTINFO MapEdgepointInfo;
 	UINT8 ubCurrSlot;
 	UINT8 ubTotalSoldiers;
@@ -3159,6 +3159,9 @@ void AddSoldierInitListMilitiaOnEdge( UINT8 ubStrategicInsertionCode, UINT8 ubNu
 		// HEADROCK HAM 3.2: Experimental, militia reinforcements arrive with 0 APs.
 		if (gGameExternalOptions.ubReinforcementsFirstTurnFreeze == 1 || gGameExternalOptions.ubReinforcementsFirstTurnFreeze == 3)
 		{
+			// JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+			if (pSoldier == nullptr) continue;
+
 			pSoldier->bActionPoints = 0;
 
 			// Flugente: due to a fix, also note here that the reinforcements get no APs.
@@ -3282,9 +3285,12 @@ void SectorAddPrisonersofWar( INT16 sMapX, INT16 sMapY, INT16 sMapZ )
 		if ( pTeamSoldier && pTeamSoldier->bActive && pTeamSoldier->bInSector && pTeamSoldier->sSectorX == sMapX && pTeamSoldier->sSectorY == sMapY && pTeamSoldier->bSectorZ == sMapZ )
 			++numberofcivs;
 
-		// count how many pows are already placed
-		if ( pTeamSoldier->usSoldierFlagMask & SOLDIER_POW_PRISON )
-			++numberofpows;
+		if (pTeamSoldier != nullptr) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+		{
+			// count how many pows are already placed
+			if (pTeamSoldier->usSoldierFlagMask & SOLDIER_POW_PRISON)
+				++numberofpows;
+		}
 	}
 
 	// we can't spawn if all civilian slots are already taken (we leave a bit of reserve for more important civs)

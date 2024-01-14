@@ -4296,23 +4296,26 @@ void HealCharacters( SOLDIERTYPE *pDoctor, INT16 sX, INT16 sY, INT8 bZ )
 				// find the worst hurt patient
 				pWorstHurtSoldier = NULL;
 
-				for ( cnt = 0, pTeamSoldier = MercPtrs[ cnt ]; cnt <= gTacticalStatus.Team[ pSoldier->bTeam ].bLastID; ++cnt, pTeamSoldier++)
+				if (pSoldier != NULL) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
 				{
-					if( pTeamSoldier->bActive )
+					for (cnt = 0, pTeamSoldier = MercPtrs[cnt]; cnt <= gTacticalStatus.Team[pSoldier->bTeam].bLastID; ++cnt, pTeamSoldier++)
 					{
-						if( CanSoldierBeHealedByDoctor( pTeamSoldier, pDoctor, FALSE, HEALABLE_THIS_HOUR, FALSE, FALSE, FALSE ) == TRUE )
+						if (pTeamSoldier->bActive)
 						{
-							if( pWorstHurtSoldier == NULL )
+							if (CanSoldierBeHealedByDoctor(pTeamSoldier, pDoctor, FALSE, HEALABLE_THIS_HOUR, FALSE, FALSE, FALSE) == TRUE)
 							{
-								pWorstHurtSoldier = pTeamSoldier;
-							}
-							else
-							{
-								// check to see if this guy is hurt worse than anyone previous?
-								if( pTeamSoldier->stats.bLife < pWorstHurtSoldier->stats.bLife )
+								if (pWorstHurtSoldier == NULL)
 								{
-									// he is now the worse hurt guy
 									pWorstHurtSoldier = pTeamSoldier;
+								}
+								else
+								{
+									// check to see if this guy is hurt worse than anyone previous?
+									if (pTeamSoldier->stats.bLife < pWorstHurtSoldier->stats.bLife)
+									{
+										// he is now the worse hurt guy
+										pWorstHurtSoldier = pTeamSoldier;
+									}
 								}
 							}
 						}
@@ -6822,15 +6825,18 @@ void HandleSpyAssignments()
 		{
 			SOLDIERTYPE* pSoldier = MercPtrs[usIdOfUncoveredMerc];
 
-			pSoldier->usSoldierFlagMask2 |= (SOLDIER_CONCEALINSERTION|SOLDIER_CONCEALINSERTION_DISCOVERED);
+			if (pSoldier != NULL ) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+			{
+				pSoldier->usSoldierFlagMask2 |= (SOLDIER_CONCEALINSERTION | SOLDIER_CONCEALINSERTION_DISCOVERED);
 
-			AddCharacterToSquad( pSoldier, bNewSquad );
+				AddCharacterToSquad(pSoldier, bNewSquad);
 
-			UpdateMercsInSector( pSoldier->sSectorX, pSoldier->sSectorY, pSoldier->bSectorZ );
+				UpdateMercsInSector(pSoldier->sSectorX, pSoldier->sSectorY, pSoldier->bSectorZ);
 
-			GroupArrivedAtSector( pSoldier->ubGroupID, TRUE, TRUE );
+				GroupArrivedAtSector(pSoldier->ubGroupID, TRUE, TRUE);
 
-			ScreenMsg( FONT_MCOLOR_RED, MSG_INTERFACE, szIntelText[2], pSoldier->GetName() );
+				ScreenMsg(FONT_MCOLOR_RED, MSG_INTERFACE, szIntelText[2], pSoldier->GetName());
+			}
 		}
 	}
 }
@@ -19421,6 +19427,12 @@ UINT32 GetLastSquadListedInSquadMenu( void )
 
 BOOLEAN CanCharacterRepairAnotherSoldiersStuff( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pOtherSoldier )
 {
+	// JADOL -- pOtherSoldier with NULL value is impossible to repair
+	if (pOtherSoldier == NULL)
+	{
+		return(FALSE);
+	}
+	// --
 	if ( pOtherSoldier == pSoldier )
 	{
 		return( FALSE );
@@ -19517,7 +19529,7 @@ void RepairItemsOnOthers( SOLDIERTYPE *pSoldier, UINT8 *pubRepairPtsLeft )
 {
 	UINT8 ubPassType;
 	INT8 bLoop;
-	SOLDIERTYPE * pOtherSoldier;
+	SOLDIERTYPE * pOtherSoldier = NULL;
 	SOLDIERTYPE * pBestOtherSoldier;
 	INT8 bPriority, bBestPriority = -1;
 	BOOLEAN fSomethingWasRepairedThisPass;
@@ -19558,11 +19570,14 @@ void RepairItemsOnOthers( SOLDIERTYPE *pSoldier, UINT8 *pubRepairPtsLeft )
 					// okay, seems like a candidate!
 					if ( FindRepairableItemOnOtherSoldier( pSoldier, pOtherSoldier, ubPassType ) != 0 )
 					{
-						bPriority = pOtherSoldier->stats.bExpLevel;
-						if ( bPriority > bBestPriority )
+						if (pOtherSoldier != NULL)	// JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
 						{
-							bBestPriority = bPriority;
-							pBestOtherSoldier = pOtherSoldier;
+							bPriority = pOtherSoldier->stats.bExpLevel; 
+							if (bPriority > bBestPriority)
+							{
+								bBestPriority = bPriority;
+								pBestOtherSoldier = pOtherSoldier;
+							}
 						}
 					}
 				}

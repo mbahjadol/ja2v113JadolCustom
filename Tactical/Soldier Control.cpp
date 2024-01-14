@@ -6874,6 +6874,7 @@ void SoldierGotHitExplosion(SOLDIERTYPE* pSoldier, UINT16 usWeaponIndex, INT16 s
 		else if (ubSpecial == FIRE_WEAPON_BLINDED)
 		{
 		}
+		[[fallthrough]]; // fallthrough is explicit
 	case ANIM_CROUCH:
 
 		if (ubSpecial == FIRE_WEAPON_BLINDED ||
@@ -13089,7 +13090,10 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack(INT32 sGridNo, UINT8 ubDirection
 #endif
 	{
 		// Are we in attack mode yet?
-		if (this->usAnimState != NINJA_BREATH && gAnimControl[this->usAnimState].ubHeight == ANIM_STAND && gAnimControl[pTSoldier->usAnimState].ubHeight != ANIM_PRONE)
+		if (this->usAnimState != NINJA_BREATH && gAnimControl[this->usAnimState].ubHeight == ANIM_STAND &&
+			// JADOL -- to be honest when that pTSoldier got null?, i don't know but this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe? 
+			( (pTSoldier != nullptr) ? (gAnimControl[pTSoldier->usAnimState].ubHeight != ANIM_PRONE) : FALSE) 
+			)
 		{
 			this->EVENT_InitNewSoldierAnim(NINJA_GOTOBREATH, 0, FALSE);
 		}
@@ -13126,8 +13130,11 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack(INT32 sGridNo, UINT8 ubDirection
 					if (pTSoldier) oldlife = pTSoldier->stats.bLife;
 
 					INT16 damage = (INT16)(5 + Random(20));
-					if (pTSoldier->stats.bLife - damage < 0)
-						damage = oldlife;
+					if (pTSoldier != nullptr) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+					{
+						if (pTSoldier->stats.bLife - damage < 0)
+							damage = oldlife;
+					}
 
 					// We've got a problem if we kill someone outright without him collapsing properly...
 					// FIX: We'll adjust our damage, so if we'd kill someone without collapsing first, we lower our damage, to let him collapse
@@ -13136,20 +13143,29 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack(INT32 sGridNo, UINT8 ubDirection
 						damage -= (INT16)((5 + Random(5)));
 
 					INT16 breathdamage = (INT16)(500 + Random(1500));
-					if (pTSoldier->bBreath - breathdamage < 0)
-						breathdamage = pTSoldier->bBreath;
-
-					pTSoldier->SoldierTakeDamage(0, damage, breathdamage, TAKE_DAMAGE_HANDTOHAND, this->ubID, pTSoldier->sGridNo, 0, TRUE);
-
-					if (pTSoldier->stats.bLife == 0)
+					if (pTSoldier != nullptr) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
 					{
-						// FINISH HIM!
-						HandleTakeDamageDeath(pTSoldier, oldlife, TAKE_DAMAGE_BLOODLOSS);
+						if (pTSoldier->bBreath - breathdamage < 0)
+							breathdamage = pTSoldier->bBreath;
 					}
-					else if (pTSoldier->stats.bLife < OKLIFE && !pTSoldier->bCollapsed)
+
+					if (pTSoldier != nullptr) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
 					{
-						// let the target collapse...
-						SoldierCollapse(pTSoldier);
+						pTSoldier->SoldierTakeDamage(0, damage, breathdamage, TAKE_DAMAGE_HANDTOHAND, this->ubID, pTSoldier->sGridNo, 0, TRUE);
+					}
+
+					if (pTSoldier != nullptr) // JADOL -- to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+					{
+						if (pTSoldier->stats.bLife == 0)
+						{
+							// FINISH HIM!
+							HandleTakeDamageDeath(pTSoldier, oldlife, TAKE_DAMAGE_BLOODLOSS);
+						}
+						else if (pTSoldier->stats.bLife < OKLIFE && !pTSoldier->bCollapsed)
+						{
+							// let the target collapse...
+							SoldierCollapse(pTSoldier);
+						}
 					}
 				}
 				else

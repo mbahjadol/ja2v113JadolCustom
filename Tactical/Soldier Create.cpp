@@ -4810,7 +4810,7 @@ void ResetNumSquadleadersInArmyGroup( void )
 // SANDRO - Added a function to add traits to soldiers
 BOOLEAN AssignTraitsToSoldier( SOLDIERTYPE *pSoldier, SOLDIERCREATE_STRUCT *pCreateStruct )
 {
-	INT32 iChance;
+	INT32 iChance = 0; // JADOL -- add initialize
 	UINT8	ubProgress, ubSolClass;
 	BOOLEAN ATraitAssigned = FALSE;
 	BOOLEAN BTraitAssigned = FALSE;
