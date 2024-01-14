@@ -127,7 +127,7 @@ INT8 FireBullet( UINT8 ubFirer, BULLET * pBullet, BOOLEAN fFake );
 
 void reapplySETTINGS();
 
-BOOLEAN CheckConditionsForBattle( GROUP *pGroup ); // this comes from strategic movement.cpp
+extern BOOLEAN CheckConditionsForBattle( GROUP *pGroup ); // this comes from strategic movement.cpp
 
 extern char client_names[4][30];
 

@@ -12889,7 +12889,8 @@ void SOLDIERTYPE::EVENT_SoldierBeginBladeAttack(INT32 sGridNo, UINT8 ubDirection
 
 			// Flugente: if we attack with a bayonet, we don't need to change stance if even if we are standing and the target is prone...
 			// so we simulate here that the target is still standing
-			UINT8 targetheight = gAnimControl[pTSoldier->usAnimState].ubEndHeight;
+			UINT8 targetheight = NULL;
+			if (pTSoldier != NULL) { targetheight = gAnimControl[pTSoldier->usAnimState].ubEndHeight; }
 
 			// Look at stance of target
 			switch (targetheight)
@@ -13121,7 +13122,8 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack(INT32 sGridNo, UINT8 ubDirection
 					// Play sound
 					PlayJA2SampleFromFile("Sounds\\zombie_swish1.wav", RATE_11025, HIGHVOLUME, 1, MIDDLEPAN);
 
-					INT8 oldlife = pTSoldier->stats.bLife;
+					INT8 oldlife = 0;
+					if (pTSoldier) oldlife = pTSoldier->stats.bLife;
 
 					INT16 damage = (INT16)(5 + Random(20));
 					if (pTSoldier->stats.bLife - damage < 0)
@@ -13184,149 +13186,152 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack(INT32 sGridNo, UINT8 ubDirection
 				nokick = TRUE;
 
 			// Look at stance of target
-			switch (gAnimControl[pTSoldier->usAnimState].ubEndHeight)
+			if (pTSoldier != NULL)
 			{
-			case ANIM_STAND:
-			case ANIM_CROUCH:
-
-				if (!Item[usItem].crowbar)
+				switch (gAnimControl[pTSoldier->usAnimState].ubEndHeight)
 				{
-					BOOLEAN fCannotKick = (ubDirection & 1);
-					// SANDRO - we will determine here what type of punch we are gonna use
-					if (gGameExternalOptions.fEnhancedCloseCombatSystem && (this->aiData.bAimTime > 0))
+				case ANIM_STAND:
+				case ANIM_CROUCH:
+
+					if (!Item[usItem].crowbar)
 					{
-						if (gAnimControl[pTSoldier->usAnimState].ubEndHeight == ANIM_STAND)
+						BOOLEAN fCannotKick = (ubDirection & 1);
+						// SANDRO - we will determine here what type of punch we are gonna use
+						if (gGameExternalOptions.fEnhancedCloseCombatSystem && (this->aiData.bAimTime > 0))
 						{
-							// if we aim for legs, always use kick
-							if (this->bAimMeleeLocation == AIM_SHOT_LEGS && !(ubDirection & 1) && !nokick)
+							if (gAnimControl[pTSoldier->usAnimState].ubEndHeight == ANIM_STAND)
 							{
-								this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
-							}
-							// if we aim for head, always use punch animation
-							else if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1))
-							{
-								this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
-							}
-							// otherwise make it random, but favor the punch a bit
-							else
-							{
-								if (nokick || Random(20) > 8)
-									this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
-								else
+								// if we aim for legs, always use kick
+								if (this->bAimMeleeLocation == AIM_SHOT_LEGS && !(ubDirection & 1) && !nokick)
+								{
 									this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								}
+								// if we aim for head, always use punch animation
+								else if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1))
+								{
+									this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
+								}
+								// otherwise make it random, but favor the punch a bit
+								else
+								{
+									if (nokick || Random(20) > 8)
+										this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
+									else
+										this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								}
+							}
+							else // if crouching enemy
+							{
+								// random if aiming on head, favor kick though
+								if (this->bAimShotLocation == AIM_SHOT_HEAD || (ubDirection & 1) || nokick)
+								{
+									if (nokick || Random(20) > 12 || (ubDirection & 1))
+										this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
+									else
+										this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								}
+								// otherwise always use kick
+								else
+								{
+									this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								}
 							}
 						}
-						else // if crouching enemy
+						else
 						{
-							// random if aiming on head, favor kick though
-							if (this->bAimShotLocation == AIM_SHOT_HEAD || (ubDirection & 1) || nokick)
+							if (gAnimControl[pTSoldier->usAnimState].ubEndHeight == ANIM_STAND)
 							{
-								if (nokick || Random(20) > 12 || (ubDirection & 1))
-									this->EVENT_InitNewSoldierAnim(FOCUSED_PUNCH, 0, FALSE);
+								// if we aim for legs, always use kick
+								if (this->bAimMeleeLocation == AIM_SHOT_LEGS && !(ubDirection & 1) && !nokick)
+								{
+									this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
+								}
+								// if we aim for head, always use punch animation
+								else if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1))
+								{
+									this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
+								}
+								// otherwise make it random, but favor the punch a bit
 								else
-									this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								{
+									if (nokick || Random(20) > 8)
+										this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
+									else
+										this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
+								}
 							}
-							// otherwise always use kick
-							else
+							else // if crouching enemy
 							{
-								this->EVENT_InitNewSoldierAnim(FOCUSED_HTH_KICK, 0, FALSE);
+								// random if aiming on head, favor kick though
+								if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1) || nokick)
+								{
+									if (nokick || Random(20) > 12 || (ubDirection & 1))
+										this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
+									else
+										this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
+								}
+								// otherwise always use kick
+								else
+								{
+									this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
+								}
 							}
 						}
 					}
 					else
 					{
-						if (gAnimControl[pTSoldier->usAnimState].ubEndHeight == ANIM_STAND)
+						this->EVENT_InitNewSoldierAnim(CROWBAR_ATTACK, 0, FALSE);
+					}
+
+					// CHECK IF HE CAN SEE US, IF SO CHANGE DIR
+					if (pTSoldier->aiData.bOppList[this->ubID] == 0 && pTSoldier->bTeam != this->bTeam)
+					{
+						// Get direction to target
+						// IF WE ARE AN ANIMAL, CAR, MONSTER, DONT'T TURN
+						if (!(pTSoldier->flags.uiStatusFlags & (SOLDIER_MONSTER | SOLDIER_ANIMAL | SOLDIER_VEHICLE)))
 						{
-							// if we aim for legs, always use kick
-							if (this->bAimMeleeLocation == AIM_SHOT_LEGS && !(ubDirection & 1) && !nokick)
+							// OK, stop merc....
+							pTSoldier->EVENT_StopMerc(pTSoldier->sGridNo, pTSoldier->ubDirection);
+
+							if (pTSoldier->bTeam != gbPlayerNum)
 							{
-								this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
+								DebugAI(AI_MSG_INFO, pTSoldier, String("CancelAIAction: begin blade attack"));
+								CancelAIAction(pTSoldier, TRUE);
 							}
-							// if we aim for head, always use punch animation
-							else if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1))
-							{
-								this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
-							}
-							// otherwise make it random, but favor the punch a bit
-							else
-							{
-								if (nokick || Random(20) > 8)
-									this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
-								else
-									this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
-							}
-						}
-						else // if crouching enemy
-						{
-							// random if aiming on head, favor kick though
-							if (this->bAimMeleeLocation == AIM_SHOT_HEAD || (ubDirection & 1) || nokick)
-							{
-								if (nokick || Random(20) > 12 || (ubDirection & 1))
-									this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
-								else
-									this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
-							}
-							// otherwise always use kick
-							else
-							{
-								this->EVENT_InitNewSoldierAnim(HTH_KICK, 0, FALSE);
-							}
+
+							ubTDirection = (UINT8)GetDirectionFromGridNo(this->sGridNo, pTSoldier);
+							SendSoldierSetDesiredDirectionEvent(pTSoldier, ubTDirection);
 						}
 					}
+					break;
+
+				case ANIM_PRONE:
+
+					// CHECK OUR STANCE
+					// ATE: Added this for CIV body types 'cause of elliot
+					if (!IS_MERC_BODY_TYPE(this))
+					{
+						this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
+					}
+					else
+					{
+						if (gAnimControl[this->usAnimState].ubEndHeight != ANIM_CROUCH)
+						{
+							// SET DESIRED STANCE AND SET PENDING ANIMATION
+							SendChangeSoldierStanceEvent(this, ANIM_CROUCH);
+							this->usPendingAnimation = PUNCH_LOW;
+						}
+						else
+						{
+							// USE crouched one
+							// NEED TO CHANGE STANCE IF NOT CROUCHD!
+							this->EVENT_InitNewSoldierAnim(PUNCH_LOW, 0, FALSE);
+						}
+					}
+					break;
+
+				}
 			}
-				else
-				{
-					this->EVENT_InitNewSoldierAnim(CROWBAR_ATTACK, 0, FALSE);
-				}
-
-				// CHECK IF HE CAN SEE US, IF SO CHANGE DIR
-				if (pTSoldier->aiData.bOppList[this->ubID] == 0 && pTSoldier->bTeam != this->bTeam)
-				{
-					// Get direction to target
-					// IF WE ARE AN ANIMAL, CAR, MONSTER, DONT'T TURN
-					if (!(pTSoldier->flags.uiStatusFlags & (SOLDIER_MONSTER | SOLDIER_ANIMAL | SOLDIER_VEHICLE)))
-					{
-						// OK, stop merc....
-						pTSoldier->EVENT_StopMerc(pTSoldier->sGridNo, pTSoldier->ubDirection);
-
-						if (pTSoldier->bTeam != gbPlayerNum)
-						{
-							DebugAI(AI_MSG_INFO, pTSoldier, String("CancelAIAction: begin blade attack"));
-							CancelAIAction(pTSoldier, TRUE);
-						}
-
-						ubTDirection = (UINT8)GetDirectionFromGridNo(this->sGridNo, pTSoldier);
-						SendSoldierSetDesiredDirectionEvent(pTSoldier, ubTDirection);
-					}
-				}
-				break;
-
-			case ANIM_PRONE:
-
-				// CHECK OUR STANCE
-				// ATE: Added this for CIV body types 'cause of elliot
-				if (!IS_MERC_BODY_TYPE(this))
-				{
-					this->EVENT_InitNewSoldierAnim(PUNCH, 0, FALSE);
-				}
-				else
-				{
-					if (gAnimControl[this->usAnimState].ubEndHeight != ANIM_CROUCH)
-					{
-						// SET DESIRED STANCE AND SET PENDING ANIMATION
-						SendChangeSoldierStanceEvent(this, ANIM_CROUCH);
-						this->usPendingAnimation = PUNCH_LOW;
-					}
-					else
-					{
-						// USE crouched one
-						// NEED TO CHANGE STANCE IF NOT CROUCHD!
-						this->EVENT_InitNewSoldierAnim(PUNCH_LOW, 0, FALSE);
-					}
-				}
-				break;
-
-		}
 	}
 }
 

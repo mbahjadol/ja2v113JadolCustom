@@ -383,12 +383,20 @@ typedef struct OpinionEvent
 
 typedef struct DynamicOpinionSpeechEvent_EventData
 {
+// JADOL -- Suppressing stupid false positive visual studio warning about C26495
+#pragma warning(push)
+#pragma warning(disable: 26495)
 	DynamicOpinionSpeechEvent_EventData( ) :
 	event( ),
 	usId( 0 ),
 	usPriority( 0 ),
 	ubProfileINTERJECTOR( NO_PROFILE )
-	{}
+	{
+		memset(ubProfileSideCause, 0, sizeof(ubProfileSideCause)); // initialize the array to zeros
+		memset(ubProfileSideComplainant, 0, sizeof(ubProfileSideComplainant)); // initialize the array to zeros
+	}
+#pragma warning(pop)
+// --
 
 	OpinionEvent event;				// the event that this is all about
 
@@ -398,15 +406,23 @@ typedef struct DynamicOpinionSpeechEvent_EventData
 	// other mercs an interfere in the dialogue
 	UINT8 ubProfileINTERJECTOR;		// if an INTERJECTOR tries to solve the situation, it'll be this guy
 
+// JADOL -- Suppressing stupid false positive visual studio warning about C26495
+#pragma warning(push)
+#pragma warning(disable: 26495)
 	// several other mercs can agree with either cause or complainant. Most of the time, these guys will have similar events at the time, which will simply be merged
 	// the goal is to have less dialogue events while making them somewhat deeper
 	UINT8 ubProfileSideCause[DOST_INTERJECTORS_MAX];
 	UINT8 ubProfileSideComplainant[DOST_INTERJECTORS_MAX];
+#pragma warning(pop)
+// --
 
 } DynamicOpinionSpeechEvent_EventData;
 
 typedef struct DynamicOpinionSpeechEvent
 {
+// JADOL -- Suppressing stupid false positive visual studio warning about C26495
+#pragma warning(push)
+#pragma warning(disable: 26495)
 	DynamicOpinionSpeechEvent( ) :
 	data( ),
 	usStarttime( 0 ),
@@ -415,7 +431,11 @@ typedef struct DynamicOpinionSpeechEvent
 	usSpeaker( NO_PROFILE ),
 	usSide( DOST_POSITION_LEFT ),
 	usNumonside( 0 )
-	{}
+	{
+		memset(usFiller, 0, sizeof(usFiller)); // initialize the array to zeros
+	}
+#pragma warning(pop)
+// --
 
 	DynamicOpinionSpeechEvent_EventData data;
 
@@ -427,7 +447,12 @@ typedef struct DynamicOpinionSpeechEvent
 	UINT8 usSide;					// side with ubProfileComplainant (DOST_POSITION_LEFT), ubProfileCause (DOST_POSITION_RIGHT) or stay neutral (DOST_POSITION_MIDDLE)
 
 	UINT8 usNumonside;				// this argument is the x'th on this side
+// JADOL -- Suppressing stupid false positive visual studio warning about C26495
+#pragma warning(push)
+#pragma warning(disable: 26495)
 	UINT8 usFiller[3];				// to appease the petty gods of padding AGAIN
+#pragma warning(pop)
+// --
 } DynamicOpinionSpeechEvent;
 
 

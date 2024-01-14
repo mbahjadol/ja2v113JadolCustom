@@ -31,6 +31,7 @@ public:
 		wasBackwards = false;
 		status = AStar_Init;
 		parent = -1;
+		numSteps = 0;
 	};
 	// h is calculated on the fly
 	INT16		cost;//G
