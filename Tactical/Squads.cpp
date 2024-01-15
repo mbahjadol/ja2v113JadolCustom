@@ -929,13 +929,19 @@ BOOLEAN SetCurrentSquad( INT32 iCurrentSquad, BOOLEAN fForce )
 		if( Menptr[ gusSelectedSoldier ].bAssignment != iCurrentTacticalSquad )
 		{
 			// ATE: Changed this to FALSE for ackoledgement sounds.. sounds bad if just starting/entering sector..
-			SelectSoldier( Squad[ iCurrentTacticalSquad ][ 0 ]->ubID, FALSE, TRUE );
+			if (Squad[iCurrentTacticalSquad][0] != nullptr) // JADOL -- preventing accessing null pointer, to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+			{
+				SelectSoldier(Squad[iCurrentTacticalSquad][0]->ubID, FALSE, TRUE);
+			}
 		}
 	}
 	else
 	{
 		// ATE: Changed this to FALSE for ackoledgement sounds.. sounds bad if just starting/entering sector..
-		SelectSoldier( Squad[ iCurrentTacticalSquad ][ 0 ]->ubID, FALSE, TRUE );
+		if (Squad[iCurrentTacticalSquad][0] != nullptr) // JADOL -- preventing accessing null pointer, to be honest, this check is almost 99.99% useless but who know about 0.01% ??, hardware failure maybe?
+		{
+			SelectSoldier(Squad[iCurrentTacticalSquad][0]->ubID, FALSE, TRUE);
+		}
 	}
 
 	return ( TRUE );
