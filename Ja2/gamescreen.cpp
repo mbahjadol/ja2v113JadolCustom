@@ -629,7 +629,14 @@ UINT32	MainGameScreenHandle(void)
 				InternalLocateGridNo(gGameUBOptions.LOCATEGRIDNO, TRUE);
 		}
 #else
-		InternalLocateGridNo(gGameExternalOptions.iInitialMercArrivalLocation, TRUE);
+		if (gfFirstHeliRun)
+		{
+			InternalLocateGridNo(gGameExternalOptions.iInitialMercArrivalLocation, TRUE);
+		}
+		else
+		{
+			InternalLocateGridNo(gMapInformation.sCenterGridNo, TRUE);
+		}
 #endif
 		// Flugente: we might have reloaded the game, so we are currently not dropping mercs out of a helicopter
 		gfIngagedInDrop = FALSE;
